@@ -586,7 +586,9 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
     ecf = ngx_event_get_conf(cycle->conf_ctx, ngx_event_core_module);
 
+    //判断是否使用mutex锁，主要是为了控制负载均衡
     if (ccf->master && ccf->worker_processes > 1 && ecf->accept_mutex) {
+        //使用mutex控制进程的负载均衡
         ngx_use_accept_mutex = 1;
         ngx_accept_mutex_held = 0;
         ngx_accept_mutex_delay = ecf->accept_mutex_delay;
@@ -602,10 +604,12 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     }
 #endif
 
+    //定时器初始化
     if (ngx_event_timer_init(cycle->log) == NGX_ERROR) {
         return NGX_ERROR;
     }
 
+    //event module的初始化
     for (m = 0; ngx_modules[m]; m++) {
         if (ngx_modules[m]->type != NGX_EVENT_MODULE) {
             continue;
@@ -616,7 +620,8 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         }
 
         module = ngx_modules[m]->ctx;
-
+        
+        //初始化模块
         if (module->actions.init(cycle, ngx_timer_resolution) != NGX_OK) {
             /* fatal */
             exit(2);
@@ -672,6 +677,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
 #endif
 
+    //创建连接池
     cycle->connections =
         ngx_alloc(sizeof(ngx_connection_t) * cycle->connection_n, cycle->log);
     if (cycle->connections == NULL) {
@@ -679,7 +685,8 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     }
 
     c = cycle->connections;
-
+    
+    //创建所有读事件
     cycle->read_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n,
                                    cycle->log);
     if (cycle->read_events == NULL) {
@@ -687,8 +694,10 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     }
 
     rev = cycle->read_events;
+    //初始化读事件
     for (i = 0; i < cycle->connection_n; i++) {
         rev[i].closed = 1;
+        //防止stale event 
         rev[i].instance = 1;
 #if (NGX_THREADS)
         rev[i].lock = &c[i].lock;
@@ -696,6 +705,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 #endif
     }
 
+    //创建写事件
     cycle->write_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n,
                                     cycle->log);
     if (cycle->write_events == NULL) {
@@ -703,6 +713,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     }
 
     wev = cycle->write_events;
+    //初始化写事件
     for (i = 0; i < cycle->connection_n; i++) {
         wev[i].closed = 1;
 #if (NGX_THREADS)
@@ -714,10 +725,13 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     i = cycle->connection_n;
     next = NULL;
 
+    //初始化连接池
     do {
         i--;
-
+        
+        //链表
         c[i].data = next;
+        //每一个连接的读写事件对应cycle的读写事件
         c[i].read = &cycle->read_events[i];
         c[i].write = &cycle->write_events[i];
         c[i].fd = (ngx_socket_t) -1;
@@ -729,14 +743,18 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 #endif
     } while (i);
 
+    //设置free 连接 
     cycle->free_connections = next;
     cycle->free_connection_n = cycle->connection_n;
 
     /* for each listening socket */
+    //下面这段初始化listen 事件 ，创建socket句柄，绑定事件回调，然后加入到事件驱动中
 
     ls = cycle->listening.elts;
+    //开始遍历listen 
     for (i = 0; i < cycle->listening.nelts; i++) {
-
+        
+        //从连接池取得连接
         c = ngx_get_connection(ls[i].fd, cycle->log);
 
         if (c == NULL) {
@@ -814,9 +832,11 @@ ngx_event_process_init(ngx_cycle_t *cycle)
         }
 
 #else
-
+        
+        //设置listen句柄的事件回调，这个回调里面会accept，然后进行后续处理，这个函数是nginx事件驱动的第一个函数 
         rev->handler = ngx_event_accept;
 
+        //如果默认使用mutex，则会继续下面操作
         if (ngx_use_accept_mutex) {
             continue;
         }
@@ -827,6 +847,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
             }
 
         } else {
+            //加可读事件到事件处理
             if (ngx_add_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR) {
                 return NGX_ERROR;
             }

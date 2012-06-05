@@ -218,14 +218,16 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
         }
 
         /* rc == NGX_OK || rc == NGX_CONF_BLOCK_START */
-
+        //判断cf是否有handler回调，如果有的话，优先调用handler回调，如果没有，则会进入ngx_conf_handler进行一般处理
+        //特别说一下，http的模块使用handler是ngx_http_block，具体请看ngx_http.c
         if (cf->handler) {
 
             /*
              * the custom handler, i.e., that is used in the http's
              * "types { ... }" directive
              */
-
+            
+            //使用handler处理
             rv = (*cf->handler)(cf, NULL, cf->handler_conf);
             if (rv == NGX_CONF_OK) {
                 continue;
@@ -240,7 +242,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
             goto failed;
         }
 
-
+        //否则进入一般处理
         rc = ngx_conf_handler(cf, rc);
 
         if (rc == NGX_ERROR) {
@@ -304,7 +306,8 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
         if (cmd == NULL) {
             continue;
         }
-
+        
+        //遍历模块的command，比较名字，然后调用回调函数set
         for ( /* void */ ; cmd->name.len; cmd++) {
 
             if (name->len != cmd->name.len) {
@@ -391,6 +394,7 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
                 }
             }
 
+            //调用set
             rv = cmd->set(cf, cmd, conf);
 
             if (rv == NGX_CONF_OK) {

@@ -21,3 +21,23 @@ nginx源码中文注释版
 
 //http://blog.csdn.net/livelylittlefish/article/details/7262750
 
+
+个人学习路径：
+
+
+1 了解Unix IO模型
+
+
+2 跟着这两篇文章：
+
+
+http://www.pagefault.info/?p=188
+
+
+http://www.pagefault.info/?p=201&cpage=1
+
+
+走一遍
+
+
+3 待续...

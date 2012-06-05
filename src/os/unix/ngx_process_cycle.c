@@ -723,6 +723,7 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
 
     ngx_process = NGX_PROCESS_WORKER;
 
+    //初始化worker进程
     ngx_worker_process_init(cycle, 1);
 
     ngx_setproctitle("worker process");
@@ -964,6 +965,10 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_uint_t priority)
 
     for (i = 0; ngx_modules[i]; i++) {
         if (ngx_modules[i]->init_process) {
+            //进程初始化 
+            //这里要特别看的是event模块:
+            //nginx的event模块包含一个init_process,也就是ngx_event_process_init(ngx_event.c).
+            //这个函数就是nginx的驱动器，他初始化事件驱动器，连接池，定时器，以及挂在listen 句柄的回调函数
             if (ngx_modules[i]->init_process(cycle) == NGX_ERROR) {
                 /* fatal */
                 exit(2);

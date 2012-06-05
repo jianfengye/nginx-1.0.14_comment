@@ -220,20 +220,25 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     ngx_strlow(cycle->hostname.data, (u_char *) hostname, cycle->hostname.len);
 
-    //调用核心模块的配置创建函数， cycle->conf_ctx 中对应的指针指向创建的配置  
+    //调用核心模块的配置创建函数， cycle->conf_ctx 中对应的指针指向创建的配置 
+    //创建所有core module的configure.它通过调用每个core module的create_conf方法，来创建对应的conf，
+    //然后将这个conf对象保存在全局的conf_ctx中 
     for (i = 0; ngx_modules[i]; i++) {
         if (ngx_modules[i]->type != NGX_CORE_MODULE) {
             continue;
         }
-
+        
+        //得到core modules
         module = ngx_modules[i]->ctx;
 
+        //如果create_conf存在，则直接创建config
         if (module->create_conf) {
             rv = module->create_conf(cycle);
             if (rv == NULL) {
                 ngx_destroy_pool(pool);
                 return NULL;
             }
+            //保存config
             cycle->conf_ctx[ngx_modules[i]->index] = rv;
         }
     }
@@ -274,6 +279,8 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
+    //开始解析配置文件了，解析配置文件它会一行行读取，然后如果遇到指令
+    //则会查找到对应的ngx_command_t对象，然后执行对应的回调set方法。这里所有动作都在ngx_conf_parse这个函数中进行.
     if (ngx_conf_parse(&conf, &cycle->conf_file) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
@@ -285,6 +292,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
                        cycle->conf_file.data);
     }
 
+    //初始化core module的config
     for (i = 0; ngx_modules[i]; i++) {
         if (ngx_modules[i]->type != NGX_CORE_MODULE) {
             continue;
@@ -292,6 +300,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
         module = ngx_modules[i]->ctx;
 
+        //调用init_conf 
         if (module->init_conf) {
             if (module->init_conf(cycle, cycle->conf_ctx[ngx_modules[i]->index])
                 == NGX_CONF_ERROR)
@@ -472,7 +481,8 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
             break;
         }
-
+        
+        //初始化所有创建的共享内存
         if (ngx_shm_alloc(&shm_zone[i].shm) != NGX_OK) {
             goto failed;
         }
@@ -578,6 +588,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         }
     }
 
+    //listen socket的初始化,创建并bind等操作
     if (ngx_open_listening_sockets(cycle) != NGX_OK) {
         goto failed;
     }
@@ -599,6 +610,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     pool->log = cycle->log;
 
+    //调用init_module对所有的模块进行初始化
     for (i = 0; ngx_modules[i]; i++) {
         if (ngx_modules[i]->init_module) {
             if (ngx_modules[i]->init_module(cycle) != NGX_OK) {
