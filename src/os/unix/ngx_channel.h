@@ -13,12 +13,12 @@
 #include <ngx_core.h>
 #include <ngx_event.h>
 
-
+//封装了父子进程之间传递的消息
 typedef struct {
-     ngx_uint_t  command;
-     ngx_pid_t   pid;
-     ngx_int_t   slot;
-     ngx_fd_t    fd;
+     ngx_uint_t  command;       //对端将要做的命令
+     ngx_pid_t   pid;           //子进程ID
+     ngx_int_t   slot;          //在全局注册表中的位置
+     ngx_fd_t    fd;            //传递的fd
 } ngx_channel_t;
 
 

@@ -19,14 +19,15 @@ typedef pid_t       ngx_pid_t;
 typedef void (*ngx_spawn_proc_pt) (ngx_cycle_t *cycle, void *data);
 
 typedef struct {
-    ngx_pid_t           pid;
-    int                 status;
-    ngx_socket_t        channel[2];
+    ngx_pid_t           pid;            //进程ID
+    int                 status;         //进程的退出状态（主要在waitpid中进行处理）
+    ngx_socket_t        channel[2];     //进程channel（也就是通过socketpair创建的两个句柄）
 
-    ngx_spawn_proc_pt   proc;
+    ngx_spawn_proc_pt   proc;           //进程的执行函数
     void               *data;
     char               *name;
 
+    //进程的几个状态
     unsigned            respawn:1;
     unsigned            just_spawn:1;
     unsigned            detached:1;

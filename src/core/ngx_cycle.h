@@ -73,12 +73,12 @@ struct ngx_cycle_s {
 
 //Core模块的配置结构，ngx_core_module_create_conf创建，ngx_core_module_init_conf初始化
 typedef struct {
-     ngx_flag_t               daemon;
+     ngx_flag_t               daemon;              //是否设置daemon
      ngx_flag_t               master;
 
      ngx_msec_t               timer_resolution;
 
-     ngx_int_t                worker_processes;
+     ngx_int_t                worker_processes;    //创建多少个worker进程
      ngx_int_t                debug_points;
 
      ngx_int_t                rlimit_nofile;

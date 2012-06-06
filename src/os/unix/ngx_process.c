@@ -88,18 +88,22 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
 {
     u_long     on;
     ngx_pid_t  pid;
+    //表示将要fork的子进程在ngx_process中的位置
     ngx_int_t  s;
 
+    //如果传递进来的类型大于0,则就是已经确定这个进程已经退出，我们就可以直接确定slot
     if (respawn >= 0) {
         s = respawn;
 
     } else {
+        //遍历ngx_processess，从而找到空闲的slot，从而等会fork完毕后,将子进程信息放入全局进程信息表的相应的slot
         for (s = 0; s < ngx_last_process; s++) {
             if (ngx_processes[s].pid == -1) {
                 break;
             }
         }
 
+        //到达最大进程限制报错
         if (s == NGX_MAX_PROCESSES) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, 0,
                           "no more than %d processes can be spawned",
@@ -108,11 +112,11 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
         }
     }
 
-
+    //如果类型为NGX_PROCESS_DETACHED，则说明是热代码替换(热代码替换也是通过这个函数进行处理的)，因此不需要新建socketpair
     if (respawn != NGX_PROCESS_DETACHED) {
 
         /* Solaris 9 still has no AF_LOCAL */
-
+        //创建socketpair，并设置相关属性
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, ngx_processes[s].channel) == -1)
         {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
@@ -124,7 +128,8 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
                        "channel %d:%d",
                        ngx_processes[s].channel[0],
                        ngx_processes[s].channel[1]);
-
+        
+        //设置非阻塞模式
         if (ngx_nonblocking(ngx_processes[s].channel[0]) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           ngx_nonblocking_n " failed while spawning \"%s\"",
@@ -141,6 +146,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
             return NGX_INVALID_PID;
         }
 
+        //打开异步模式
         on = 1;
         if (ioctl(ngx_processes[s].channel[0], FIOASYNC, &on) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
@@ -149,6 +155,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
             return NGX_INVALID_PID;
         }
 
+        //设置异步IO的所有者
         if (fcntl(ngx_processes[s].channel[0], F_SETOWN, ngx_pid) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           "fcntl(F_SETOWN) failed while spawning \"%s\"", name);
@@ -156,6 +163,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
             return NGX_INVALID_PID;
         }
 
+        //当执行后关闭句柄
         if (fcntl(ngx_processes[s].channel[0], F_SETFD, FD_CLOEXEC) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           "fcntl(FD_CLOEXEC) failed while spawning \"%s\"",
@@ -172,6 +180,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
             return NGX_INVALID_PID;
         }
 
+        //设置当前子进程的句柄
         ngx_channel = ngx_processes[s].channel[1];
 
     } else {
@@ -179,6 +188,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
         ngx_processes[s].channel[1] = -1;
     }
 
+    //设置全局的ngx_process_slot
     ngx_process_slot = s;
 
 
@@ -194,6 +204,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
 
     case 0:
         ngx_pid = ngx_getpid();
+        //在子进程中执行传递进来的函数
         proc(cycle, data);
         break;
 
@@ -299,7 +310,8 @@ ngx_init_signals(ngx_log_t *log)
     return NGX_OK;
 }
 
-
+//在nginx中，worker和master的交互，是通过流管道以及信号。
+//而master与外部的交互是通过信号来进行的,这个函数就是master处理信号的程序。
 void
 ngx_signal_handler(int signo)
 {
@@ -311,7 +323,8 @@ ngx_signal_handler(int signo)
     ignore = 0;
 
     err = ngx_errno;
-
+    
+    //得到当前的信号
     for (sig = signals; sig->signo != 0; sig++) {
         if (sig->signo == signo) {
             break;
@@ -322,23 +335,27 @@ ngx_signal_handler(int signo)
 
     action = "";
 
+    //这里ngx_process在master和worker中赋值不同
     switch (ngx_process) {
 
     case NGX_PROCESS_MASTER:
     case NGX_PROCESS_SINGLE:
         switch (signo) {
 
+        //quit信号
         case ngx_signal_value(NGX_SHUTDOWN_SIGNAL):
             ngx_quit = 1;
             action = ", shutting down";
             break;
 
+        //终止信号
         case ngx_signal_value(NGX_TERMINATE_SIGNAL):
         case SIGINT:
             ngx_terminate = 1;
             action = ", exiting";
             break;
 
+        //winch信号，停止接受accept
         case ngx_signal_value(NGX_NOACCEPT_SIGNAL):
             if (ngx_daemonized) {
                 ngx_noaccept = 1;
@@ -346,16 +363,19 @@ ngx_signal_handler(int signo)
             }
             break;
 
+        //sighup信号用来reconfig 
         case ngx_signal_value(NGX_RECONFIGURE_SIGNAL):
             ngx_reconfigure = 1;
             action = ", reconfiguring";
             break;
 
+        //用户信号，用来reopen
         case ngx_signal_value(NGX_REOPEN_SIGNAL):
             ngx_reopen = 1;
             action = ", reopening logs";
             break;
 
+        //热代码替换
         case ngx_signal_value(NGX_CHANGEBIN_SIGNAL):
             if (getppid() > 1 || ngx_new_binary > 0) {
 
@@ -365,12 +385,19 @@ ngx_signal_handler(int signo)
                  * is still running.  Or ignore the signal in the old binary's
                  * process if the new binary's process is already running.
                  */
-
+                /* 这里给出了详细的注释，更通俗一点来讲，就是说，进程现在是一个 
+                * master(新的master进程)，但是当他的父进程old master还在运行的话， 
+                * 这时收到了USR2信号，我们就忽略它，不然就成了新master里又要生成 
+                * master。。。另外一种情况就是，old master已经开始了生成新master的过程 
+                * 中，这时如果又有USR2信号到来，那么也要忽略掉。。。(不知道够不够通俗=.=) 
+                参考文档：http://blog.csdn.net/dingyujie/article/details/7192144
+                */
                 action = ", ignoring";
                 ignore = 1;
                 break;
             }
 
+            //正常情况下，需要热代码替换，设置标志位
             ngx_change_binary = 1;
             action = ", changing binary";
             break;
@@ -390,6 +417,7 @@ ngx_signal_handler(int signo)
 
         break;
 
+    //worker的信号处理
     case NGX_PROCESS_WORKER:
     case NGX_PROCESS_HELPER:
         switch (signo) {
@@ -435,6 +463,7 @@ ngx_signal_handler(int signo)
                       "before either old or new binary's process");
     }
 
+    //最终如果信号是sigchld，我们收割僵尸进程(用waitpid)
     if (signo == SIGCHLD) {
         ngx_process_get_status();
     }
