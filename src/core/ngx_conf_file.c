@@ -99,6 +99,11 @@ ngx_conf_param(ngx_conf_t *cf)
 }
 
 
+//这个函数的详细解析
+//请参看:http://www.pagefault.info/?p=188  nginx的启动流程分析(一)
+//			http://www.pagefault.info/?p=368
+//第二个参数可以为空的，如果为空，则说明将要解析的是block中的内容或者param
+
 char *
 ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
 {
@@ -382,14 +387,19 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
             /* set up the directive's configuration context */
 
             conf = NULL;
+			
+			//最核心的地方，
 
             if (cmd->type & NGX_DIRECT_CONF) {
+				//我们还记得最开始ctx是包含了所有core模块的conf(create_conf回调),因此这里取出对应的模块conf.
                 conf = ((void **) cf->ctx)[ngx_modules[i]->index];
 
             } else if (cmd->type & NGX_MAIN_CONF) {
+            	//如果不是DIRECT_CONF并且是MAIN，则说明我们需要在配置中创建自己模块的上下文(也就是需要进入二级模块)
                 conf = &(((void **) cf->ctx)[ngx_modules[i]->index]);
 
             } else if (cf->ctx) {
+            	//否则进入二级模块处理
                 confp = *(void **) ((char *) cf->ctx + cmd->conf);
 
                 if (confp) {

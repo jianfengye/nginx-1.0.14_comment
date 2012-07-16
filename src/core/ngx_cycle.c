@@ -238,7 +238,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
                 ngx_destroy_pool(pool);
                 return NULL;
             }
-            //保存config
+            //保存config，这里看到conf_ctx里面就是放对应模块的main conf.
             cycle->conf_ctx[ngx_modules[i]->index] = rv;
         }
     }
@@ -266,7 +266,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     conf.cycle = cycle;
     conf.pool = pool;
     conf.log = log;
-    conf.module_type = NGX_CORE_MODULE;
+    conf.module_type = NGX_CORE_MODULE;//注意，一开始命令的类型就是MAIN，并且模块类型是core。
     conf.cmd_type = NGX_MAIN_CONF;
 
 #if 0
@@ -292,7 +292,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
                        cycle->conf_file.data);
     }
 
-    //初始化core module的config
+    //当配置文件解析完毕后，就初始化core module的config
     for (i = 0; ngx_modules[i]; i++) {
         if (ngx_modules[i]->type != NGX_CORE_MODULE) {
             continue;

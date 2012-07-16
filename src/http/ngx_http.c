@@ -134,6 +134,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
+	//最核心的地方，可以看到修改了传递进来的conf
     *(ngx_http_conf_ctx_t **) conf = ctx;
 
 
@@ -153,6 +154,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     /* the http main_conf context, it is the same in the all http contexts */
     
     //开始初始化，可以看到默认会分配max个config 
+    //创建HTTP对应的conf，因为每个级别(main/ser/loc)都会包含模块的conf
     ctx->main_conf = ngx_pcalloc(cf->pool,
                                  sizeof(void *) * ngx_http_max_module);
     if (ctx->main_conf == NULL) {
@@ -222,7 +224,9 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
     }
 
+	//保存当前使用的cf，因为我们只是在解析HTTP时需要改变当前的cf
     pcf = *cf;
+	//保存当前模块的上下文
     cf->ctx = ctx;
 
     for (m = 0; ngx_modules[m]; m++) {
@@ -242,9 +246,10 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     /* parse inside the http{} block */
 
+	//设置模块类型和命令类型
     cf->module_type = NGX_HTTP_MODULE;
     cf->cmd_type = NGX_HTTP_MAIN_CONF;
-    //继续parse config
+    //继续parse config,这里注意传递进去的文件名是空
     rv = ngx_conf_parse(cf, NULL);
 
     if (rv != NGX_CONF_OK) {
@@ -337,6 +342,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
      * and in postconfiguration process
      */
 
+	//恢复cf
     *cf = pcf;
 
 
