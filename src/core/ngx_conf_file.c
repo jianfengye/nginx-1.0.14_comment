@@ -170,6 +170,8 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
 
 
     for ( ;; ) {
+		//读入一个token，一般是一行
+		//读到的配置参数放到: (ngx_str_t*)(*((*cf).args)).elts
         rc = ngx_conf_read_token(cf);
 
         /*
@@ -306,7 +308,8 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
         if (cmd == NULL) {
             continue;
         }
-        
+
+		//每个模块都有一个command数组，参考:ngx_http_browser_commands 或ngx_http_commands 或其它ngx_command_t变量定义
         //遍历模块的command，比较名字，然后调用回调函数set
         for ( /* void */ ; cmd->name.len; cmd++) {
 
@@ -678,11 +681,12 @@ ngx_conf_read_token(ngx_conf_t *cf)
             } else if (ch == ' ' || ch == '\t' || ch == CR || ch == LF
                        || ch == ';' || ch == '{')
             {
+            	//空格、TAB、换行、分号，大括号等
                 last_space = 1;
                 found = 1;
             }
 
-            if (found) {
+            if (found) {//找到了一个字符串
                 word = ngx_array_push(cf->args);
                 if (word == NULL) {
                     return NGX_ERROR;
@@ -693,6 +697,9 @@ ngx_conf_read_token(ngx_conf_t *cf)
                     return NGX_ERROR;
                 }
 
+				//没有直接拷贝，而是逐个字符读入，并做了转义字符的解析
+				//在程序启动阶段做的，性能不是最最重要的，而是配置文件的灵活性
+				//解析完命令后，会在字符串结尾加'\0'结尾符
                 for (dst = word->data, src = start, len = 0;
                      src < b->pos - 1;
                      len++)

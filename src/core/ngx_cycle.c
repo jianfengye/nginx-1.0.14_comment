@@ -47,7 +47,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     ngx_uint_t           i, n;
     ngx_log_t           *log;
     ngx_time_t          *tp;
-    ngx_conf_t           conf;
+    ngx_conf_t           conf;//与nginx.conf配置文件相关的一个变量，配置文件的解析都是围绕这个变量进行
     ngx_pool_t          *pool;
     ngx_cycle_t         *cycle, **old;
     ngx_shm_zone_t      *shm_zone, *oshm_zone;

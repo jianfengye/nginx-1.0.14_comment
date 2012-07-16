@@ -111,7 +111,7 @@ struct ngx_open_file_s {
 
 struct ngx_module_s {
     ngx_uint_t            ctx_index;    //分类模块计数器
-    ngx_uint_t            index;        //模块计数器
+    ngx_uint_t            index;        //模块id，标识某个模块在全局模块数组中的下标
 
     ngx_uint_t            spare0;
     ngx_uint_t            spare1;

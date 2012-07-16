@@ -277,6 +277,7 @@ main(int argc, char *const *argv)
     ngx_regex_init();
 #endif
 
+	//master pid
     ngx_pid = ngx_getpid();
 
     log = ngx_log_init(ngx_prefix);
