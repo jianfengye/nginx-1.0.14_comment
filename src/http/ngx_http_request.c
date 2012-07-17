@@ -203,17 +203,17 @@ ngx_http_init_connection(ngx_connection_t *c)
     c->log_error = NGX_ERROR_INFO;
 
     rev = c->read;
-    rev->handler = ngx_http_init_request;
+    rev->handler = ngx_http_init_request;//设置读handler
     c->write->handler = ngx_http_empty_handler;
 
 #if (NGX_STAT_STUB)
     (void) ngx_atomic_fetch_add(ngx_stat_reading, 1);
 #endif
 
-    if (rev->ready) {
+    if (rev->ready) {//如果接收准备好了，则直接调用ngx_http_init_request
         /* the deferred accept(), rtsig, aio, iocp */
 
-        if (ngx_use_accept_mutex) {
+        if (ngx_use_accept_mutex) {//如果使用了mutex锁，则post 这个event，然后返回。
             ngx_post_event(rev, &ngx_posted_events);
             return;
         }
@@ -222,8 +222,10 @@ ngx_http_init_connection(ngx_connection_t *c)
         return;
     }
 
+	//添加定时器
     ngx_add_timer(rev, c->listening->post_accept_timeout);
 
+	//将事件挂载到事件处理器
     if (ngx_handle_read_event(rev, 0) != NGX_OK) {
 #if (NGX_STAT_STUB)
         (void) ngx_atomic_fetch_add(ngx_stat_reading, -1);
