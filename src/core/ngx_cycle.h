@@ -98,7 +98,7 @@ typedef struct {
      ngx_str_t                lock_file;
 
      ngx_str_t                pid;
-     ngx_str_t                oldpid;
+     ngx_str_t                oldpid;				/* “‘'.oldbin' Ω·Œ≤ */
 
      ngx_array_t              env;
      char                   **environment;
