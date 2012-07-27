@@ -138,7 +138,7 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
     //启动worker,这时已经有了worker进程
     ngx_start_worker_processes(cycle, ccf->worker_processes,            
                                NGX_PROCESS_RESPAWN);
-    ngx_start_cache_manager_processes(cycle, 0);
+    ngx_start_cache_manager_processes(cycle, 0);  //创建有关cache的子进程
 
     ngx_new_binary = 0;
     delay = 0;
@@ -173,8 +173,8 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
 
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "sigsuspend");
 
-        //延时，等待定时器
-        sigsuspend(&set);
+        //延时，等待信号
+        sigsuspend(&set);  //调用这个将master进程挂起来
 
         ngx_time_update();
 

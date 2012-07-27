@@ -323,7 +323,7 @@ main(int argc, char *const *argv)
     if (ngx_crc32_table_init() != NGX_OK) {
         return 1;
     }
-     // 继承sockets
+     // 继承sockets,继承来的socket将会放到init_cycle的listening数组
     if (ngx_add_inherited_sockets(&init_cycle) != NGX_OK) {
         return 1;
     }
@@ -333,7 +333,7 @@ main(int argc, char *const *argv)
         ngx_modules[i]->index = ngx_max_module++;
     }
 
-    // 对ngx_cycle结构进行初始化
+    // 对ngx_cycle结构进行初始化,这里是nginx启动核心之处！
     cycle = ngx_init_cycle(&init_cycle);
     if (cycle == NULL) {
         if (ngx_test_config) {

@@ -77,13 +77,13 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     }
     pool->log = log;
 
-    //分配内存，并把内存池、日志、旧信息以及路径进行了设置  
+    //分配内存，并把内存池、日志、旧信息以及路径进行了设置。这两段代码所的是创建一个内存池，然后在内存池上为cycle变量分配一个存储空间。
     cycle = ngx_pcalloc(pool, sizeof(ngx_cycle_t));
     if (cycle == NULL) {
         ngx_destroy_pool(pool);
         return NULL;
     }
-
+    
     cycle->pool = pool;
     cycle->log = log;
     cycle->new_log.log_level = NGX_LOG_ERR;
@@ -136,7 +136,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     cycle->pathes.size = sizeof(ngx_path_t *);
     cycle->pathes.nalloc = n;
     cycle->pathes.pool = pool;
-
+    // 每个打开的文件都会放到cycle中的open_files中。每个共享内存段都会放到shared_memory链表中
     //如果原来结构中有文件，那么直接统计原来打开的文件，否则默认20  
     if (old_cycle->open_files.part.nelts) {
         n = old_cycle->open_files.part.nelts;
@@ -147,7 +147,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     } else {
         n = 20;
     }
-
+    
     //根据数量初始化，初始化open_files
     if (ngx_list_init(&cycle->open_files, pool, n, sizeof(ngx_open_file_t))
         != NGX_OK)
@@ -193,7 +193,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     ngx_queue_init(&cycle->reusable_connections_queue);
 
-    //创建所有模块配置的指针
+    //创建所有模块配置的指针, 这里的ngx_max_module在nginx.c中计算过了
     cycle->conf_ctx = ngx_pcalloc(pool, ngx_max_module * sizeof(void *));
     if (cycle->conf_ctx == NULL) {
         ngx_destroy_pool(pool);
@@ -221,11 +221,11 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     ngx_strlow(cycle->hostname.data, (u_char *) hostname, cycle->hostname.len); //将主机名变为消息，所以这里主机名是不分大小写的
 
     //调用核心模块的配置创建函数， cycle->conf_ctx 中对应的指针指向创建的配置 
-    //创建所有core module的configure.它通过调用每个core module的create_conf方法，来创建对应的conf，
+    //创建所有core module的configure.它通过调用每个core module的ngx_xxx_module_create_conf方法，来创建对应的conf，
     //然后将这个conf对象保存在全局的conf_ctx中 
     for (i = 0; ngx_modules[i]; i++) {
         if (ngx_modules[i]->type != NGX_CORE_MODULE) {
-            continue;
+            continue; //这里只对核心模块进行处理，核心模块就是ngx_core_module，ngx_errlog_module，ngx_events_module和ngx_http_module，实际上只有ngx_core_module_create_conf
         }
         
         //得到core modules
@@ -301,7 +301,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
         module = ngx_modules[i]->ctx;
 
-        //调用init_conf 
+        //调用ngx_xxx_module_init_conf
         if (module->init_conf) {
             if (module->init_conf(cycle, cycle->conf_ctx[ngx_modules[i]->index])
                 == NGX_CONF_ERROR)
@@ -369,7 +369,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     part = &cycle->open_files.part;
     file = part->elts;
-
+    // 打开所有文件，这时候file里面不仅有存文件路径，而且存储了文件描述符等信息。
     for (i = 0; /* void */ ; i++) {
 
         if (i >= part->nelts) {
@@ -589,7 +589,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         }
     }
 
-    //listen socket的初始化,创建并bind等操作
+    //listen socket的初始化,创建并bind等操作， 打开所有的监听套接口（依次进行socket,bind,listen）
     if (ngx_open_listening_sockets(cycle) != NGX_OK) {
         goto failed;
     }
@@ -993,7 +993,7 @@ ngx_create_pidfile(ngx_str_t *name, ngx_log_t *log)
     ngx_file_t  file;
     u_char      pid[NGX_INT64_LEN + 2];
 
-    if (ngx_process > NGX_PROCESS_MASTER) {
+    if (ngx_process > NGX_PROCESS_MASTER) { //如果不是master进程，就不会创建pid文件
         return NGX_OK;
     }
 
