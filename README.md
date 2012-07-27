@@ -40,4 +40,11 @@ http://www.pagefault.info/?p=201&cpage=1
 走一遍
 
 
-3 待续...
+3 没有待续了，读代码
+
+
+ChangeList:
+
+2012/7/27
+
+从main函数开始读起，增加一些注释
