@@ -429,11 +429,11 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     void              ***cf;
     u_char              *shared;
     size_t               size, cl;
-    ngx_shm_t            shm;
+    ngx_shm_t            shm; //nginx多进程间的共享内存
     ngx_time_t          *tp;
     ngx_core_conf_t     *ccf;
     ngx_event_conf_t    *ecf;
-
+    // 获取使用的事件模块，如IOCP，epool
     cf = ngx_get_conf(cycle->conf_ctx, ngx_events_module);
 
     if (cf == NULL) {
@@ -441,16 +441,16 @@ ngx_event_module_init(ngx_cycle_t *cycle)
                       "no \"events\" section in configuration");
         return NGX_ERROR;
     }
-
+    // 获取使用的事件模块的配置
     ecf = (*cf)[ngx_event_core_module.ctx_index];
 
     if (!ngx_test_config && ngx_process <= NGX_PROCESS_MASTER) {
         ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0,
                       "using the \"%s\" event method", ecf->name);
     }
-
+    // 获取核心配置
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
-
+    // 设置时间精度
     ngx_timer_resolution = ccf->timer_resolution;
 
 #if !(NGX_WIN32)
@@ -463,7 +463,7 @@ ngx_event_module_init(ngx_cycle_t *cycle)
                       "getrlimit(RLIMIT_NOFILE) failed, ignored");
 
     } else {
-        if (ecf->connections > (ngx_uint_t) rlmt.rlim_cur
+        if (ecf->connections > (ngx_uint_t) rlmt.rlim_cur // 检查连接上否已经超过上限
             && (ccf->rlimit_nofile == NGX_CONF_UNSET
                 || ecf->connections > (ngx_uint_t) ccf->rlimit_nofile))
         {
@@ -479,7 +479,7 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     }
 #endif /* !(NGX_WIN32) */
 
-
+    // 检查master
     if (ccf->master == 0) {
         return NGX_OK;
     }
@@ -492,7 +492,7 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     /* cl should be equal or bigger than cache line size */
 
     cl = 128;
-
+    // 创建共享内存，用于accept mutex，connection counter和ngx_temp_number
     size = cl            /* ngx_accept_mutex */
            + cl          /* ngx_connection_counter */
            + cl;         /* ngx_temp_number */
@@ -512,7 +512,7 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     shm.name.len = sizeof("nginx_shared_zone");
     shm.name.data = (u_char *) "nginx_shared_zone";
     shm.log = cycle->log;
-
+    // 申请共享内存
     if (ngx_shm_alloc(&shm) != NGX_OK) {
         return NGX_ERROR;
     }
@@ -521,13 +521,13 @@ ngx_event_module_init(ngx_cycle_t *cycle)
 
     ngx_accept_mutex_ptr = (ngx_atomic_t *) shared;
     ngx_accept_mutex.spin = (ngx_uint_t) -1;
-
+    // 系统支持原子数据则使用原子数据实现accept mutex，否则使用文件上锁实现
     if (ngx_shmtx_create(&ngx_accept_mutex, shared, cycle->lock_file.data)
         != NGX_OK)
     {
         return NGX_ERROR;
     }
-
+    // ngx_connection_counter指到共享内存那
     ngx_connection_counter = (ngx_atomic_t *) (shared + 1 * cl);
 
     (void) ngx_atomic_cmp_set(ngx_connection_counter, 0, 1);
@@ -539,7 +539,7 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     ngx_temp_number = (ngx_atomic_t *) (shared + 2 * cl);
 
     tp = ngx_timeofday();
-
+    //根据当前时间和进程ID，获取一个随机数
     ngx_random_number = (tp->msec << 16) + ngx_pid;
 
 #if (NGX_STAT_STUB)

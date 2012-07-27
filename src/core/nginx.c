@@ -277,9 +277,9 @@ main(int argc, char *const *argv)
     ngx_regex_init();
 #endif
 
-	//master pid
+	//master pid， 获取当前进程ID
     ngx_pid = ngx_getpid();
-
+    // 初始化日志，如打开日志文件
     log = ngx_log_init(ngx_prefix);
     if (log == NULL) {
         return 1;
@@ -287,7 +287,7 @@ main(int argc, char *const *argv)
 
     /* STUB */
 #if (NGX_OPENSSL)
-    ngx_ssl_init(log);
+    ngx_ssl_init(log);  //是否开启了ssl，如果开启在这里进行初始化
 #endif
 
     /*
@@ -298,42 +298,42 @@ main(int argc, char *const *argv)
     ngx_memzero(&init_cycle, sizeof(ngx_cycle_t));
     init_cycle.log = log;
     ngx_cycle = &init_cycle;
-
+    // 为cycle创建一个1024B的内存池
     init_cycle.pool = ngx_create_pool(1024, log);
     if (init_cycle.pool == NULL) {
         return 1;
     }
-
+    // 保存参数到全局变量中
     if (ngx_save_argv(&init_cycle, argc, argv) != NGX_OK) {
         return 1;
     }
-
+    // 初始化init_cycle中的一些如: conf_file，prefix，conf_prefix等字段
     if (ngx_process_options(&init_cycle) != NGX_OK) {
         return 1;
     }
-
-    if (ngx_os_init(log) != NGX_OK) {
+    // 初始化系统相关变量，如内存页面大小ngx_pagesize,ngx_cacheline_size,最大连接数ngx_max_sockets等
+    if (ngx_os_init(log) != NGX_OK) {  // 这个ngx_os_init在不同操作系统调用不同的函数
         return 1;
     }
 
     /*
      * ngx_crc32_table_init() requires ngx_cacheline_size set in ngx_os_init()
      */
-
+    // 初始化CRC表，提高效率，以后就不用计算了，直接用
     if (ngx_crc32_table_init() != NGX_OK) {
         return 1;
     }
-
+     // 继承sockets
     if (ngx_add_inherited_sockets(&init_cycle) != NGX_OK) {
         return 1;
     }
-
+    // 计算模块个数，并且设置各个模块顺序（索引）
     ngx_max_module = 0;
-    for (i = 0; ngx_modules[i]; i++) {
+    for (i = 0; ngx_modules[i]; i++) {  // 这里面的ngx_modules会有非常多的模块，[ngx_core_module,ngx_errlog_module,ngx_conf_moduel]
         ngx_modules[i]->index = ngx_max_module++;
     }
 
-    //初始化上下文
+    // 对ngx_cycle结构进行初始化
     cycle = ngx_init_cycle(&init_cycle);
     if (cycle == NULL) {
         if (ngx_test_config) {
@@ -352,7 +352,7 @@ main(int argc, char *const *argv)
 
         return 0;
     }
-
+    // 检查是否有设置信号处理，如有，进入ngx_signal_process处理
     if (ngx_signal) {
         return ngx_signal_process(cycle, ngx_signal);
     }
@@ -386,7 +386,7 @@ main(int argc, char *const *argv)
     }
 
 #endif
-
+    // 创建进程记录文件
     if (ngx_create_pidfile(&ccf->pid, cycle->log) != NGX_OK) {
         return 1;
     }
@@ -410,10 +410,10 @@ main(int argc, char *const *argv)
     ngx_use_stderr = 0;
 
     if (ngx_process == NGX_PROCESS_SINGLE) {
-        ngx_single_process_cycle(cycle);
+        ngx_single_process_cycle(cycle);   //单进程
 
     } else {
-        ngx_master_process_cycle(cycle);    //master进程进入这个
+        ngx_master_process_cycle(cycle);    //多进程，master进程进入这个，这个函数在不同操作系统有不同实现。
     }
 
     return 0;
@@ -427,7 +427,7 @@ ngx_add_inherited_sockets(ngx_cycle_t *cycle)
     ngx_int_t         s;
     ngx_listening_t  *ls;
 
-    inherited = (u_char *) getenv(NGINX_VAR);
+    inherited = (u_char *) getenv(NGINX_VAR);  // 查看是否有设置NGINX这个环境变量
 
     if (inherited == NULL) {
         return NGX_OK;
@@ -825,7 +825,7 @@ ngx_save_argv(ngx_cycle_t *cycle, int argc, char *const *argv)
     ngx_argv[i] = NULL;
 
 #endif
-
+    // 返回系统环境目录，如win7下为：c:\ProgramData
     ngx_os_environ = environ;
 
     return NGX_OK;
@@ -908,7 +908,7 @@ ngx_process_options(ngx_cycle_t *cycle)
          p > cycle->conf_file.data;
          p--)
     {
-        if (ngx_path_separator(*p)) {
+        if (ngx_path_separator(*p)) {  // 将config_file路径按照分隔符“/”分割
             cycle->conf_prefix.len = p - ngx_cycle->conf_file.data + 1;
             cycle->conf_prefix.data = ngx_cycle->conf_file.data;
             break;
@@ -929,7 +929,7 @@ ngx_process_options(ngx_cycle_t *cycle)
 
 
 static void *
-ngx_core_module_create_conf(ngx_cycle_t *cycle)
+ngx_core_module_create_conf(ngx_cycle_t *cycle)  // 这是core模块对外的create_conf的钩子
 {
     ngx_core_conf_t  *ccf;
 
@@ -947,7 +947,7 @@ ngx_core_module_create_conf(ngx_cycle_t *cycle)
      *     ccf->cpu_affinity_n = 0;
      *     ccf->cpu_affinity = NULL;
      */
-
+    // 只是简单初始化，设置一些默认值
     ccf->daemon = NGX_CONF_UNSET;
     ccf->master = NGX_CONF_UNSET;
     ccf->timer_resolution = NGX_CONF_UNSET_MSEC;

@@ -84,11 +84,11 @@ ngx_time_update(void)
         return;
     }
 
-    ngx_gettimeofday(&tv);
+    ngx_gettimeofday(&tv); //获取时间，unix和window走的是不同函数，但是在这里统一被封装了
 
     sec = tv.tv_sec;
-    msec = tv.tv_usec / 1000;
-
+    msec = tv.tv_usec / 1000;   //从微秒usec中计算毫秒msec
+    // 获取毫妙精度的时间，可以看出nginx精确到毫秒
     ngx_current_msec = (ngx_msec_t) sec * 1000 + msec;
 
     tp = &cached_time[slot];
@@ -98,13 +98,13 @@ ngx_time_update(void)
         ngx_unlock(&ngx_time_lock);
         return;
     }
-
+    // 当cached_time数组保存的时间达到NGX_TIME_SLOTS上限的时候，从新开始把时间保存下来
     if (slot == NGX_TIME_SLOTS - 1) {
         slot = 0;
     } else {
         slot++;
     }
-
+    // 每调用ngx_time_update（）一次，保存一次时间
     tp = &cached_time[slot];
 
     tp->sec = sec;
@@ -112,7 +112,7 @@ ngx_time_update(void)
 
     ngx_gmtime(sec, &gmt);
 
-
+    // 把时间转为http格式的时间字符串,p0就设置为诸如“Fri, 27 Jul 2012 01:09:17 GMT”
     p0 = &cached_http_time[slot][0];
 
     (void) ngx_sprintf(p0, "%s, %02d %s %4d %02d:%02d:%02d GMT",
@@ -121,7 +121,7 @@ ngx_time_update(void)
                        gmt.ngx_tm_hour, gmt.ngx_tm_min, gmt.ngx_tm_sec);
 
 #if (NGX_HAVE_GETTIMEZONE)
-
+    // 这里是获取时区，unix和windows也是分开走的，这里的tm是进行时区修改后的值
     tp->gmtoff = ngx_gettimezone();
     ngx_gmtime(sec + tp->gmtoff * 60, &tm);
 
@@ -139,7 +139,7 @@ ngx_time_update(void)
 
 #endif
 
-
+    // p1存诸如“2012/07/27 09:09:17”
     p1 = &cached_err_log_time[slot][0];
 
     (void) ngx_sprintf(p1, "%4d/%02d/%02d %02d:%02d:%02d",
@@ -147,7 +147,7 @@ ngx_time_update(void)
                        tm.ngx_tm_mday, tm.ngx_tm_hour,
                        tm.ngx_tm_min, tm.ngx_tm_sec);
 
-
+    // p2存储诸如“27/Jul/2012:09:09:17 +0800”
     p2 = &cached_http_log_time[slot][0];
 
     (void) ngx_sprintf(p2, "%02d/%s/%d:%02d:%02d:%02d %c%02d%02d",
@@ -156,7 +156,7 @@ ngx_time_update(void)
                        tm.ngx_tm_min, tm.ngx_tm_sec,
                        tp->gmtoff < 0 ? '-' : '+',
                        ngx_abs(tp->gmtoff / 60), ngx_abs(tp->gmtoff % 60));
-
+    // P3存储诸如“2012-07-27T09:09:17+08:00”
     p3 = &cached_http_log_iso8601[slot][0];
 
     (void) ngx_sprintf(p3, "%4d-%02d-%02dT%02d:%02d:%02d%c%02d:%02d",
@@ -168,14 +168,14 @@ ngx_time_update(void)
 
 
     ngx_memory_barrier();
-
+    // 调用nginx_time_update()目的就是更新这几个时间变量
     ngx_cached_time = tp;
     ngx_cached_http_time.data = p0;
-    ngx_cached_err_log_time.data = p1;
-    ngx_cached_http_log_time.data = p2;
-    ngx_cached_http_log_iso8601.data = p3;
+    ngx_cached_err_log_time.data = p1;  //error log中使用的时间，如“2012/07/07 18:56:16 [error] 28451#0: *8941 open() ”
+    ngx_cached_http_log_time.data = p2;  //access log 中使用的时间，如“192.168.100.251 - - [07/Jul/2012:18:56:17 +0800] "GET /rails_”
+    ngx_cached_http_log_iso8601.data = p3;  
 
-    ngx_unlock(&ngx_time_lock);
+    ngx_unlock(&ngx_time_lock); // 解锁，这里对nginx的时间进行更新使用了ngx_time_lock锁。
 }
 
 

@@ -87,10 +87,10 @@ int  ngx_ssl_session_cache_index;
 ngx_int_t
 ngx_ssl_init(ngx_log_t *log)
 {
-    OPENSSL_config(NULL);
+    OPENSSL_config(NULL);  //系统函数，打开SSL配置，具体参考：http://www.openssl.org/docs/crypto/OPENSSL_config.html
 
-    SSL_library_init();
-    SSL_load_error_strings();
+    SSL_library_init(); //具体参考http://linux.die.net/man/3/ssl_library_init
+    SSL_load_error_strings(); //具体参考 linxu.die.net
 
     OpenSSL_add_all_algorithms();
 

@@ -87,7 +87,7 @@ ngx_strlchr(u_char *p, u_char *last, u_char c)
  * while ZeroMemory() and bzero() are the calls.
  * icc7 may also inline several mov's of a zeroed register for small blocks.
  */
-#define ngx_memzero(buf, n)       (void) memset(buf, 0, n)
+#define ngx_memzero(buf, n)       (void) memset(buf, 0, n)  //ngx_memzero使用的是memset原型，memset使用汇编进行编写
 #define ngx_memset(buf, c, n)     (void) memset(buf, c, n)
 
 

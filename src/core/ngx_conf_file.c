@@ -103,7 +103,6 @@ ngx_conf_param(ngx_conf_t *cf)
 //请参看:http://www.pagefault.info/?p=188  nginx的启动流程分析(一)
 //			http://www.pagefault.info/?p=368
 //第二个参数可以为空的，如果为空，则说明将要解析的是block中的内容或者param
-
 char *
 ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
 {
@@ -126,7 +125,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
     if (filename) {
 
         /* open configuration file */
-
+        // 打开配置文件
         fd = ngx_open_file(filename->data, NGX_FILE_RDONLY, NGX_FILE_OPEN, 0);
         if (fd == NGX_INVALID_FILE) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, ngx_errno,
@@ -138,7 +137,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
         prev = cf->conf_file;
 
         cf->conf_file = &conf_file;
-
+        // 获取文件信息
         if (ngx_fd_info(fd, &cf->conf_file->file.info) == -1) {
             ngx_log_error(NGX_LOG_EMERG, cf->log, ngx_errno,
                           ngx_fd_info_n " \"%s\" failed", filename->data);
@@ -155,7 +154,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
         buf.last = buf.start;
         buf.end = buf.last + NGX_CONF_BUFFER;
         buf.temporary = 1;
-
+        // 保存配置文件的基本信息
         cf->conf_file->file.fd = fd;
         cf->conf_file->file.name.len = filename->len;
         cf->conf_file->file.name.data = filename->data;
@@ -173,7 +172,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
         type = parse_param;
     }
 
-
+    //循环遍历每一行配置文件，读取配置内容
     for ( ;; ) {
 		//读入一个token，一般是一行
 		//读到的配置参数放到: (ngx_str_t*)(*((*cf).args)).elts
@@ -249,7 +248,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
             goto failed;
         }
 
-        //否则进入一般处理
+        //否则进入一般处理， 调用ngx_conf_handler对当前的token进行处理
         rc = ngx_conf_handler(cf, rc);
 
         if (rc == NGX_ERROR) {
@@ -294,11 +293,11 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
     ngx_uint_t      i, multi;
     ngx_str_t      *name;
     ngx_command_t  *cmd;
-
+    // 获取token这个关键字命令的名字
     name = cf->args->elts;
 
     multi = 0;
-
+    // 遍历每个模块，检查token（就是上面的name，比如这里的name可能是worker_process）是在哪个模块中被定义，并且进行处理
     for (i = 0; ngx_modules[i]; i++) {
 
         /* look up the directive in the appropriate modules */
@@ -317,7 +316,7 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
 		//每个模块都有一个command数组，参考:ngx_http_browser_commands 或ngx_http_commands 或其它ngx_command_t变量定义
         //遍历模块的command，比较名字，然后调用回调函数set
         for ( /* void */ ; cmd->name.len; cmd++) {
-
+            // 这里先比较name（配置文件中的命令）和cmd->name（模块中定义的命令）的长度，再比较内容
             if (name->len != cmd->name.len) {
                 continue;
             }
@@ -407,7 +406,7 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
                 }
             }
 
-            //调用set
+            //调用对应命令的处理函数，比如worker_process这命令在nginx.c中对应的处理函数是ngx_conf_set_num_slot，这里的set就是ngx_conf_set_num_slot
             rv = cmd->set(cf, cmd, conf);
 
             if (rv == NGX_CONF_OK) {
@@ -475,7 +474,7 @@ ngx_conf_read_token(ngx_conf_t *cf)
     start_line = cf->conf_file->line;
 
     file_size = ngx_file_size(&cf->conf_file->file.info);
-
+    // 循环解析配置文件，逐字符
     for ( ;; ) {
 
         if (b->pos >= b->last) {
@@ -533,7 +532,7 @@ ngx_conf_read_token(ngx_conf_t *cf)
             if (size > b->end - (b->start + len)) {
                 size = b->end - (b->start + len);
             }
-
+            //读出配置文件内容到缓冲区b中
             n = ngx_read_file(&cf->conf_file->file, b->start + len, size,
                               cf->conf_file->file.offset);
 
@@ -555,15 +554,15 @@ ngx_conf_read_token(ngx_conf_t *cf)
         }
 
         ch = *b->pos++;
-
+        //检查是否到行尾
         if (ch == LF) {
             cf->conf_file->line++;
-
+            // 如果前面一行是注释行，那么现在开始设置新行的标志为：非注释行
             if (sharp_comment) {
                 sharp_comment = 0;
             }
         }
-
+        //注释行的话，跳过
         if (sharp_comment) {
             continue;
         }
@@ -1200,7 +1199,7 @@ ngx_conf_set_keyval_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-
+// 对worker的数量进行设置
 char *
 ngx_conf_set_num_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1218,7 +1217,7 @@ ngx_conf_set_num_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     value = cf->args->elts;
-    *np = ngx_atoi(value[1].data, value[1].len);
+    *np = ngx_atoi(value[1].data, value[1].len); //把value后面的buffer强制转为一个str
     if (*np == NGX_ERROR) {
         return "invalid number";
     }

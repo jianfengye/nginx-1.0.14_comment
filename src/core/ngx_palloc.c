@@ -18,7 +18,7 @@ ngx_create_pool(size_t size, ngx_log_t *log)
 {
     ngx_pool_t  *p;
 
-    p = ngx_memalign(NGX_POOL_ALIGNMENT, size, log);
+    p = ngx_memalign(NGX_POOL_ALIGNMENT, size, log);  // 分配内存函数，uinx,windows分开走
     if (p == NULL) {
         return NULL;
     }
@@ -124,7 +124,7 @@ ngx_palloc(ngx_pool_t *pool, size_t size)
         p = pool->current;
 
         do {
-            m = ngx_align_ptr(p->d.last, NGX_ALIGNMENT);
+            m = ngx_align_ptr(p->d.last, NGX_ALIGNMENT); // 对齐内存指针，加快存取速度
 
             if ((size_t) (p->d.end - m) >= size) {
                 p->d.last = m + size;

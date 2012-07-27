@@ -62,15 +62,15 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     /* force localtime update with a new timezone */
 
-    tp = ngx_timeofday();
+    tp = ngx_timeofday();  // 这个宏就是取出之前的ngx_cache_time
     tp->sec = 0;
 
-    ngx_time_update();
+    ngx_time_update(); //这里又进行了一次time更新
 
 
     log = old_cycle->log;
 
-    //创建内存池，并把日志和它关联  
+    //创建内存池，并把日志和它关联 ，创建固定大小的内存池：16384
     pool = ngx_create_pool(NGX_CYCLE_POOL_SIZE, log);
     if (pool == NULL) {
         return NULL;
@@ -123,7 +123,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
-    //文件路径分配空间并初始化  
+    //文件路径分配空间并初始化 ，如果old_cycle默认没有指定，则大小为10
     n = old_cycle->pathes.nelts ? old_cycle->pathes.nelts : 10;
 
     cycle->pathes.elts = ngx_pcalloc(pool, n * sizeof(ngx_path_t *));
@@ -148,7 +148,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         n = 20;
     }
 
-    //根据数量初始化  
+    //根据数量初始化，初始化open_files
     if (ngx_list_init(&cycle->open_files, pool, n, sizeof(ngx_open_file_t))
         != NGX_OK)
     {
@@ -168,7 +168,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         n = 1;
     }
 
-    //根据数量初始化  
+    //根据数量初始化，初始化shared_memory
     if (ngx_list_init(&cycle->shared_memory, pool, n, sizeof(ngx_shm_zone_t))
         != NGX_OK)
     {
@@ -200,7 +200,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
-    //设置 host  
+    //获取主机名，设置 hostname，这个时候hostname就是机器名，比如“yejianfeng-D1”
     if (gethostname(hostname, NGX_MAXHOSTNAMELEN) == -1) {
         ngx_log_error(NGX_LOG_EMERG, log, ngx_errno, "gethostname() failed");
         ngx_destroy_pool(pool);
@@ -218,7 +218,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
-    ngx_strlow(cycle->hostname.data, (u_char *) hostname, cycle->hostname.len);
+    ngx_strlow(cycle->hostname.data, (u_char *) hostname, cycle->hostname.len); //将主机名变为消息，所以这里主机名是不分大小写的
 
     //调用核心模块的配置创建函数， cycle->conf_ctx 中对应的指针指向创建的配置 
     //创建所有core module的configure.它通过调用每个core module的create_conf方法，来创建对应的conf，
@@ -233,7 +233,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
         //如果create_conf存在，则直接创建config
         if (module->create_conf) {
-            rv = module->create_conf(cycle);
+            rv = module->create_conf(cycle); //对每个模块调用模块内部的钩子ngx_xxx_module_create_conf，当然第一个模块是core
             if (rv == NULL) {
                 ngx_destroy_pool(pool);
                 return NULL;
@@ -280,7 +280,8 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     }
 
     //开始解析配置文件了，解析配置文件它会一行行读取，然后如果遇到指令
-    //则会查找到对应的ngx_command_t对象，然后执行对应的回调set方法。这里所有动作都在ngx_conf_parse这个函数中进行.
+    //则会查找到对应的ngx_command_t对象，然后执行对应的回调set方法。这里所有动作都在ngx_conf_parse这个函数中进行. 
+    //这函数是立即模块的核心函数，对配置文件边解析边处理
     if (ngx_conf_parse(&conf, &cycle->conf_file) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
@@ -351,7 +352,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         goto failed;
     }
 
-
+    // 创建client_body_temp，proxy_temp，fastcgi_temp，uwsgi_temp，scgi_temp这几个目录
     if (ngx_create_pathes(cycle, ccf->user) != NGX_OK) {
         goto failed;
     }
@@ -610,7 +611,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     pool->log = cycle->log;
 
-    //调用init_module对所有的模块进行初始化
+    //调用init_module对所有的模块进行初始化，调用所有模块的ngx_XXX_module_init钩子，比如ngx_event_module_init
     for (i = 0; ngx_modules[i]; i++) {
         if (ngx_modules[i]->init_module) {
             if (ngx_modules[i]->init_module(cycle) != NGX_OK) {
@@ -622,7 +623,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
 
     /* close and delete stuff that lefts from an old cycle */
-
+    // 关闭或删除残留在old_cycle中的资源
     /* free the unnecessary shared memory */
 
     opart = &old_cycle->shared_memory.part;
