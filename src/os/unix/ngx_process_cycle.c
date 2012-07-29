@@ -809,11 +809,11 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
 
     for ( ;; ) {
 
-        //ngx_exiting是当收到master的quit命令后，设置为1,然后等待其他资源退出
+        //ngx_exiting是当收到master的quit命令（SIGQUIT信号）后，设置为1,然后等待其他资源退出
         if (ngx_exiting) {
 
             c = cycle->connections;
-
+            // worker进程退出前，先处理完每个connection上已经发生的事件
             for (i = 0; i < cycle->connection_n; i++) {
 
                 /* THREAD: lock */
@@ -824,7 +824,7 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
                 }
             }
 
-            //定时器超时则退出worker
+            //定时器超时则退出worker; 处理完所有事件，worker进程退出
             if (ngx_event_timer_rbtree.root == ngx_event_timer_rbtree.sentinel)
             {
                 ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
@@ -834,17 +834,17 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
         }
 
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "worker cycle");
-
+        // 这里是worker进程处理事件的核心。
         ngx_process_events_and_timers(cycle);
 
-        //收到shutdown命令则worker直接退出 
+        //收到shutdown命令（SIGINT信号）则worker直接退出 
         if (ngx_terminate) {
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
 
             ngx_worker_process_exit(cycle);
         }
 
-        //收到quit命令
+        //收到quit命令（SIGQUIT信号）
         if (ngx_quit) {
             ngx_quit = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0,
@@ -858,7 +858,7 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
             }
         }
 
-        //收到master重新打开log的命令
+        //收到master重新打开log的命令，worker进程收到了SIGUSR1信号
         if (ngx_reopen) {
             ngx_reopen = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reopening logs");
@@ -1004,7 +1004,7 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_uint_t priority)
 
     for (i = 0; ngx_modules[i]; i++) {
         if (ngx_modules[i]->init_process) {
-            //进程初始化 
+            //进程初始化, 调用每个模块的init_process,用它做模块开发的时候，使用得挺少的 
             //这里要特别看的是event模块:
             //nginx的event模块包含一个init_process,也就是ngx_event_process_init(ngx_event.c).
             //这个函数就是nginx的驱动器，他初始化事件驱动器，连接池，定时器，以及挂在listen 句柄的回调函数
@@ -1014,27 +1014,27 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_uint_t priority)
             }
         }
     }
-
+    // 这里循环用户关闭其他worker进程的无用channel资源
     for (n = 0; n < ngx_last_process; n++) {
 
-        if (ngx_processes[n].pid == -1) {
+        if (ngx_processes[n].pid == -1) { //n位置的进程不存在，这里是预防性的代码
+            continue;
+        }
+        //ngx_process_slot是创建worker进程的时候，从master进程复制过来的，此处就是指本worker进程在数组中的索引位置
+        if (n == ngx_process_slot) {  
             continue;
         }
 
-        if (n == ngx_process_slot) {
+        if (ngx_processes[n].channel[1] == -1) { // channel不存在，跳过
             continue;
         }
-
-        if (ngx_processes[n].channel[1] == -1) {
-            continue;
-        }
-
+        // 创建worker进程时，会将master的资源复制过来，因此需要关闭无用的channel -- 其他worker进程的读端描述符
         if (close(ngx_processes[n].channel[1]) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           "close() channel failed");
         }
     }
-
+    // 关闭本worker进程的channel的写端描述符。
     if (close(ngx_processes[ngx_process_slot].channel[0]) == -1) {
         ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                       "close() channel failed");
@@ -1043,7 +1043,7 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_uint_t priority)
 #if 0
     ngx_last_process = 0;
 #endif
-
+    // 将channel放入nginx关心的集合中，同时关注channel上的读事件。
     if (ngx_add_channel_event(cycle, ngx_channel, NGX_READ_EVENT,
                               ngx_channel_handler)
         == NGX_ERROR)

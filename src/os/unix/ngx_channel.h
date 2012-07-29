@@ -13,12 +13,12 @@
 #include <ngx_core.h>
 #include <ngx_event.h>
 
-//封装了父子进程之间传递的消息
+//master和worker之间传递的指令。master和worker是单向的，只能master向worker传递指令
 typedef struct {
-     ngx_uint_t  command;       //对端将要做的命令
-     ngx_pid_t   pid;           //子进程ID
-     ngx_int_t   slot;          //在全局注册表中的位置
-     ngx_fd_t    fd;            //传递的fd
+     ngx_uint_t  command;       //worker要操作的指令
+     ngx_pid_t   pid;           //worker进程id
+     ngx_int_t   slot;          //worker进程在ngx_process中的索引
+     ngx_fd_t    fd;            //有可能用到的文件描述符
 } ngx_channel_t;
 
 

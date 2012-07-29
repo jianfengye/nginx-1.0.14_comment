@@ -441,14 +441,14 @@ ngx_event_module_init(ngx_cycle_t *cycle)
                       "no \"events\" section in configuration");
         return NGX_ERROR;
     }
-    // 获取使用的事件模块的配置
+    // 获取使用的事件模块ngx_event_core_module的配置
     ecf = (*cf)[ngx_event_core_module.ctx_index];
 
     if (!ngx_test_config && ngx_process <= NGX_PROCESS_MASTER) {
         ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0,
                       "using the \"%s\" event method", ecf->name);
     }
-    // 获取核心配置
+    // 获取ngx_core_module模块的配置
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
     // 设置时间精度
     ngx_timer_resolution = ccf->timer_resolution;
@@ -479,12 +479,12 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     }
 #endif /* !(NGX_WIN32) */
 
-    // 检查master
+    // 检查master进程是否关闭。如果master进程关闭了，就是单进程方式了。下面步骤是实现内存实现锁等，单进程不需要。
     if (ccf->master == 0) {
         return NGX_OK;
     }
-
-    if (ngx_accept_mutex_ptr) {
+    
+    if (ngx_accept_mutex_ptr) {  // 已经存在accept互斥体了，不需要再重复创建
         return NGX_OK;
     }
 
@@ -512,13 +512,13 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     shm.name.len = sizeof("nginx_shared_zone");
     shm.name.data = (u_char *) "nginx_shared_zone";
     shm.log = cycle->log;
-    // 申请共享内存
+    // 创建共享内存，共享内存的起始地址保存在shm.addr
     if (ngx_shm_alloc(&shm) != NGX_OK) {
         return NGX_ERROR;
     }
-
+    // 获得共享内存的起始地址
     shared = shm.addr;
-
+    // accept互斥体取得共享内存的第一段cl大小内存
     ngx_accept_mutex_ptr = (ngx_atomic_t *) shared;
     ngx_accept_mutex.spin = (ngx_uint_t) -1;
     // 系统支持原子数据则使用原子数据实现accept mutex，否则使用文件上锁实现
@@ -582,16 +582,16 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     ngx_core_conf_t     *ccf;
     ngx_event_conf_t    *ecf;
     ngx_event_module_t  *module;
-
+    // 获取相应模块的配置结构
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
     ecf = ngx_event_get_conf(cycle->conf_ctx, ngx_event_core_module);
 
-    //判断是否使用mutex锁，主要是为了控制负载均衡
+    // 判断是否使用mutex锁，主要是为了控制负载均衡。ccf->master主要确定下是否是master-worker模式。单进程模式就不需要进行下面操作了。
     if (ccf->master && ccf->worker_processes > 1 && ecf->accept_mutex) {
         //使用mutex控制进程的负载均衡
         ngx_use_accept_mutex = 1;
         ngx_accept_mutex_held = 0;
-        ngx_accept_mutex_delay = ecf->accept_mutex_delay;
+        ngx_accept_mutex_delay = ecf->accept_mutex_delay; // 抢互斥体失败后，下次再抢的间隔时间
 
     } else {
         ngx_use_accept_mutex = 0;
@@ -677,7 +677,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
 #endif
 
-    //创建连接池
+    //创建连接池。现在已经是在worker中了，所以每个worker都有自己的connection数组
     cycle->connections =
         ngx_alloc(sizeof(ngx_connection_t) * cycle->connection_n, cycle->log);
     if (cycle->connections == NULL) {
@@ -750,7 +750,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     /* for each listening socket */
     //下面这段初始化listen 事件 ，创建socket句柄，绑定事件回调，然后加入到事件驱动中
 
-    ls = cycle->listening.elts;
+    ls = cycle->listening.elts;  // 为每一个监听套接字从connection数组中分配一个连接，即一个slot
     //开始遍历listen 
     for (i = 0; i < cycle->listening.nelts; i++) {
         
@@ -820,7 +820,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
             }
 
         } else {
-            rev->handler = ngx_event_accept;
+            rev->handler = ngx_event_accept;  // 注册监听套接读事件的回调函数ngx_event_accept
 
             if (ngx_use_accept_mutex) {
                 continue;
@@ -847,7 +847,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
             }
 
         } else {
-            //加可读事件到事件处理
+            //加可读事件到事件处理，如果没有使用accept互斥体，那么就在此处将监听套接字放入
             if (ngx_add_event(rev, NGX_READ_EVENT, 0) == NGX_ERROR) {
                 return NGX_ERROR;
             }
@@ -915,7 +915,7 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         ngx_modules[i]->ctx_index = ngx_event_max_module++;
     }
-
+    // 为每个事件模块分配一个指针，用以保存相应配置结构的地址。
     ctx = ngx_pcalloc(cf->pool, sizeof(void *));
     if (ctx == NULL) {
         return NGX_CONF_ERROR;
@@ -927,7 +927,7 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     *(void **) conf = ctx;
-
+    // 循环调用每个事件模块的create_conf函数，创建配置结构
     for (i = 0; ngx_modules[i]; i++) {
         if (ngx_modules[i]->type != NGX_EVENT_MODULE) {
             continue;
@@ -947,14 +947,14 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     cf->ctx = ctx;
     cf->module_type = NGX_EVENT_MODULE;
     cf->cmd_type = NGX_EVENT_CONF;
-
+    // 完成配置文件中events{}这个block的解析，从而调用其下的所有的配置指令的回调函数
     rv = ngx_conf_parse(cf, NULL);
 
     *cf = pcf;
 
     if (rv != NGX_CONF_OK)
         return rv;
-
+    // 循环执行每个事件模块的init_conf函数，初始化配置结构
     for (i = 0; ngx_modules[i]; i++) {
         if (ngx_modules[i]->type != NGX_EVENT_MODULE) {
             continue;
