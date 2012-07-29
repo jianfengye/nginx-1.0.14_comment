@@ -276,7 +276,7 @@ ngx_pmemalign(ngx_pool_t *pool, size_t size, size_t alignment)
     return p;
 }
 
-//控制大块内存的释放
+//控制大块内存的释放。注意，这个函数只会释放大内存，不会释放其对应的头部结构，遗留下来的头部结构会做下一次申请大内存之用
 ngx_int_t
 ngx_pfree(ngx_pool_t *pool, void *p)
 {

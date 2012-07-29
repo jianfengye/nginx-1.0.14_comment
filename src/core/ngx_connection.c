@@ -736,7 +736,7 @@ ngx_get_connection(ngx_socket_t s, ngx_log_t *log)
 
         return NULL;
     }
-
+    // 移动free_connections指针到获取的c的下一个可用slot上
     ngx_cycle->free_connections = c->data;
     ngx_cycle->free_connection_n--;
 

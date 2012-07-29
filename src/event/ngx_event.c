@@ -218,9 +218,9 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
 
 #endif
     }
-
+    //是否使用accept互斥体。accept mutex的作用就是避免惊群，同时实现负载均衡
     if (ngx_use_accept_mutex) {
-        if (ngx_accept_disabled > 0) {
+        if (ngx_accept_disabled > 0) {  //大于0说明该进程接收的连接过多，放弃一次争抢accept mutex的机会
             ngx_accept_disabled--;
 
         } else {
@@ -229,11 +229,11 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
             }
 
             if (ngx_accept_mutex_held) {
-                flags |= NGX_POST_EVENTS;
+                flags |= NGX_POST_EVENTS;  //这个标志是将所有产生的事件放入到一个队列中。等释放锁以后再慢慢来处理事件。
 
             } else {
                 if (timer == NGX_TIMER_INFINITE
-                    || timer > ngx_accept_mutex_delay)
+                    || timer > ngx_accept_mutex_delay)  //设置最长延迟多久，再次去争抢锁
                 {
                     timer = ngx_accept_mutex_delay;
                 }
@@ -242,29 +242,29 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
     }
 
     delta = ngx_current_msec;
-
+    //epoll开始wait事件
     (void) ngx_process_events(cycle, timer, flags);
 
     delta = ngx_current_msec - delta;
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                    "timer delta: %M", delta);
-
+    //ngx_posted_accept_events暂存epoll从监听套接字接口wait到的accept事件
     if (ngx_posted_accept_events) {
         ngx_event_process_posted(cycle, &ngx_posted_accept_events);
     }
 
-    if (ngx_accept_mutex_held) {
+    if (ngx_accept_mutex_held) {    //所有accept事件处理完成了，如果拥有锁的话，赶紧释放了
         ngx_shmtx_unlock(&ngx_accept_mutex);
     }
-
+    //delta是上文对epoll wait事件的耗时统计，存在毫秒级的耗时就对所有事件的timer进行检查，
     if (delta) {
         ngx_event_expire_timers();
     }
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                    "posted events %p", ngx_posted_events);
-
+    //处理普通事件（连接上获得的读写事件）
     if (ngx_posted_events) {
         if (ngx_threaded) {
             ngx_wakeup_worker_thread(cycle);
@@ -571,7 +571,7 @@ ngx_timer_signal_handler(int signo)
 
 #endif
 
-
+// 这篇文章写得很清晰http://www.tbdata.org/archives/1245
 static ngx_int_t
 ngx_event_process_init(ngx_cycle_t *cycle)
 {
