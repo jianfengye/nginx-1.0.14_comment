@@ -3,9 +3,11 @@
 # Copyright (C) Igor Sysoev
 # Copyright (C) Nginx, Inc.
 
-
+# 设置参数变量
 . auto/options
+# 初始化
 . auto/init
+# 设置源码相关的环境变量
 . auto/sources
 
 test -d $NGX_OBJS || mkdir $NGX_OBJS
