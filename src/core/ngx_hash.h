@@ -12,20 +12,20 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-//²Î¿¼£º
+//å‚è€ƒï¼š
 //http://blog.csdn.net/livelylittlefish/article/details/6636229
-//hashÔªËØ½á¹¹ 
+//hashå…ƒç´ ç»“æ„ 
 typedef struct {
-    void             *value;    //value£¬¼´Ä³¸ökey¶ÔÓ¦µÄÖµ£¬¼´<key,value>ÖĞµÄvalue 
-    u_short           len;      //name³¤¶È
-    u_char            name[1];  //Ä³¸öÒªhashµÄÊı¾İ(ÔÚnginxÖĞ±íÏÖÎª×Ö·û´®)£¬¼´<key,value>ÖĞµÄkey
+    void             *value;    //valueï¼Œå³æŸä¸ªkeyå¯¹åº”çš„å€¼ï¼Œå³<key,value>ä¸­çš„value 
+    u_short           len;      //nameé•¿åº¦
+    u_char            name[1];  //æŸä¸ªè¦hashçš„æ•°æ®(åœ¨nginxä¸­è¡¨ç°ä¸ºå­—ç¬¦ä¸²)ï¼Œå³<key,value>ä¸­çš„key
 } ngx_hash_elt_t;
 
 
-//hash½á¹¹
+//hashç»“æ„
 typedef struct {
-    ngx_hash_elt_t  **buckets; //hashÍ°(ÓĞsize¸öÍ°) 
-    ngx_uint_t        size;    //hashÍ°¸öÊı
+    ngx_hash_elt_t  **buckets; //hashæ¡¶(æœ‰sizeä¸ªæ¡¶) 
+    ngx_uint_t        size;    //hashæ¡¶ä¸ªæ•°
 } ngx_hash_t;
 
 
@@ -36,9 +36,9 @@ typedef struct {
 
 
 typedef struct {
-    ngx_str_t         key;      //key£¬ÎªnginxµÄ×Ö·û´®½á¹¹ 
-    ngx_uint_t        key_hash; //ÓÉ¸Ãkey¼ÆËã³öµÄhashÖµ(Í¨¹ıhashº¯ÊıÈçngx_hash_key_lc())
-    void             *value;    //¸Ãkey¶ÔÓ¦µÄÖµ£¬×é³ÉÒ»¸ö¼ü-Öµ¶Ô<key,value>
+    ngx_str_t         key;      //keyï¼Œä¸ºnginxçš„å­—ç¬¦ä¸²ç»“æ„ 
+    ngx_uint_t        key_hash; //ç”±è¯¥keyè®¡ç®—å‡ºçš„hashå€¼(é€šè¿‡hashå‡½æ•°å¦‚ngx_hash_key_lc())
+    void             *value;    //è¯¥keyå¯¹åº”çš„å€¼ï¼Œç»„æˆä¸€ä¸ªé”®-å€¼å¯¹<key,value>
 } ngx_hash_key_t;
 
 
@@ -52,17 +52,17 @@ typedef struct {
 } ngx_hash_combined_t;
 
 
-//hash³õÊ¼»¯½á¹¹£¬ÓÃÀ´½«ÆäÏà¹ØÊı¾İ·â×°ÆğÀ´×÷Îª²ÎÊı´«µİ¸øngx_hash_init()»òngx_hash_wildcard_init()º¯Êı
+//hashåˆå§‹åŒ–ç»“æ„ï¼Œç”¨æ¥å°†å…¶ç›¸å…³æ•°æ®å°è£…èµ·æ¥ä½œä¸ºå‚æ•°ä¼ é€’ç»™ngx_hash_init()æˆ–ngx_hash_wildcard_init()å‡½æ•°
 typedef struct {
-    ngx_hash_t       *hash;         //Ö¸Ïò´ı³õÊ¼»¯µÄhash½á¹¹ 
-    ngx_hash_key_pt   key;          //hashº¯ÊıÖ¸Õë
+    ngx_hash_t       *hash;         //æŒ‡å‘å¾…åˆå§‹åŒ–çš„hashç»“æ„ 
+    ngx_hash_key_pt   key;          //hashå‡½æ•°æŒ‡é’ˆ
 
-    ngx_uint_t        max_size;     //bucketµÄ×î´ó¸öÊı
-    ngx_uint_t        bucket_size;  //Ã¿¸öbucketµÄ¿Õ¼ä
+    ngx_uint_t        max_size;     //bucketçš„æœ€å¤§ä¸ªæ•°
+    ngx_uint_t        bucket_size;  //æ¯ä¸ªbucketçš„ç©ºé—´
 
-    char             *name;         //¸Ãhash½á¹¹µÄÃû×Ö(½öÔÚ´íÎóÈÕÖ¾ÖĞÊ¹ÓÃ)  
-    ngx_pool_t       *pool;         //¸Ãhash½á¹¹´ÓpoolÖ¸ÏòµÄÄÚ´æ³ØÖĞ·ÖÅä 
-    ngx_pool_t       *temp_pool;    //·ÖÅäÁÙÊ±Êı¾İ¿Õ¼äµÄÄÚ´æ³Ø
+    char             *name;         //è¯¥hashç»“æ„çš„åå­—(ä»…åœ¨é”™è¯¯æ—¥å¿—ä¸­ä½¿ç”¨)  
+    ngx_pool_t       *pool;         //è¯¥hashç»“æ„ä»poolæŒ‡å‘çš„å†…å­˜æ± ä¸­åˆ†é… 
+    ngx_pool_t       *temp_pool;    //åˆ†é…ä¸´æ—¶æ•°æ®ç©ºé—´çš„å†…å­˜æ± 
 } ngx_hash_init_t;
 
 
@@ -93,15 +93,16 @@ typedef struct {
 } ngx_hash_keys_arrays_t;
 
 
+// ngx_table_elt_tæ˜¯ä¸€ä¸ªkey/valueå¯¹ï¼Œngx_str_tç±»å‹çš„keyå’Œvalue
 typedef struct {
-    ngx_uint_t        hash;
-    ngx_str_t         key;
-    ngx_str_t         value;
-    u_char           *lowcase_key;
+    ngx_uint_t        hash; //å½“å®ƒæ˜¯ngx_hash_tè¡¨çš„æˆå‘˜çš„æ—¶å€™ï¼Œç”¨äºå¿«é€Ÿæ£€ç´¢å¤´éƒ¨
+    ngx_str_t         key;  //åå­—å­—ç¬¦ä¸²
+    ngx_str_t         value; //å€¼å­—ç¬¦ä¸²
+    u_char           *lowcase_key; //å…¨å°å†™çš„keyå­—ç¬¦ä¸²
 } ngx_table_elt_t;
 
 
-//hash²éÕÒ
+//hashæŸ¥æ‰¾
 void *ngx_hash_find(ngx_hash_t *hash, ngx_uint_t key, u_char *name, size_t len);
 void *ngx_hash_find_wc_head(ngx_hash_wildcard_t *hwc, u_char *name, size_t len);
 void *ngx_hash_find_wc_tail(ngx_hash_wildcard_t *hwc, u_char *name, size_t len);
@@ -115,7 +116,7 @@ ngx_int_t ngx_hash_wildcard_init(ngx_hash_init_t *hinit, ngx_hash_key_t *names,
 
 #define ngx_hash(key, c)   ((ngx_uint_t) key * 31 + c)
 ngx_uint_t ngx_hash_key(u_char *data, size_t len);
-//lc±íÊ¾lower case£¬¼´×Ö·û´®×ª»»ÎªĞ¡Ğ´ºóÔÙ¼ÆËãhashÖµ
+//lcè¡¨ç¤ºlower caseï¼Œå³å­—ç¬¦ä¸²è½¬æ¢ä¸ºå°å†™åå†è®¡ç®—hashå€¼
 ngx_uint_t ngx_hash_key_lc(u_char *data, size_t len);  
 ngx_uint_t ngx_hash_strlow(u_char *dst, u_char *src, size_t n);
 

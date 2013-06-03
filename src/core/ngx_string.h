@@ -13,31 +13,34 @@
 #include <ngx_core.h>
 
 
+// ngx_str_tæ¥è¡¨ç¤ºå­—ç¬¦ä¸²ï¼Œåˆ‡è®°ä¸èƒ½æŠŠdataå½“åšå­—ç¬¦ä¸²å¤„ç†ï¼Œdataå¹¶æ²¡æœ‰è§„å®šä»¥\0ç»“å°¾
+// data+len æ‰ä»£è¡¨å­—ç¬¦ä¸²ï¼Œæ‰€ä»¥å¦‚æœæŠŠdataå½“åšå­—ç¬¦ä¸²å¤„ç†ï¼Œæœ‰å¯èƒ½å¯¼è‡´å†…å­˜è¶Šç•Œã€‚
+// ä¸ä½¿ç”¨å­—ç¬¦ä¸²èƒ½æœ‰æ•ˆé™ä½å†…å­˜ä½¿ç”¨é‡ã€‚
 typedef struct {
-    size_t      len;  //stringµÄ³¤¶È
-    u_char     *data; //stringµÄÄÚÈİ
+    size_t      len;  //å­—ç¬¦ä¸²çš„æœ‰æ•ˆé•¿åº¦
+    u_char     *data; //å­—ç¬¦ä¸²çš„å†…å®¹ï¼ŒæŒ‡å‘å­—ç¬¦ä¸²çš„èµ·å§‹ä½ç½®
 } ngx_str_t;
 
 
 typedef struct {
-    ngx_str_t   key;  //key-value½á¹¹
-    ngx_str_t   value; //key-value½á¹¹
+    ngx_str_t   key;  //key-valueç»“æ„
+    ngx_str_t   value; //key-valueç»“æ„
 } ngx_keyval_t;
 
-//²Î¿¼×ÊÁÏ£º
+//å‚è€ƒèµ„æ–™ï¼š
 //http://blog.csdn.net/dingyujie/article/details/7515904
 typedef struct {
-    unsigned    len:28;             //±äÁ¿ÖµµÄ³¤¶È
+    unsigned    len:28;             //å˜é‡å€¼çš„é•¿åº¦
 
-    unsigned    valid:1;            //±äÁ¿ÊÇ·ñÓĞĞ§
-    unsigned    no_cacheable:1;     /* ±äÁ¿ÊÇ·ñÊÇ¿É»º´æµÄ£¬Ò»°ãÀ´Ëµ£¬Ä³Ğ©±äÁ¿ÔÚµÚÒ»´ÎµÃµ½±äÁ¿Öµºó£¬ºóÃæÔÙ´ÎÓÃµ½Ê±£¬¿ÉÒÔÖ±½ÓÊ¹ÓÃÉÏ             
-                                    * ´ÎµÄÖµ£¬¶ø¶ÔÓÚÒ»Ğ©ËùÎ½µÄno_cacheableµÄ±äÁ¿£¬ÔòĞèÒªÔÚÃ¿´ÎÊ¹ÓÃµÄÊ±ºò£¬¶¼ÒªÍ¨¹ıget_handlerÖ®  
-                                    * Àà²Ù×÷£¬ÔÙ´Î»ñÈ¡  
+    unsigned    valid:1;            //å˜é‡æ˜¯å¦æœ‰æ•ˆ
+    unsigned    no_cacheable:1;     /* å˜é‡æ˜¯å¦æ˜¯å¯ç¼“å­˜çš„ï¼Œä¸€èˆ¬æ¥è¯´ï¼ŒæŸäº›å˜é‡åœ¨ç¬¬ä¸€æ¬¡å¾—åˆ°å˜é‡å€¼åï¼Œåé¢å†æ¬¡ç”¨åˆ°æ—¶ï¼Œå¯ä»¥ç›´æ¥ä½¿ç”¨ä¸Š             
+                                    * æ¬¡çš„å€¼ï¼Œè€Œå¯¹äºä¸€äº›æ‰€è°“çš„no_cacheableçš„å˜é‡ï¼Œåˆ™éœ€è¦åœ¨æ¯æ¬¡ä½¿ç”¨çš„æ—¶å€™ï¼Œéƒ½è¦é€šè¿‡get_handlerä¹‹  
+                                    * ç±»æ“ä½œï¼Œå†æ¬¡è·å–  
                                     */
-    unsigned    not_found:1;        //±äÁ¿Ã»ÓĞÕÒµ½£¬Ò»°ãÊÇÖ¸Ä³¸ö±äÁ¿Ã»ÓÃÄÜ¹»Í¨¹ıget»ñÈ¡µ½Æä±äÁ¿Öµ
-    unsigned    escape:1;           //±äÁ¿ÖµÊÇ·ñĞèÒª×÷×ªÒå´¦Àí
+    unsigned    not_found:1;        //å˜é‡æ²¡æœ‰æ‰¾åˆ°ï¼Œä¸€èˆ¬æ˜¯æŒ‡æŸä¸ªå˜é‡æ²¡ç”¨èƒ½å¤Ÿé€šè¿‡getè·å–åˆ°å…¶å˜é‡å€¼
+    unsigned    escape:1;           //å˜é‡å€¼æ˜¯å¦éœ€è¦ä½œè½¬ä¹‰å¤„ç†
 
-    u_char     *data;               //±äÁ¿Öµ
+    u_char     *data;               //å˜é‡å€¼
 } ngx_variable_value_t;
 
 
@@ -87,7 +90,7 @@ ngx_strlchr(u_char *p, u_char *last, u_char c)
  * while ZeroMemory() and bzero() are the calls.
  * icc7 may also inline several mov's of a zeroed register for small blocks.
  */
-#define ngx_memzero(buf, n)       (void) memset(buf, 0, n)  //ngx_memzeroÊ¹ÓÃµÄÊÇmemsetÔ­ĞÍ£¬memsetÊ¹ÓÃ»ã±à½øĞĞ±àĞ´
+#define ngx_memzero(buf, n)       (void) memset(buf, 0, n)  //ngx_memzeroä½¿ç”¨çš„æ˜¯memsetåŸå‹ï¼Œmemsetä½¿ç”¨æ±‡ç¼–è¿›è¡Œç¼–å†™
 #define ngx_memset(buf, c, n)     (void) memset(buf, c, n)
 
 
@@ -181,7 +184,7 @@ ngx_int_t ngx_hextoi(u_char *line, size_t n);
 
 u_char *ngx_hex_dump(u_char *dst, u_char *src, size_t len);
 
-//base64 ±àÂë£¯½âÂëº¯ÊıºÍºê
+//base64 ç¼–ç ï¼è§£ç å‡½æ•°å’Œå®
 #define ngx_base64_encoded_length(len)  (((len + 2) / 3) * 4)
 #define ngx_base64_decoded_length(len)  (((len + 3) / 4) * 3)
 
@@ -189,7 +192,7 @@ void ngx_encode_base64(ngx_str_t *dst, ngx_str_t *src);
 ngx_int_t ngx_decode_base64(ngx_str_t *dst, ngx_str_t *src);
 ngx_int_t ngx_decode_base64url(ngx_str_t *dst, ngx_str_t *src);
 
-//utf-8 ±àÂë£¯½âÂëÏà¹Øº¯Êı
+//utf-8 ç¼–ç ï¼è§£ç ç›¸å…³å‡½æ•°
 uint32_t ngx_utf8_decode(u_char **p, size_t n);
 size_t ngx_utf8_length(u_char *p, size_t n);
 u_char *ngx_utf8_cpystrn(u_char *dst, u_char *src, size_t n, size_t len);
@@ -206,7 +209,7 @@ u_char *ngx_utf8_cpystrn(u_char *dst, u_char *src, size_t n, size_t len);
 #define NGX_UNESCAPE_URI       1
 #define NGX_UNESCAPE_REDIRECT  2
 
-//urlencodeºÍhtmlÊµÌåµÄ±àÂë½âÂë
+//urlencodeÂºÃhtmlÃŠÂµÃŒÃ¥ÂµÃ„Â±Ã Ã‚Ã«Â½Ã¢Ã‚Ã«
 uintptr_t ngx_escape_uri(u_char *dst, u_char *src, size_t size,
     ngx_uint_t type);
 void ngx_unescape_uri(u_char **dst, u_char **src, size_t size, ngx_uint_t type);
