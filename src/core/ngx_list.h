@@ -16,34 +16,34 @@
 typedef struct ngx_list_part_s  ngx_list_part_t;
 
 struct ngx_list_part_s {
-    void             *elts; // ¿ÉÓÃÁÐ±í¿Õ¼äµÄÊ×µØÖ·
-    ngx_uint_t        nelts; // µ±Ç°ÒÑ¾­Ê¹ÓÃµÄ¿Õ¼äÊýÁ¿
-    ngx_list_part_t  *next; // Ö¸ÏòÏÂÒ»¸öÁÐ±í½Úµã
+    void             *elts; //å¯ç”¨åˆ—è¡¨ç©ºé—´çš„é¦–åœ°å€
+    ngx_uint_t        nelts; //å½“å‰å·²ç»ä½¿ç”¨çš„ç©ºé—´æ•°é‡
+    ngx_list_part_t  *next; //æŒ‡å‘ä¸‹ä¸€ä¸ªåˆ—è¡¨èŠ‚ç‚¹
 };
 
 
 typedef struct {
-    ngx_list_part_t  *last; // listÖÐ×îºóÒ»¸öpart
-    ngx_list_part_t   part; // listÖÐÍ·²¿part
-    size_t            size; // Êý×éÖÐÃ¿¸öÔªËØµÄ´óÐ¡
-    ngx_uint_t        nalloc; // ÒÑ·ÖÅä¿Õ¼äÖÐ¿É´æ·ÅµÄÔªËØ¸öÊý
-    ngx_pool_t       *pool; // µ±Ç°listÊý¾Ý´æ·ÅµÄÄÚ´æ³Ø
+    ngx_list_part_t  *last; //listä¸­æœ€åŽä¸€ä¸ªpart
+    ngx_list_part_t   part; //listä¸­å¤´éƒ¨part
+    size_t            size; //æ•°ç»„ä¸­æ¯ä¸ªå…ƒç´ çš„å¤§å°
+    ngx_uint_t        nalloc; //å·²åˆ†é…ç©ºé—´ä¸­å¯å­˜æ”¾çš„å…ƒç´ ä¸ªæ•°
+    ngx_pool_t       *pool; //å½“å‰listæ•°æ®å­˜æ”¾çš„å†…å­˜æ± 
 } ngx_list_t;
 
-// ngx_list_createºÍngx_list_init¹¦ÄÜÊÇÒ»ÑùµÄ¶¼ÊÇ´´½¨Ò»¸ölist£¬Ö»ÊÇ·µ»ØÖµ²»Ò»Ñù...
+//ngx_list_createå’Œngx_list_initåŠŸèƒ½æ˜¯ä¸€æ ·çš„éƒ½æ˜¯åˆ›å»ºä¸€ä¸ªlistï¼Œåªæ˜¯è¿”å›žå€¼ä¸ä¸€æ ·...
 ngx_list_t *ngx_list_create(ngx_pool_t *pool, ngx_uint_t n, size_t size);
 
 static ngx_inline ngx_int_t
 ngx_list_init(ngx_list_t *list, ngx_pool_t *pool, ngx_uint_t n, size_t size)
 {
-    list->part.elts = ngx_palloc(pool, n * size); // ´ÓÄÚ´æ³ØÉêÇë¿Õ¼äºó£¬ÈÃeltsÖ¸Ïò¿ÉÓÃ¿Õ¼ä
+    list->part.elts = ngx_palloc(pool, n * size); //ä»Žå†…å­˜æ± ç”³è¯·ç©ºé—´åŽï¼Œè®©eltsæŒ‡å‘å¯ç”¨ç©ºé—´
     if (list->part.elts == NULL) {
         return NGX_ERROR;
     }
 
-    list->part.nelts = 0; // ¸Õ·ÖÅäÏÂÀ´£¬»¹Ã»Ê¹ÓÃ£¬ËùÒÔÎª0
+    list->part.nelts = 0; //åˆšåˆ†é…ä¸‹æ¥ï¼Œè¿˜æ²¡ä½¿ç”¨ï¼Œæ‰€ä»¥ä¸º0
     list->part.next = NULL;
-    list->last = &list->part; // last¿ªÊ¼µÄÊ±ºòÖ¸ÏòÊ×½Úµã
+    list->last = &list->part; //lastå¼€å§‹çš„æ—¶å€™æŒ‡å‘é¦–èŠ‚ç‚¹
     list->size = size;
     list->nalloc = n;
     list->pool = pool;

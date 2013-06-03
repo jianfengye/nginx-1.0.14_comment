@@ -12,10 +12,10 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-// 使用malloc分配内存空间
+//浣跨敤malloc鍒嗛厤鍐呭瓨绌洪棿
 void *ngx_alloc(size_t size, ngx_log_t *log);
 
-//使用malloc分配内存空间，并且将空间内容初始化为0
+//浣跨敤malloc鍒嗛厤鍐呭瓨绌洪棿锛屽苟涓斿皢绌洪棿鍐呭鍒濆鍖栦负0
 void *ngx_calloc(size_t size, ngx_log_t *log);
 
 #define ngx_free          free
