@@ -15,24 +15,35 @@
 
 
 typedef struct {
-    void        **main_conf;//���飬�����Ա��void*��ָ��httpģ���mainconf
+    void        **main_conf;//数组，数组成员是void*，指向http模块的mainconf
     void        **srv_conf;
     void        **loc_conf;
 } ngx_http_conf_ctx_t;
 
-
+//HTTP框架在读取,重载配置文件时定义了由ngx_http_module_t接口描述的8个阶段
+//这8个阶段的调用顺序应该是：
+/*
+create_main_conf
+create_srv_conf
+create_loc_conf
+preconfiguration
+init_main_conf
+merge_srv_conf
+merge_loc_conf
+postconfiguration
+*/
 typedef struct {
-    ngx_int_t   (*preconfiguration)(ngx_conf_t *cf);  //ģ��Ԥ����
-    ngx_int_t   (*postconfiguration)(ngx_conf_t *cf); //ģ���������
+    ngx_int_t   (*preconfiguration)(ngx_conf_t *cf);  //解析配置文件前调用
+    ngx_int_t   (*postconfiguration)(ngx_conf_t *cf); //完成配置文件解析后调用
 
-    void       *(*create_main_conf)(ngx_conf_t *cf);  //main��ʼ��
-    char       *(*init_main_conf)(ngx_conf_t *cf, void *conf); //��ʼ����
+    void       *(*create_main_conf)(ngx_conf_t *cf);  //当需要创建数据结构用户存储main级别的全局配置项时候调用
+    char       *(*init_main_conf)(ngx_conf_t *cf, void *conf); //初始化main级别配置项
 
-    void       *(*create_srv_conf)(ngx_conf_t *cf); //srv��ʼ��
-    char       *(*merge_srv_conf)(ngx_conf_t *cf, void *prev, void *conf); //srv���ǲ���
+    void       *(*create_srv_conf)(ngx_conf_t *cf); //当需要创建数据结构用户存储srv级别的全局配置项时候调用
+    char       *(*merge_srv_conf)(ngx_conf_t *cf, void *prev, void *conf); //srv覆盖策略
 
-    void       *(*create_loc_conf)(ngx_conf_t *cf); //loc��ʼ��
-    char       *(*merge_loc_conf)(ngx_conf_t *cf, void *prev, void *conf); //loc���ǲ���
+    void       *(*create_loc_conf)(ngx_conf_t *cf); //当需要创建数据结构用户存储loc级别的全局配置项时候调用
+    char       *(*merge_loc_conf)(ngx_conf_t *cf, void *prev, void *conf); //loc覆盖策略
 } ngx_http_module_t;
 
 

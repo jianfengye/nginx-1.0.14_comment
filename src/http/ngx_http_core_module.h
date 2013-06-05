@@ -96,24 +96,41 @@ typedef struct {
     u_char                     addr[NGX_SOCKADDR_STRLEN + 1];
 } ngx_http_listen_opt_t;
 
-
+//这个结构是定义了HTTP模块处理用户请求的11个阶段
 typedef enum {
+    //在接收到完整的HTTP头部后处理的HTTP阶段
     NGX_HTTP_POST_READ_PHASE = 0,
 
+    //在还没有查询到URI匹配的location前，这时rewrite重写URL也作为一个独立的HTTP阶段
     NGX_HTTP_SERVER_REWRITE_PHASE,
 
+    //根据URI寻找匹配的location
     NGX_HTTP_FIND_CONFIG_PHASE,
+
+    //在查询到URI匹配的location之后的rewrite重写URL阶段
     NGX_HTTP_REWRITE_PHASE,
+
+    //用于在rewrite重写URL后重新跳到NGX_HTTP_FIND_CONFIG_PHASE阶段
     NGX_HTTP_POST_REWRITE_PHASE,
 
+    //处理NGX_HTTP_ACCESS_PHASE阶段前
     NGX_HTTP_PREACCESS_PHASE,
 
+    //让HTTP模块判断是否允许这个请求访问NGINX服务器
     NGX_HTTP_ACCESS_PHASE,
+
+    //当NGX_HTTP_ACCESS_PHASE阶段中HTTP模块的handler返回不允许访问的错误码的时候，
+    //这个阶段负责构造拒绝服务的用户相应
     NGX_HTTP_POST_ACCESS_PHASE,
 
+    //这个阶段完全是try_files配置项设立的。当HTTP请求访问静态文件资源的时候，try_files配置项
+    //可以使这个请求顺序的访问多个静态文件资源。
     NGX_HTTP_TRY_FILES_PHASE,
+
+    //用于处理HTTP请求内容的阶段。这个是大部分HTTP模块最喜欢介入的阶段。
     NGX_HTTP_CONTENT_PHASE,
 
+    //处理完请求后记录日志的阶段。
     NGX_HTTP_LOG_PHASE
 } ngx_http_phases;
 

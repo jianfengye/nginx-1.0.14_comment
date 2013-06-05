@@ -74,17 +74,41 @@
 
 #define NGX_MAX_CONF_ERRSTR  1024
 
-
+//commandsæ•°ç»„ç”¨äºå®šä¹‰æ¨¡å—çš„é…ç½®æ–‡ä»¶å‚æ•°ã€‚
 struct ngx_command_s {
-    ngx_str_t             name;         //ÃüÁîÃû³Æ
-    ngx_uint_t            type;         //ÃüÁîÀàĞÍ(ÓĞ¼¸¸ö²ÎÊıµÈ)
-    char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf); //Êı¾İ´æ´¢º¯Êı
-    ngx_uint_t            conf;         //Êı¾İ´æ·ÅÔÚÄÄ¸öÅäÖÃ
-    ngx_uint_t            offset;       //Êı¾İ´æ·ÅÔÚÄÄ¸öÎ»ÖÃ
-    void                 *post;         //Ò»Ğ©¶ÁÈ¡ÅäÖÃÊ±ºòµÄÁãËé±äÁ¿£¬Ò»°ãÎªnull
+    ngx_str_t             name;         //é…ç½®é¡¹åç§°
+
+    //é…ç½®é¡¹ç±»å‹(æœ‰å‡ ä¸ªå‚æ•°æˆ–è€…å¯ä»¥åœ¨ä»€ä¹ˆåœ°æ–¹å‡ºç°ç­‰)
+    ngx_uint_t            type;         
+
+    //å‡ºç°äº†nameä¸­åˆ¶å®šçš„é…ç½®é¡¹åï¼Œå°†ä¼šè°ƒç”¨setæ–¹æ³•å¤„ç†é…ç½®é¡¹å‚æ•°ã€‚
+    //è¿™ä¸ªå¯ä»¥ä½¿ç”¨nginxé¢„è®¾çš„14ä¸ªè§£æé…ç½®æ–¹æ³•ï¼Œä¹Ÿå¯ä»¥ä½¿ç”¨è‡ªå®šä¹‰çš„ã€‚
+    char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+
+    //åœ¨é…ç½®æ–‡ä»¶ä¸­çš„åç§»é‡ï¼Œå®ƒçš„å–å€¼èŒƒå›´æ˜¯ï¼š
+    /*
+    NGX_HTTP_MAIN_CONF_OFFSET
+    NGX_HTTP_SRV_CONF_OFFSET
+    NGX_HTTP_LOC_CONF_OFFSET
+    */
+    //å› ä¸ºæœ‰å¯èƒ½æ¨¡å—åŒæ—¶ä¼šæœ‰mainï¼Œsrvï¼Œlocä¸‰ç§é…ç½®ç»“æ„ä½“ï¼Œä½†æ˜¯è¿™ä¸ªé…ç½®é¡¹è§£æå®Œåè¦æ”¾åœ¨å“ªä¸ªç»“æ„ä½“å†…å‘¢ï¼Ÿ
+    ngx_uint_t            conf;     
+
+    //è¡¨ç¤ºå½“å‰é…ç½®é¡¹åœ¨æ•´ä¸ªå­˜å‚¨é…ç½®é¡¹çš„ç»“æ„ä½“ä¸­çš„åç§»ä½ç½®ï¼Œ
+    //å¯ä»¥ä½¿ç”¨offsetof(test_stru, b)æ¥è·å–    
+    ngx_uint_t            offset;
+
+    //å‘½ä»¤å¤„ç†å®Œåçš„å›è°ƒæŒ‡é’ˆï¼Œå¯¹äºsetçš„14ç§é¢„è®¾çš„è§£æé…ç½®æ–¹æ³•ï¼Œ å¯èƒ½çš„ç»“æ„æœ‰ï¼š
+    /*
+    ngx_conf_post_t
+    ngx_conf_enum_t
+    ngx_conf_bitmask_t
+    null
+    */
+    void                 *post;
 };
 
-#define ngx_null_command  { ngx_null_string, 0, NULL, 0, 0, NULL }  //¿ÕÃüÁî
+#define ngx_null_command  { ngx_null_string, 0, NULL, 0, 0, NULL }  //ç©ºå‘½ä»¤
 
 
 struct ngx_open_file_s {
@@ -104,38 +128,53 @@ struct ngx_open_file_s {
 #endif
 };
 
-//²Î¿¼£º
+//å‚è€ƒï¼š
 //http://blog.csdn.net/livelylittlefish/article/details/6571497
-#define NGX_MODULE_V1          0, 0, 0, 0, 0, 0, 1      //¸ÃºêÓÃÀ´³õÊ¼»¯Ç°7¸ö×Ö¶Î  
-#define NGX_MODULE_V1_PADDING  0, 0, 0, 0, 0, 0, 0, 0   //¸ÃºêÓÃÀ´³õÊ¼»¯×îºó8¸ö×Ö¶Î
+#define NGX_MODULE_V1          0, 0, 0, 0, 0, 0, 1      //è¯¥å®ç”¨æ¥åˆå§‹åŒ–å‰7ä¸ªå­—æ®µ  
+#define NGX_MODULE_V1_PADDING  0, 0, 0, 0, 0, 0, 0, 0   //è¯¥å®ç”¨æ¥åˆå§‹åŒ–æœ€å8ä¸ªå­—æ®µ
 
+//ngx_module_sæ˜¯æ¨¡å—çš„å®šä¹‰
 struct ngx_module_s {
-    ngx_uint_t            ctx_index;    //·ÖÀàÄ£¿é¼ÆÊıÆ÷
-    ngx_uint_t            index;        //Ä£¿éid£¬±êÊ¶Ä³¸öÄ£¿éÔÚÈ«¾ÖÄ£¿éÊı×éÖĞµÄÏÂ±ê
+    //å¯¹äºä¸€ç±»æ¨¡å—ï¼ˆç”±ä¸‹é¢çš„typeæˆå‘˜å†³å®šç±»åˆ«ï¼‰è€Œè¨€ï¼Œctx_indexæ ‡ç¤ºå½“å‰æ¨¡å—åœ¨è¿™ç±»æ¨¡å—ä¸­çš„åºå·ã€‚
+    //è¿™ä¸ªæˆå‘˜å¸¸å¸¸æ˜¯ç”±ç®¡ç†è¿™ç±»æ¨¡å—çš„ä¸€ä¸ªnginxæ ¸å¿ƒæ¨¡å—è®¾ç½®çš„ï¼Œå¯¹äºæ‰€æœ‰çš„HTTPæ¨¡å—è€Œè¨€ï¼Œctx_index
+    //æ˜¯ç”±æ ¸å¿ƒæ¨¡å—ngx_http_moduleè®¾ç½®çš„ã€‚
+    ngx_uint_t            ctx_index;
 
+    //indexè¡¨ç¤ºå½“å‰æ¨¡å—åœ¨ngx_modulesæ•°ç»„ä¸­çš„åºå·ã€‚Nginxå¯åŠ¨çš„æ—¶å€™ä¼šæ ¹æ®ngx_modulesæ•°ç»„è®¾ç½®å„ä¸ªæ¨¡å—çš„indexå€¼
+    ngx_uint_t            index; 
+
+    //spareç³»åˆ—çš„ä¿ç•™å˜é‡ï¼Œæš‚æœªä½¿ç”¨
     ngx_uint_t            spare0;
     ngx_uint_t            spare1;
     ngx_uint_t            spare2;
     ngx_uint_t            spare3;
 
-    ngx_uint_t            version;      //°æ±¾  
+    //nginxæ¨¡å—ç‰ˆæœ¬ï¼Œç›®å‰åªæœ‰ä¸€ç§ï¼Œæš‚å®šä¸º1
+    ngx_uint_t            version;
 
-    void                 *ctx;          //Ä£¿éÉÏÏÂÎÄ£¬Ã¿¸öÄ£¿éÓĞ²»Í¬Ä£¿éÉÏÏÂÎÄ
-    ngx_command_t        *commands;     //Ä£¿éÃüÁî¼¯
-    ngx_uint_t            type;         //Ä£¿éÀàĞÍ£¨HTTP, Core, Mail£¬EventÖĞµÄÒ»ÖÖ£©
+    //æ¨¡å—ä¸Šä¸‹æ–‡ï¼Œæ¯ä¸ªæ¨¡å—æœ‰ä¸åŒæ¨¡å—ä¸Šä¸‹æ–‡,æ¯ä¸ªæ¨¡å—éƒ½æœ‰è‡ªå·±çš„ç‰¹æ€§ï¼Œè€Œctxä¼šæŒ‡å‘ç‰¹å®šç±»å‹æ¨¡å—çš„å…¬å…±æ¥å£ã€‚
+    //æ¯”å¦‚ï¼Œåœ¨HTTPæ¨¡å—ä¸­ï¼Œctxéœ€è¦æŒ‡å‘ngx_http_module_tç»“æ„ä½“ã€‚
+    void                 *ctx;
 
-    ngx_int_t           (*init_master)(ngx_log_t *log);         //³õÊ¼»¯master
+    //æ¨¡å—å‘½ä»¤é›†ï¼Œå°†å¤„ç†nginx.confä¸­çš„é…ç½®é¡¹
+    ngx_command_t        *commands;
 
-    ngx_int_t           (*init_module)(ngx_cycle_t *cycle);     //³õÊ¼»¯Ä£¿é
+    //æ ‡ç¤ºè¯¥æ¨¡å—çš„ç±»å‹ï¼Œå’Œctxæ˜¯ç´§å¯†ç›¸å…³çš„ã€‚å®ƒçš„å–å€¼èŒƒå›´æ˜¯ä»¥ä¸‹å‡ ç§:
+    //NGX_HTTP_MODULE,NGX_CORE_MODULE,NGX_CONF_MODULE,
+    //NGX_EVENT_MODULE,NGX_MAIL_MODULE
+    ngx_uint_t            type;
 
-    ngx_int_t           (*init_process)(ngx_cycle_t *cycle);    //³õÊ¼»¯½ø³Ì
-    ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);     //³õÊ¼»¯Ïß³Ì
-    void                (*exit_thread)(ngx_cycle_t *cycle);     //ÍË³öÏß³Ì
-    void                (*exit_process)(ngx_cycle_t *cycle);    //ÍË³ö½ø³Ì
+    //ä¸‹é¢7ä¸ªå‡½æ•°æ˜¯nginxåœ¨å¯åŠ¨ï¼Œåœæ­¢è¿‡ç¨‹ä¸­çš„7ä¸ªæ‰§è¡Œç‚¹
+    ngx_int_t           (*init_master)(ngx_log_t *log);         //åˆå§‹åŒ–master
+    ngx_int_t           (*init_module)(ngx_cycle_t *cycle);     //åˆå§‹åŒ–æ¨¡å—
+    ngx_int_t           (*init_process)(ngx_cycle_t *cycle);    //åˆå§‹åŒ–è¿›ç¨‹
+    ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);     //åˆå§‹åŒ–çº¿ç¨‹
+    void                (*exit_thread)(ngx_cycle_t *cycle);     //é€€å‡ºçº¿ç¨‹
+    void                (*exit_process)(ngx_cycle_t *cycle);    //é€€å‡ºè¿›ç¨‹
+    void                (*exit_master)(ngx_cycle_t *cycle);     //é€€å‡ºmaster
 
-    void                (*exit_master)(ngx_cycle_t *cycle);     //ÍË³ömaster
-
-    uintptr_t             spare_hook0;  //±£Áô×Ö¶Î£¬ÎŞÓÃ
+    //ä¿ç•™å­—æ®µï¼Œæ— ç”¨ï¼Œå¯ä»¥ä½¿ç”¨NGX_MODULE_V1_PADDINGæ¥æ›¿æ¢
+    uintptr_t             spare_hook0;
     uintptr_t             spare_hook1;
     uintptr_t             spare_hook2;
     uintptr_t             spare_hook3;
@@ -145,12 +184,12 @@ struct ngx_module_s {
     uintptr_t             spare_hook7;
 };
 
-//²Î¿¼£º
+//å‚è€ƒï¼š
 //http://blog.csdn.net/livelylittlefish/article/details/7247080
 typedef struct {
-    ngx_str_t             name;                                         //Ä£¿éÃû£¬¼´ngx_core_module_ctx½á¹¹Ìå¶ÔÏóµÄ
-    void               *(*create_conf)(ngx_cycle_t *cycle);             //´´½¨ÅäÖÃµÄcallback
-    char               *(*init_conf)(ngx_cycle_t *cycle, void *conf);   //³õÊ¼»¯ÅäÖÃµÄcallback
+    ngx_str_t             name;                                         //æ¨¡å—åï¼Œå³ngx_core_module_ctxç»“æ„ä½“å¯¹è±¡çš„
+    void               *(*create_conf)(ngx_cycle_t *cycle);             //åˆ›å»ºé…ç½®çš„callback
+    char               *(*init_conf)(ngx_cycle_t *cycle, void *conf);   //åˆå§‹åŒ–é…ç½®çš„callback
 } ngx_core_module_t;
 
 
@@ -166,22 +205,22 @@ typedef char *(*ngx_conf_handler_pt)(ngx_conf_t *cf,
 
 
 struct ngx_conf_s {
-    char                 *name;  //Ã»ÓĞÊ¹ÓÃ
-    ngx_array_t          *args;  //Ö¸ÁîµÄ²ÎÊı
+    char                 *name;  //æ²¡æœ‰ä½¿ç”¨
+    ngx_array_t          *args;  //æŒ‡ä»¤çš„å‚æ•°
 
-    ngx_cycle_t          *cycle; //Ö¸ÏòÏµÍ³²ÎÊı£¬ÔÚÏµÍ³Õû¸öÔËĞĞ¹ı³ÌÖĞ£¬
-                                 //ĞèÒªÊ¹ÓÃµÄÒ»Ğ©²ÎÊı¡¢×ÊÔ´ĞèÒªÍ³Ò»µÄ¹ÜÀí
-    ngx_pool_t           *pool;  //ÄÚ´æ³Ø
-    ngx_pool_t           *temp_pool; //·ÖÅäÁÙÊ±Êı¾İ¿Õ¼äµÄÄÚ´æ³Ø
-    ngx_conf_file_t      *conf_file; //ÅäÖÃÎÄ¼şµÄĞÅÏ¢
-    ngx_log_t            *log; //ÈÕÖ¾
+    ngx_cycle_t          *cycle; //æŒ‡å‘ç³»ç»Ÿå‚æ•°ï¼Œåœ¨ç³»ç»Ÿæ•´ä¸ªè¿è¡Œè¿‡ç¨‹ä¸­ï¼Œ
+                                 //éœ€è¦ä½¿ç”¨çš„ä¸€äº›å‚æ•°ã€èµ„æºéœ€è¦ç»Ÿä¸€çš„ç®¡ç†
+    ngx_pool_t           *pool;  //å†…å­˜æ± 
+    ngx_pool_t           *temp_pool; //åˆ†é…ä¸´æ—¶æ•°æ®ç©ºé—´çš„å†…å­˜æ± 
+    ngx_conf_file_t      *conf_file; //é…ç½®æ–‡ä»¶çš„ä¿¡æ¯
+    ngx_log_t            *log; //æ—¥å¿—
 
-    void                 *ctx;  //Ä£¿éµÄÅäÖÃĞÅÏ¢
-    ngx_uint_t            module_type; //µ±Ç°Ö¸ÁîµÄÀàĞÍ
-    ngx_uint_t            cmd_type; //ÃüÁîµÄÀàĞÍ
+    void                 *ctx;  //æ¨¡å—çš„é…ç½®ä¿¡æ¯
+    ngx_uint_t            module_type; //å½“å‰æŒ‡ä»¤çš„ç±»å‹
+    ngx_uint_t            cmd_type; //å‘½ä»¤çš„ç±»å‹
 
-    ngx_conf_handler_pt   handler; //Ö¸Áî´¦Àíº¯Êı£¬ÓĞ×Ô¼ºĞĞÎªµÄÔÚÕâÀïÊµÏÖ
-    char                 *handler_conf; //Ö¸Áî´¦Àíº¯ÊıµÄÅäÖÃĞÅÏ¢
+    ngx_conf_handler_pt   handler; //æŒ‡ä»¤å¤„ç†å‡½æ•°ï¼Œæœ‰è‡ªå·±è¡Œä¸ºçš„åœ¨è¿™é‡Œå®ç°
+    char                 *handler_conf; //æŒ‡ä»¤å¤„ç†å‡½æ•°çš„é…ç½®ä¿¡æ¯
 };
 
 

@@ -12,22 +12,27 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-
+//代表文件结构
 struct ngx_file_s {
-    ngx_fd_t                   fd;
-    ngx_str_t                  name;
-    ngx_file_info_t            info;
+    ngx_fd_t                   fd;  //文件描述符
+    ngx_str_t                  name; //文件名称
+    ngx_file_info_t            info;  //文件大小等信息，实际上就是linux系统定义的stat结构
 
+    //该偏移量告诉nginx现在处理到文件何处了，一般不用手动设置
     off_t                      offset;
+    //当前文件系统偏移量，一般不用设置
     off_t                      sys_offset;
 
+    //日志对象，相关的日志会输出到log指定的日志文件中
     ngx_log_t                 *log;
 
 #if (NGX_HAVE_FILE_AIO)
     ngx_event_aio_t           *aio;
 #endif
 
+    //目前未使用
     unsigned                   valid_info:1;
+    //与配置文件中的directio配置项对应，在发送大文件的时候可以设置为1
     unsigned                   directio:1;
 };
 

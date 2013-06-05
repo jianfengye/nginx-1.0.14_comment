@@ -222,7 +222,7 @@ typedef struct {
     time_t                            keep_alive_n;
 
     unsigned                          connection_type:2;
-    unsigned                          msie:1;  //���������
+    unsigned                          msie:1;  //浏览器类型
     unsigned                          msie6:1;
     unsigned                          opera:1;
     unsigned                          gecko:1;
@@ -232,12 +232,15 @@ typedef struct {
 } ngx_http_headers_in_t;
 
 
+//ngx_http_headers_out_t 代表输出的相应头
 typedef struct {
+    //待发送的HTTP头部链表。
     ngx_list_t                        headers;
 
-    ngx_uint_t                        status;
-    ngx_str_t                         status_line;
+    ngx_uint_t                        status; //http相应状态，比如200
+    ngx_str_t                         status_line; //相应的状态行，比如“HTTP/1.1 201 CREATED”
 
+    //下面成员都是RFC1616中定义的HTTP头部。
     ngx_table_elt_t                  *server;
     ngx_table_elt_t                  *date;
     ngx_table_elt_t                  *content_length;
@@ -253,6 +256,8 @@ typedef struct {
 
     ngx_str_t                        *override_charset;
 
+    //可以调用ngx_http_set_content_type(r)方法帮助我们设置Content-Type头部，
+    //这个方法会根据URI中的文件扩展名并对应者mime.type来设置Content-type值
     size_t                            content_type_len;
     ngx_str_t                         content_type;
     ngx_str_t                         charset;
@@ -261,11 +266,28 @@ typedef struct {
 
     ngx_array_t                       cache_control;
 
+    //这里指定过content_length_n后，不用再到ngx_table_elt_t中设置了
     off_t                             content_length_n;
     time_t                            date_time;
     time_t                            last_modified_time;
 } ngx_http_headers_out_t;
 
+//ngx_http_headers_out_t使用示例：
+/*
+ngx_table_elt_t *h = ngx_list_push(&r->headers_out.headers)
+if(h == NULL) {
+    return NGX_ERROR;
+}
+
+h->hash=1
+h->key.len = sizeof("TestHead") - 1;
+h->key.data = (u_char *) "TestHead";
+h->value.len = sizeof("TestValue") - 1;
+h->value.data = (u_char *) "TestValue";
+
+这样会在相应中增加一个HTTP头部
+TestHead: TestValue\r\n
+*/
 
 typedef void (*ngx_http_client_body_handler_pt)(ngx_http_request_t *r);
 
@@ -347,12 +369,12 @@ typedef void (*ngx_http_event_handler_pt)(ngx_http_request_t *r);
 struct ngx_http_request_s {
     uint32_t                          signature;         /* "HTTP" */
 
-    ngx_connection_t                 *connection;  //��ǰrequest������
+    ngx_connection_t                 *connection;  //当前request的连接
 
-    void                            **ctx;  //������
-    void                            **main_conf; //main����
-    void                            **srv_conf;  //srv����
-    void                            **loc_conf;  //loc����
+    void                            **ctx;  //上下文
+    void                            **main_conf; //main配置
+    void                            **srv_conf;  //srv配置
+    void                            **loc_conf;  //loc配置
 
     ngx_http_event_handler_pt         read_event_handler;
     ngx_http_event_handler_pt         write_event_handler;
@@ -361,35 +383,35 @@ struct ngx_http_request_s {
     ngx_http_cache_t                 *cache;
 #endif
 
-    ngx_http_upstream_t              *upstream;  //load-balance�����ģ����load-balance�Ļ��������
+    ngx_http_upstream_t              *upstream;  //load-balance，如果模块是load-balance的话设置这个
     ngx_array_t                      *upstream_states;
                                          /* of ngx_http_upstream_state_t */
 
-    ngx_pool_t                       *pool;     //���ӳ�
+    ngx_pool_t                       *pool;     //连接池
     ngx_buf_t                        *header_in;
 
-    ngx_http_headers_in_t             headers_in; //request��header
-    ngx_http_headers_out_t            headers_out; //response��header��ʹ��ngx_http_send_header����
+    ngx_http_headers_in_t             headers_in; //request的header
+    ngx_http_headers_out_t            headers_out; //response的header，使用ngx_http_send_header发送
 
-    ngx_http_request_body_t          *request_body; //response��body
+    ngx_http_request_body_t          *request_body; //response的body
 
     time_t                            lingering_time;
     time_t                            start_sec;
     ngx_msec_t                        start_msec;
 
     ngx_uint_t                        method;
-    ngx_uint_t                        http_version; //http�İ汾
+    ngx_uint_t                        http_version; //http的版本
 
     ngx_str_t                         request_line;
-    ngx_str_t                         uri;  //�����·�� eg '/query.php'
-    ngx_str_t                         args; //����Ĳ��� eg 'name=john'
+    ngx_str_t                         uri;  //请求的路径 eg '/query.php'
+    ngx_str_t                         args; //请求的参数 eg 'name=john'
     ngx_str_t                         exten; 
     ngx_str_t                         unparsed_uri;
 
     ngx_str_t                         method_name;
     ngx_str_t                         http_protocol;
 
-    ngx_chain_t                      *out; //�����chain
+    ngx_chain_t                      *out; //输出的chain
     ngx_http_request_t               *main;
     ngx_http_request_t               *parent;
     ngx_http_postponed_request_t     *postponed;
