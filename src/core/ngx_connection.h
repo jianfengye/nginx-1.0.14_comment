@@ -144,60 +144,126 @@ typedef enum {
 
 
 struct ngx_connection_s {
+    /*
+    连接未使用时，data成员用于充当连接池中空闲连接链表中的next指针。当连接被使用时，data的意义由使用它的nginx模块而定，
+    如在HTTP框架中，data指向ngx_http_request_t请求
+    */
     void               *data;
+
+    // 连接对应的读事件
     ngx_event_t        *read;
+    // 连接对应的写事件
     ngx_event_t        *write;
 
+    // 套接字句柄
     ngx_socket_t        fd;
 
+    // 直接接受网络字符流的方法
     ngx_recv_pt         recv;
+    // 直接发送网络字符流的方法
     ngx_send_pt         send;
+    // 以ngx_chain_t链表为参数来接收网络字符流的方法
     ngx_recv_chain_pt   recv_chain;
+    // 以ngx_chain_t链表为参数来发送网络字符流的方法
     ngx_send_chain_pt   send_chain;
 
+    // 这个连接对应的ngx_listening_t监听对象，此连接由listening 监听端口的事件建立
     ngx_listening_t    *listening;
 
+    // 这个连接上已经发送出去的字节数
     off_t               sent;
 
+    // 可以记录日志的ngx_log_t对象
     ngx_log_t          *log;
 
+    /*
+    内存池，一般在accept一个新连接时，会创建一个内存池，而在这个连接结束时会销毁内存池。
+    */
     ngx_pool_t         *pool;
 
+    //连接客户端的socketaddr结构体
     struct sockaddr    *sockaddr;
+    // socketaddr结构体的长度
     socklen_t           socklen;
+    // 连接客户端字符串形式的IP地址
     ngx_str_t           addr_text;
 
 #if (NGX_SSL)
     ngx_ssl_connection_t  *ssl;
 #endif
 
+    // 本机的监听端口对应的socketaddr结构体，也就是listening监听对象中的sockaddr成员
     struct sockaddr    *local_sockaddr;
 
+    /* 
+    用于接收、缓存客户端发来的字符流，每个事件消费模块可自由决定从连接池中分配多大的空间给 buffer这个接收缓存字段。
+    例如，在HTTP模块中，它的大小决定于client_header_buffer_size配置项
+    */ 
     ngx_buf_t          *buffer;
 
+    /*
+    该字段用于将当前连接以双向链表元素的形式添加到ngx_cycle_t核心结构体的reusable_connections_queue双向链表中，表示可重用的连接
+    */
     ngx_queue_t         queue;
 
+    /*
+    连接使用次数。ngx_connection_t结构体每次建立一条来自客户端的连接，或者用于主动向后端服务器发起连接时 （ngx_peer_connection_t也使用它）
+    number都会加1
+    */
     ngx_atomic_uint_t   number;
 
+    // 处理的请求次数
     ngx_uint_t          requests;
 
+    /*
+    缓存中的业务类型。任何事件消费模块都可以自定义需要的标志位。
+    这个buffered字段有8位，最多可以同时表示8个不同的业务。第三方模块在自定义buffered标志位时注意不要与可能使用的模块定义的标志位冲突。
+    */
     unsigned            buffered:8;
 
+    /*
+    本连接记录日志时的级别，它占用了3位，取值范围是0～7，但实际上目前只定义了5个值，由ngx_connection_log_error_e枚举表示，如下：
+    typedef enum{
+        NGX_ERROR_ALERT = 0,
+        NGX_ERROR_ERR,
+        NGX_ERROR_INFO,
+        NGX_ERROR_IGNORE_ECONNRESET,
+        NGX_ERROR_IGNORE_EINVAL,
+    } ngx_connection_log_error_e;
+    */
     unsigned            log_error:3;     /* ngx_connection_log_error_e */
 
+    /*
+    标志位，为1表示独立的连接，如从客户端发起的连接；
+    为0表示依靠其他连接的行为而建立起来的非独立连接，如使用upstream机制向后端服务器建立起来的连接
+    */
     unsigned            single_connection:1;
+    // 标志位，为1表示不期待字符流结束，目前无意义
     unsigned            unexpected_eof:1;
+    // 标志位，为1表示连接已超时
     unsigned            timedout:1;
+    // 标志位，为1表示连接处理过程中出现错误
     unsigned            error:1;
+    // 标志位，为1表示连接已经销毁。这里的连接指的是TCP连接，而不是ngx_connection_t结构体。
+    // 当destroy为1时，ngx_connection_t结构体仍然存在，但其对应的套接字，内存池已经不可用。
     unsigned            destroyed:1;
 
+    // 标志位，为1表示连接处于空闲状态，如keepalive请求中两次请求之间的状态
     unsigned            idle:1;
+    // 标志位，为1表示连接可重用，它与上面的queue字段是对应使用的
     unsigned            reusable:1;
+    // 标志位，为1表示连接关闭
     unsigned            close:1;
 
+    // 标志位，为1表示正在将文件中的数据发往连接的另一端
     unsigned            sendfile:1;
+    /*
+    标志位，如果为1， 则表示只有在连接套接字对应的发送缓冲区必须满足最低设置的大小阀值，事件驱动模型才会分发该事件。
+    */ 
     unsigned            sndlowat:1;
+    // 标志位，表示如何使用TCP的nodelay特性。它的取值范围是ngx_connection_tcp_nodelay_e
     unsigned            tcp_nodelay:2;   /* ngx_connection_tcp_nodelay_e */
+    // 标志位，表示如何使用TCP的nopush特性，它的取值范围是ngx_connection_tcp_nopush_e
     unsigned            tcp_nopush:2;    /* ngx_connection_tcp_nopush_e */
 
 #if (NGX_HAVE_IOCP)
@@ -205,7 +271,9 @@ struct ngx_connection_s {
 #endif
 
 #if (NGX_HAVE_AIO_SENDFILE)
+    // 标志位，为1时表示使用异步I/O的方式将磁盘上文件发送给网络连接的另一端
     unsigned            aio_sendfile:1;
+    // 使用异步 I/O 方式发送的文件，busy_sendfile缓冲区保存待发送文件的信息
     ngx_buf_t          *busy_sendfile;
 #endif
 
