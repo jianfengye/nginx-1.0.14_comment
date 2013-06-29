@@ -188,8 +188,8 @@ struct ngx_module_s {
 //http://blog.csdn.net/livelylittlefish/article/details/7247080
 typedef struct {
     ngx_str_t             name;                                         //模块名，即ngx_core_module_ctx结构体对象的
-    void               *(*create_conf)(ngx_cycle_t *cycle);             //创建配置的callback
-    char               *(*init_conf)(ngx_cycle_t *cycle, void *conf);   //初始化配置的callback
+    void               *(*create_conf)(ngx_cycle_t *cycle);             //解析配置项茜，nginx框架会调用create_conf方法
+    char               *(*init_conf)(ngx_cycle_t *cycle, void *conf);   //解析配置项完成后，nginx框架会调用init_conf方法
 } ngx_core_module_t;
 
 

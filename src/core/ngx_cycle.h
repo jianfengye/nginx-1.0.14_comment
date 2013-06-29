@@ -34,51 +34,49 @@ struct ngx_shm_zone_s {
     void                     *tag;
 };
 
-//参考：
-//http://blog.csdn.net/livelylittlefish/article/details/7247080
+
 struct ngx_cycle_s {
-    void                  ****conf_ctx; //配置上下文数组（含所有模块）
-    ngx_pool_t               *pool;     //内存池
+    void                  ****conf_ctx; 
+    ngx_pool_t               *pool;     
 
-    ngx_log_t                *log;      //日志
-    ngx_log_t                 new_log;  //新日志
+    ngx_log_t                *log;      
+    ngx_log_t                 new_log; 
 
-    ngx_connection_t        **files;    //存放socket和connection之间的关系
-    ngx_connection_t         *free_connections;     //空闲连接
-    ngx_uint_t                free_connection_n;    // 空闲连接的个数
+    ngx_connection_t        **files;    
+    ngx_connection_t         *free_connections;    
+    ngx_uint_t                free_connection_n;    
 
-    ngx_queue_t               reusable_connections_queue;  //再利用连接队列
+    ngx_queue_t               reusable_connections_queue;  
 
-    ngx_array_t               listening;        //监听套接字，元素结构为ngx_listening_t
-    ngx_array_t               pathes;           //系统所使用的路径集合，元素结构为ngx_path_t
-    ngx_list_t                open_files;       //打开文件的集合，元素结构为ngx_open_file_t
-    ngx_list_t                shared_memory;    //共享内存 ，元素结构为ngx_shm_zone_t
+    ngx_array_t               listening;        
+    ngx_array_t               pathes;           
+    ngx_list_t                open_files;       
+    ngx_list_t                shared_memory;   
 
-    ngx_uint_t                connection_n;     //总的预先创建的连接个数
-    ngx_uint_t                files_n;          //打开文件个数
+    ngx_uint_t                connection_n;    
+    ngx_uint_t                files_n;     
 
-    ngx_connection_t         *connections;      //所有的连接
-    ngx_event_t              *read_events;      //读事件
-    ngx_event_t              *write_events;     //写事件
+    ngx_connection_t         *connections;   
+    ngx_event_t              *read_events;   
+    ngx_event_t              *write_events;  
 
-    ngx_cycle_t              *old_cycle;        //旧的全局信息 
+    ngx_cycle_t              *old_cycle;    
 
-    ngx_str_t                 conf_file;        //配置文件
-    ngx_str_t                 conf_param;       //配置参数
-    ngx_str_t                 conf_prefix;      //配置文件前缀 
-    ngx_str_t                 prefix;           //系统安装路径前缀 
-    ngx_str_t                 lock_file;        //锁文件
-    ngx_str_t                 hostname;         //主机名
+    ngx_str_t                 conf_file;     
+    ngx_str_t                 conf_param;      
+    ngx_str_t                 conf_prefix;    
+    ngx_str_t                 prefix;         
+    ngx_str_t                 lock_file;      
+    ngx_str_t                 hostname;   
 };
 
-//Core模块的配置结构，ngx_core_module_create_conf创建，ngx_core_module_init_conf初始化
 typedef struct {
-     ngx_flag_t               daemon;              //是否设置daemon
+     ngx_flag_t               daemon;              
      ngx_flag_t               master;
 
      ngx_msec_t               timer_resolution;
 
-     ngx_int_t                worker_processes;    //创建多少个worker进程
+     ngx_int_t                worker_processes;    
      ngx_int_t                debug_points;
 
      ngx_int_t                rlimit_nofile;
@@ -90,7 +88,7 @@ typedef struct {
      ngx_uint_t               cpu_affinity_n;
      u_long                  *cpu_affinity;
 
-     char                    *username;             /* 用户名 */  
+     char                    *username;             
      ngx_uid_t                user;                 /* user ID */  
      ngx_gid_t                group;                /* group ID*/ 
 
@@ -98,7 +96,7 @@ typedef struct {
      ngx_str_t                lock_file;
 
      ngx_str_t                pid;
-     ngx_str_t                oldpid;				/* 以'.oldbin' 结尾 */
+     ngx_str_t                oldpid;				
 
      ngx_array_t              env;
      char                   **environment;

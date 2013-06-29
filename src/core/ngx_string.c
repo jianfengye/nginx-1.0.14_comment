@@ -50,7 +50,7 @@ ngx_cpystrn(u_char *dst, u_char *src, size_t n)
     return dst;
 }
 
-//����src�ַ���
+//¸´ÖÆsrc×Ö·û´®
 u_char *
 ngx_pstrdup(ngx_pool_t *pool, ngx_str_t *src)
 {
@@ -1717,30 +1717,37 @@ ngx_str_rbtree_insert_value(ngx_rbtree_node_t *temp,
         n = (ngx_str_node_t *) node;
         t = (ngx_str_node_t *) temp;
 
+        // 首先比较key关键字，红黑树中以key作为第一索引关键字
         if (node->key != temp->key) {
-
+            // 左子树节点的关键节小于右子树
             p = (node->key < temp->key) ? &temp->left : &temp->right;
-
+            // 当key关键字相同时，以字符串长度为第二索引关键字
         } else if (n->str.len != t->str.len) {
-
+            // 左子树节点字符串的长度小于右子树
             p = (n->str.len < t->str.len) ? &temp->left : &temp->right;
-
         } else {
+            // key关键字相同且字符串长度相同时，再继续比较字符串内容
             p = (ngx_memcmp(n->str.data, t->str.data, n->str.len) < 0)
                  ? &temp->left : &temp->right;
         }
 
+        // 如果当前节点p是哨兵节点，那么iaochu循环准备插入节点
         if (*p == sentinel) {
             break;
         }
 
+        // p节点与要插入的节点具有相同的标识符时，必须覆盖内容
         temp = *p;
     }
 
     *p = node;
+    // 置插入节点的父节点
     node->parent = temp;
+    // 左右子节点都是哨兵节点
     node->left = sentinel;
     node->right = sentinel;
+
+    // 将节点颜色设置为红色。
     ngx_rbt_red(node);
 }
 

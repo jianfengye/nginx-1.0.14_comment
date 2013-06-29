@@ -19,12 +19,19 @@ typedef ngx_int_t   ngx_rbtree_key_int_t;
 
 typedef struct ngx_rbtree_node_s  ngx_rbtree_node_t;
 
+// 红黑树
 struct ngx_rbtree_node_s {
+    // 无符号整形的关键字
     ngx_rbtree_key_t       key;
+    // 左子节点
     ngx_rbtree_node_t     *left;
+    // 右子节点
     ngx_rbtree_node_t     *right;
+    // 父节点
     ngx_rbtree_node_t     *parent;
+    // 节点的颜色，0表示黑色，1表示红色
     u_char                 color;
+    // 仅1个字节的节点数据。由于表示的空间太小，所以一般很少使用。
     u_char                 data;
 };
 
@@ -35,8 +42,11 @@ typedef void (*ngx_rbtree_insert_pt) (ngx_rbtree_node_t *root,
     ngx_rbtree_node_t *node, ngx_rbtree_node_t *sentinel);
 
 struct ngx_rbtree_s {
+    // 指向树的根节点。
     ngx_rbtree_node_t     *root;
+    // 指向NIL哨兵节点
     ngx_rbtree_node_t     *sentinel;
+    // 表示红黑树添加元素的函数指针，它决定在添加新节点时的行为究竟是替换还是新增
     ngx_rbtree_insert_pt   insert;
 };
 

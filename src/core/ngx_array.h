@@ -4,7 +4,7 @@
  * Copyright (C) Nginx, Inc.
  */
 
-//Êı×é¶¨Òå²Î¿¼£ºhttp://blog.csdn.net/sunhappy2200/article/details/5915189
+//ÃŠÃ½Ã—Ã©Â¶Â¨Ã’Ã¥Â²ÃÂ¿Â¼Â£Âºhttp://blog.csdn.net/sunhappy2200/article/details/5915189
 
 #ifndef _NGX_ARRAY_H_INCLUDED_
 #define _NGX_ARRAY_H_INCLUDED_
@@ -13,25 +13,26 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-
+// åŠ¨æ€æ•°ç»„
 struct ngx_array_s {
-    void        *elts;  //Êı×éÖĞ¾ßÌåµÄÊı¾İÇøÓòµÄÖ¸Õë
-    ngx_uint_t   nelts; //Êı×éÖĞÊµ¼Ê°üº¬µÄÔªËØÊıÁ¿
-    size_t       size;  //Êı×éÖĞµ¥¸öÔªËØµÄ´óĞ¡£¨×Ö½Ú£©
-    ngx_uint_t   nalloc; //Êı×éÈİÁ¿£¬¼´Êı×éÔ¤ÏÈ·ÖÅäµÄÄÚ´æ´óĞ¡
-    ngx_pool_t  *pool;  //ÄÚ´æ³Ø
+    // eltsæŒ‡å‘æ•°ç»„çš„é¦–åœ°å€
+    void        *elts; 
+    // neltsæ˜¯æ•°ç»„ä¸­å·²ç»ä½¿ç”¨çš„å…ƒç´ ä¸ªæ•°
+    ngx_uint_t   nelts; 
+    // æ¯ä¸ªæ•°ç»„å…ƒç´ å ç”¨çš„å†…å­˜å¤§å°
+    size_t       size;  
+    // å½“å‰æ•°ç»„ä¸­èƒ½å¤Ÿå®¹çº³å…ƒç´ ä¸ªæ•°çš„æ€»å¤§å°
+    ngx_uint_t   nalloc; 
+    // å†…å­˜æ± å¯¹è±¡
+    ngx_pool_t  *pool;  
 };
 
-//´ÓÄÚ´æ³ØÖĞ´´½¨n¸öÔªËØµÄÊı×é£¬ÔªËØ´óĞ¡Îªsize
 ngx_array_t *ngx_array_create(ngx_pool_t *p, ngx_uint_t n, size_t size);
 
-//°ÑÊı×é·ÖÅäµ½µÄÄÚ´æÊÍ·Åµ½ÄÚ´æ³Ø
 void ngx_array_destroy(ngx_array_t *a);
 
-//·µ»Ø½«ÒªÌí¼Óµ½Êı×éÖĞÔªËØµÄµØÖ·£¬Èç¹ûÊı×éÒÑÂú£¬ÔòÖØĞÂ·ÖÅäÁ½±¶£¨nalloc*size)µÄÄÚ´æ¿Õ¼ä£¬ÇÒnalloc¸üĞÂÎª2*nalloc
 void *ngx_array_push(ngx_array_t *a);
 
-//·µ»Ø½«ÒªÌí¼Ón¸öÔªËØµ½Êı×éÖĞÆäÊ×¸öÔªËØµÄµØÖ·
 void *ngx_array_push_n(ngx_array_t *a, ngx_uint_t n);
 
 

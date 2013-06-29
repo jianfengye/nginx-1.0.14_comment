@@ -365,7 +365,7 @@ struct ngx_http_posted_request_s {
 typedef ngx_int_t (*ngx_http_handler_pt)(ngx_http_request_t *r);
 typedef void (*ngx_http_event_handler_pt)(ngx_http_request_t *r);
 
-
+//这个结构定义了一个HTTP请求。
 struct ngx_http_request_s {
     uint32_t                          signature;         /* "HTTP" */
 
