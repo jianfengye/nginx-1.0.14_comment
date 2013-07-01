@@ -541,17 +541,28 @@ extern ngx_os_io_t  ngx_io;
 
 
 typedef struct {
+    // 连接池的大小
     ngx_uint_t    connections;
+    // 选用的事件模块在所有事件模块中的序号
     ngx_uint_t    use;
 
+    // 标志位，如果为1，则表示在接收到一个新连接事件时，一次性建立尽可能多的连接
     ngx_flag_t    multi_accept;
+    //标识位，为1表示启用负载均衡锁
     ngx_flag_t    accept_mutex;
 
+    /*
+    负载均衡锁会使有些worker进程在拿不到锁时延迟建立新连接，accept_mutex_delay就是这段延迟时间的长度
+    */
     ngx_msec_t    accept_mutex_delay;
 
+    // 所选用事件模块的名字，它与use成员是匹配的
     u_char       *name;
 
 #if (NGX_DEBUG)
+    /*
+    在 --with-debug 编译模式下，可以仅针对某些客户端建立的连接输出调试级别的日志，而debug_connection数组用于保存这些客户端的地址信息
+    */
     ngx_array_t   debug_connection;
 #endif
 } ngx_event_conf_t;

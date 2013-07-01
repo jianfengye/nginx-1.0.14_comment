@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) Igor Sysoev
  * Copyright (C) Nginx, Inc.
@@ -145,7 +144,7 @@ static ngx_command_t  ngx_epoll_commands[] = {
       ngx_null_command
 };
 
-//epollÊÇ¸öeventÄ£¿é
+//epollæ˜¯ä¸ªeventæ¨¡å—
 ngx_event_module_t  ngx_epoll_module_ctx = {
     &epoll_name,
     ngx_epoll_create_conf,               /* create configuration */
@@ -284,16 +283,16 @@ failed:
 
 #endif
 
-//Ö÷ÒªÊÇÍê³ÉepollµÄÏà¹Ø³õÊ¼»¯¹¤×÷
+//ä¸»è¦æ˜¯å®Œæˆepollçš„ç›¸å…³åˆå§‹åŒ–å·¥ä½œ
 static ngx_int_t
 ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
 {
     ngx_epoll_conf_t  *epcf;
-    //È¡µÃepollÄ£¿éµÄÅäÖÃ½á¹¹
+    //å–å¾—epollæ¨¡å—çš„é…ç½®ç»“æ„
     epcf = ngx_event_get_conf(cycle->conf_ctx, ngx_epoll_module);
-    //epÊÇepollÄ£¿é¶¨ÒåµÄÒ»¸öÈ«¾Ö±äÁ¿£¬³õÊ¼»¯Îª-1
+    //epæ˜¯epollæ¨¡å—å®šä¹‰çš„ä¸€ä¸ªå…¨å±€å˜é‡ï¼Œåˆå§‹åŒ–ä¸º-1
     if (ep == -1) {
-        ep = epoll_create(cycle->connection_n / 2);  //´´Ò»¸öepoll¶ÔÏó£¬ÈİÁ¿Îª×ÜÁ¬½ÓÊıµÄÒ»°ë
+        ep = epoll_create(cycle->connection_n / 2);  //åˆ›ä¸€ä¸ªepollå¯¹è±¡ï¼Œå®¹é‡ä¸ºæ€»è¿æ¥æ•°çš„ä¸€åŠ
 
         if (ep == -1) {
             ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno,
@@ -312,7 +311,7 @@ ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
         if (event_list) {
             ngx_free(event_list);
         }
-        //event_list´æ´¢²úÉúÊÂ¼şµÄÊı×é
+        //event_listå­˜å‚¨äº§ç”Ÿäº‹ä»¶çš„æ•°ç»„
         event_list = ngx_alloc(sizeof(struct epoll_event) * epcf->events,
                                cycle->log);
         if (event_list == NULL) {
@@ -327,12 +326,12 @@ ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
     ngx_event_actions = ngx_epoll_module_ctx.actions;
 
 #if (NGX_HAVE_CLEAR_EVENT)
-    ngx_event_flags = NGX_USE_CLEAR_EVENT  //epollÌí¼ÓÕâ¸ö±êÖ¾£¬Ö÷ÒªÎªÁËÊµÏÖ±ßÔµ´¥·¢
+    ngx_event_flags = NGX_USE_CLEAR_EVENT  //epollæ·»åŠ è¿™ä¸ªæ ‡å¿—ï¼Œä¸»è¦ä¸ºäº†å®ç°è¾¹ç¼˜è§¦å‘
 #else
-    ngx_event_flags = NGX_USE_LEVEL_EVENT  //Ë®Æ½´¥·¢
+    ngx_event_flags = NGX_USE_LEVEL_EVENT  //æ°´å¹³è§¦å‘
 #endif
-                      |NGX_USE_GREEDY_EVENT //ioµÄÊ±ºò£¬ÖªµÀEAGAINÎªÖ¹
-                      |NGX_USE_EPOLL_EVENT; //epoll±êÖ¾
+                      |NGX_USE_GREEDY_EVENT //ioçš„æ—¶å€™ï¼ŒçŸ¥é“EAGAINä¸ºæ­¢
+                      |NGX_USE_EPOLL_EVENT; //epollæ ‡å¿—
 
     return NGX_OK;
 }
@@ -569,15 +568,15 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                    "epoll timer: %M", timer);
-    //Ò»¿ªÊ¼¾ÍÊÇµÈ´ıÊÂ¼ş£¬×î³¤µÈ´ıÊ±¼äÎªtimer£»nginxÎªÊÂ¼ş×¨ÃÅÓÃºìºÚÊ÷Î¬»¤ÁËÒ»¸ö¼ÆÊ±Æ÷
+    //ä¸€å¼€å§‹å°±æ˜¯ç­‰å¾…äº‹ä»¶ï¼Œæœ€é•¿ç­‰å¾…æ—¶é—´ä¸ºtimerï¼›nginxä¸ºäº‹ä»¶ä¸“é—¨ç”¨çº¢é»‘æ ‘ç»´æŠ¤äº†ä¸€ä¸ªè®¡æ—¶å™¨
     events = epoll_wait(ep, event_list, (int) nevents, timer);
 
     err = (events == -1) ? ngx_errno : 0;
 
     if (flags & NGX_UPDATE_TIME || ngx_event_timer_alarm) {
-        ngx_time_update(); //Ö´ĞĞÒ»´ÎÊÂ¼ş¸üĞÂ£¬nginx½«Ê±¼ä»º´æµ½Ò»×éÈ«¾Ö±äÁ¿ÖĞ£¬·½±ã³ÌĞò¸ßĞ§µÄ»ñÈ¡ÊÂ¼ş
+        ngx_time_update(); //æ‰§è¡Œä¸€æ¬¡äº‹ä»¶æ›´æ–°ï¼Œnginxå°†æ—¶é—´ç¼“å­˜åˆ°ä¸€ç»„å…¨å±€å˜é‡ä¸­ï¼Œæ–¹ä¾¿ç¨‹åºé«˜æ•ˆçš„è·å–äº‹ä»¶
     }
-    //´¦Àíwait´íÎó
+    //å¤„ç†waité”™è¯¯
     if (err) {
         if (err == NGX_EINTR) {
 
@@ -595,7 +594,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
         ngx_log_error(level, cycle->log, err, "epoll_wait() failed");
         return NGX_ERROR;
     }
-    //wait·µ»ØÊÂ¼şÊı0£¬¿ÉÄÜÊÇtimeout·µ»Ø£¬Ò²¿ÉÄÜÊÇ·Çtimeout·µ»Ø£¬·Çtimeout·µ»ØÔòÊÇerror
+    //waitè¿”å›äº‹ä»¶æ•°0ï¼Œå¯èƒ½æ˜¯timeoutè¿”å›ï¼Œä¹Ÿå¯èƒ½æ˜¯étimeoutè¿”å›ï¼Œétimeoutè¿”å›åˆ™æ˜¯error
     if (events == 0) {
         if (timer != NGX_TIMER_INFINITE) {
             return NGX_OK;
@@ -607,7 +606,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
     }
 
     ngx_mutex_lock(ngx_posted_events_mutex);
-    //Ñ­»·¿ªÊ¼´¦ÀíÊÕµ½µÄËùÓĞÊÂ¼ş
+    //å¾ªç¯å¼€å§‹å¤„ç†æ”¶åˆ°çš„æ‰€æœ‰äº‹ä»¶
     for (i = 0; i < events; i++) {
         c = event_list[i].data.ptr;
 
@@ -627,13 +626,13 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
                            "epoll: stale event %p", c);
             continue;
         }
-        //È¡µÃ·¢ÉúÒ»¸öÊÂ¼ş
+        //å–å¾—å‘ç”Ÿä¸€ä¸ªäº‹ä»¶
         revents = event_list[i].events;
 
         ngx_log_debug3(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                        "epoll: fd:%d ev:%04XD d:%p",
                        c->fd, revents, event_list[i].data.ptr);
-        //¼ÇÂ¼waitµÄ´íÎó·µ»Ø×´Ì¬
+        //è®°å½•waitçš„é”™è¯¯è¿”å›çŠ¶æ€
         if (revents & (EPOLLERR|EPOLLHUP)) {
             ngx_log_debug2(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                            "epoll_wait() error on fd:%d ev:%04XD",
@@ -647,7 +646,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
                           c->fd, revents);
         }
 #endif
-        //¸ÃÊÂ¼şÊÇÒ»¸ö¶ÁÊÂ¼ş£¬²¢¸ÃÁ¬½ÓÉÏ×¢²áµÄ¶ÁÊÂ¼şÊÇactiveµÄ
+        //è¯¥äº‹ä»¶æ˜¯ä¸€ä¸ªè¯»äº‹ä»¶ï¼Œå¹¶è¯¥è¿æ¥ä¸Šæ³¨å†Œçš„è¯»äº‹ä»¶æ˜¯activeçš„
         if ((revents & (EPOLLERR|EPOLLHUP))
              && (revents & (EPOLLIN|EPOLLOUT)) == 0)
         {
@@ -668,7 +667,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
             } else {
                 rev->ready = 1;
             }
-            //ÊÂ¼ş·ÅÈëµ½ÏàÓ¦µÄ¶ÓÁĞÖĞ
+            //äº‹ä»¶æ”¾å…¥åˆ°ç›¸åº”çš„é˜Ÿåˆ—ä¸­
             if (flags & NGX_POST_EVENTS) {
                 queue = (ngx_event_t **) (rev->accept ?
                                &ngx_posted_accept_events : &ngx_posted_events);
