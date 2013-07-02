@@ -292,11 +292,22 @@ TestHead: TestValue\r\n
 typedef void (*ngx_http_client_body_handler_pt)(ngx_http_request_t *r);
 
 typedef struct {
+    // 存放HTTP包体的临时文件
     ngx_temp_file_t                  *temp_file;
+
+    // 接收HTTP包体的缓冲区链表。当包体需要全部存放在内存中时，如果一块ngx_buf_t缓冲区无法存放完，这时就需要使用ngx_chain_t链表存放
     ngx_chain_t                      *bufs;
+
+    // 直接接收HTTP包体的缓存
     ngx_buf_t                        *buf;
+
+    // 根据content-length头部和已接收到的包体长度，计算出的还需要接收的包体长度
     off_t                             rest;
+
+    // 该缓冲区链表存放着将要写入文件的包体
     ngx_chain_t                      *to_write;
+
+    // HTTP包体接收完毕后执行的回调方法，也就是ngx_http_read_client_request_body 方法传递的第二个参数
     ngx_http_client_body_handler_pt   post_handler;
 } ngx_http_request_body_t;
 

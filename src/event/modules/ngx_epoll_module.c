@@ -292,6 +292,9 @@ ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
     epcf = ngx_event_get_conf(cycle->conf_ctx, ngx_epoll_module);
     //ep是epoll模块定义的一个全局变量，初始化为-1
     if (ep == -1) {
+        /*
+        调用epoll_create 在内核中创建epoll对象。
+        */
         ep = epoll_create(cycle->connection_n / 2);  //创一个epoll对象，容量为总连接数的一半
 
         if (ep == -1) {
