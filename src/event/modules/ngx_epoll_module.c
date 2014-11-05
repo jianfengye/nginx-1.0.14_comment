@@ -102,6 +102,9 @@ static ngx_int_t ngx_epoll_del_connection(ngx_connection_t *c,
 static ngx_int_t ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer,
     ngx_uint_t flags);
 
+/*
+ * 处理已经完成的异步IO
+ */	
 #if (NGX_HAVE_FILE_AIO)
 static void ngx_epoll_eventfd_handler(ngx_event_t *ev);
 #endif
@@ -220,7 +223,7 @@ ngx_epoll_aio_init(ngx_cycle_t *cycle, ngx_epoll_conf_t *epcf)
     int                 n;
     struct epoll_event  ee;
 
-    ngx_eventfd = syscall(SYS_eventfd, 0);
+    ngx_eventfd = syscall(SYS_eventfd, 0);//获取用于通知异步IO完成的文件
 
     if (ngx_eventfd == -1) {
         ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno,
@@ -326,20 +329,22 @@ ngx_epoll_init(ngx_cycle_t *cycle, ngx_msec_t timer)
 
     ngx_io = ngx_os_io;
 
-    ngx_event_actions = ngx_epoll_module_ctx.actions;
+    ngx_event_actions = ngx_epoll_module_ctx.actions;//各种工具方法
 
 #if (NGX_HAVE_CLEAR_EVENT)
     ngx_event_flags = NGX_USE_CLEAR_EVENT  //epoll添加这个标志，主要为了实现边缘触发
 #else
     ngx_event_flags = NGX_USE_LEVEL_EVENT  //水平触发
 #endif
-                      |NGX_USE_GREEDY_EVENT //io的时候，知道EAGAIN为止
+                      |NGX_USE_GREEDY_EVENT //io的时候，直到EAGAIN为止
                       |NGX_USE_EPOLL_EVENT; //epoll标志
 
     return NGX_OK;
 }
 
-
+/*
+ * 退出事件驱动模块前调用
+ */
 static void
 ngx_epoll_done(ngx_cycle_t *cycle)
 {
