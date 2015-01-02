@@ -203,17 +203,17 @@ ngx_http_init_connection(ngx_connection_t *c)
     c->log_error = NGX_ERROR_INFO;
 
     rev = c->read;
-    rev->handler = ngx_http_init_request;//ÉèÖÃ¶Áhandler
+    rev->handler = ngx_http_init_request;//è®¾ç½®è¯»handler
     c->write->handler = ngx_http_empty_handler;
 
 #if (NGX_STAT_STUB)
     (void) ngx_atomic_fetch_add(ngx_stat_reading, 1);
 #endif
 
-    if (rev->ready) {//Èç¹û½ÓÊÕ×¼±¸ºÃÁË£¬ÔòÖ±½Óµ÷ÓÃngx_http_init_request
+    if (rev->ready) {//å¦‚æœæ¥æ”¶å‡†å¤‡å¥½äº†ï¼Œåˆ™ç›´æ¥è°ƒç”¨ngx_http_init_request
         /* the deferred accept(), rtsig, aio, iocp */
 
-        if (ngx_use_accept_mutex) {//Èç¹ûÊ¹ÓÃÁËmutexËø£¬Ôòpost Õâ¸öevent£¬È»ºó·µ»Ø¡£
+        if (ngx_use_accept_mutex) {//å¦‚æœä½¿ç”¨äº†mutexé”ï¼Œåˆ™post è¿™ä¸ªeventï¼Œç„¶åè¿”å›ã€‚
             ngx_post_event(rev, &ngx_posted_events);
             return;
         }
@@ -222,10 +222,10 @@ ngx_http_init_connection(ngx_connection_t *c)
         return;
     }
 
-	//Ìí¼Ó¶¨Ê±Æ÷
+	//æ·»åŠ å®šæ—¶å™¨
     ngx_add_timer(rev, c->listening->post_accept_timeout);
 
-	//½«ÊÂ¼ş¹ÒÔØµ½ÊÂ¼ş´¦ÀíÆ÷
+	//å°†äº‹ä»¶æŒ‚è½½åˆ°äº‹ä»¶å¤„ç†å™¨
     if (ngx_handle_read_event(rev, 0) != NGX_OK) {
 #if (NGX_STAT_STUB)
         (void) ngx_atomic_fetch_add(ngx_stat_reading, -1);

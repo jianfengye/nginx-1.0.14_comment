@@ -89,7 +89,7 @@ ngx_write_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size,
     return NGX_OK;
 }
 
-// ¶Á³ömaster·¢¹ıÀ´µÄÖ¸ÁîÊı¾İ£¬ÊÇÊ¹ÓÃrecvmsgÊµÏÖµÄ£¬ÏêÇé½éÉÜ¼û¡¶unixÍøÂç±à³Ì¡·
+// è¯»å‡ºmasterå‘è¿‡æ¥çš„æŒ‡ä»¤æ•°æ®ï¼Œæ˜¯ä½¿ç”¨recvmsgå®ç°çš„ï¼Œè¯¦æƒ…ä»‹ç»è§ã€Šunixç½‘ç»œç¼–ç¨‹ã€‹
 ngx_int_t
 ngx_read_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size, ngx_log_t *log)
 {

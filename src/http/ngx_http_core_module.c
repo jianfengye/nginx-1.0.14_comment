@@ -1868,7 +1868,7 @@ ngx_http_send_header(ngx_http_request_t *r)
     return ngx_http_top_header_filter(r);
 }
 
-//r是request请求，in是输入的chain
+//r鏄痳equest璇锋眰锛宨n鏄緭鍏ョ殑chain
 ngx_int_t
 ngx_http_output_filter(ngx_http_request_t *r, ngx_chain_t *in)
 {
@@ -2636,10 +2636,10 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
     }
 
     http_ctx = cf->ctx;
-    ctx->main_conf = http_ctx->main_conf;//main conf不变
+    ctx->main_conf = http_ctx->main_conf;//main conf涓嶅彉
 
     /* the server{}'s srv_conf */
-	//创建新的srv和loc conf.
+	//鍒涘缓鏂扮殑srv鍜宭oc conf.
     ctx->srv_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
     if (ctx->srv_conf == NULL) {
         return NGX_CONF_ERROR;
@@ -2686,7 +2686,7 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
 
     cmcf = ctx->main_conf[ngx_http_core_module.ctx_index];
-	//保存所有的servers，可以看到是保存在main中的。这样子最后在HTTP main中就可以取到这个srv 
+	//淇濆瓨鎵�鏈夌殑servers锛屽彲浠ョ湅鍒版槸淇濆瓨鍦╩ain涓殑銆傝繖鏍峰瓙鏈�鍚庡湪HTTP main涓氨鍙互鍙栧埌杩欎釜srv 
     cscfp = ngx_array_push(&cmcf->servers);
     if (cscfp == NULL) {
         return NGX_CONF_ERROR;
@@ -2696,14 +2696,14 @@ ngx_http_core_server(ngx_conf_t *cf, ngx_command_t *cmd, void *dummy)
 
 
     /* parse inside server{} */
-	//解析server{} block，可以看到设置type为srv_conf.
+	//瑙ｆ瀽server{} block锛屽彲浠ョ湅鍒拌缃畉ype涓簊rv_conf.
     pcf = *cf;
     cf->ctx = ctx;
     cf->cmd_type = NGX_HTTP_SRV_CONF;
 
     rv = ngx_conf_parse(cf, NULL);
 
-	//恢复cf.
+	//鎭㈠cf.
     *cf = pcf;
 
     if (rv == NGX_CONF_OK && !cscf->listen) {

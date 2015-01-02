@@ -31,15 +31,15 @@ typedef ngx_int_t (*ngx_http_get_variable_pt) (ngx_http_request_t *r,
 #define NGX_HTTP_VAR_INDEXED      4
 #define NGX_HTTP_VAR_NOHASH       8
 
-//²Î¿¼×ÊÁÏ£º
+//å‚è€ƒèµ„æ–™ï¼š
 //http://blog.csdn.net/dingyujie/article/details/7515904
 struct ngx_http_variable_s {
-    ngx_str_t                     name;         /* must be first to build the hash */ //±äÁ¿µÄ×Ö·û´®Öµ
-    ngx_http_set_variable_pt      set_handler;  //Ê¹ÓÃ±äÁ¿ÖÐµÄÖµÉèÖÃrequestµÄÄ³¸ö³ÉÔ±µÄÖµ
-    ngx_http_get_variable_pt      get_handler;  //¸ù¾ÝrequestÖÐ³ÉÔ±(Èçuri£¬argsµÈ)µÄÖµÀ´ÉèÖÃ£¬r->variablesÖÐ¶ÔÓ¦±äÁ¿µÄÄÚÈÝ
-    uintptr_t                     data;         //ÔÚsetºÍget²Ù×÷ÖÐÊ¹ÓÃ£¬Ò»°ãÊÇrÖÐÄ³¸ö³ÉÔ±ÔÚrequest½á¹¹ÖÐµÄoffset
-    ngx_uint_t                    flags;        //Ò»Ð©ÔÚsetºÍgetÖÐ¿ØÖÆÌØ¶¨¶¯×÷µÄ±êÖ¾
-    ngx_uint_t                    index;        //Ä³¸ö±äÁ¿ÔÚr->variabels»òÕßcmcf->variabelsÖÐÊý×éÖÐµÄÏÂ±ê
+    ngx_str_t                     name;         /* must be first to build the hash */ //å˜é‡çš„å­—ç¬¦ä¸²å€¼
+    ngx_http_set_variable_pt      set_handler;  //ä½¿ç”¨å˜é‡ä¸­çš„å€¼è®¾ç½®requestçš„æŸä¸ªæˆå‘˜çš„å€¼
+    ngx_http_get_variable_pt      get_handler;  //æ ¹æ®requestä¸­æˆå‘˜(å¦‚uriï¼Œargsç­‰)çš„å€¼æ¥è®¾ç½®ï¼Œr->variablesä¸­å¯¹åº”å˜é‡çš„å†…å®¹
+    uintptr_t                     data;         //åœ¨setå’Œgetæ“ä½œä¸­ä½¿ç”¨ï¼Œä¸€èˆ¬æ˜¯rä¸­æŸä¸ªæˆå‘˜åœ¨requestç»“æž„ä¸­çš„offset
+    ngx_uint_t                    flags;        //ä¸€äº›åœ¨setå’Œgetä¸­æŽ§åˆ¶ç‰¹å®šåŠ¨ä½œçš„æ ‡å¿—
+    ngx_uint_t                    index;        //æŸä¸ªå˜é‡åœ¨r->variabelsæˆ–è€…cmcf->variabelsä¸­æ•°ç»„ä¸­çš„ä¸‹æ ‡
 };
 
 

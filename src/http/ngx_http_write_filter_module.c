@@ -54,7 +54,7 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
     ngx_connection_t          *c;
     ngx_http_core_loc_conf_t  *clcf;
 
-    //µÃµ½µ±Ç°ËùÊôµÄÁ¬½Ó
+    //å¾—åˆ°å½“å‰æ‰€å±žçš„è¿žæŽ¥
     c = r->connection;
 
     if (c->error) {
@@ -64,7 +64,7 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
     size = 0;
     flush = 0;
     last = 0;
-    //µÃµ½ÉÏ´ÎÃ»ÓÐ·¢ËÍÍê±ÏµÄchain
+    //å¾—åˆ°ä¸Šæ¬¡æ²¡æœ‰å‘é€å®Œæ¯•çš„chain
     ll = &r->out;
 
     /* find the size, the flush point and the last link of the saved chain */
@@ -82,7 +82,7 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
                        cl->buf->file_last - cl->buf->file_pos);
 
 #if 1
-        //Èç¹ûÓÐ0³¤¶ÈµÄbufÔò·µ»Ø´íÎó
+        //å¦‚æžœæœ‰0é•¿åº¦çš„bufåˆ™è¿”å›žé”™è¯¯
         if (ngx_buf_size(cl->buf) == 0 && !ngx_buf_special(cl->buf)) {
             ngx_log_error(NGX_LOG_ALERT, c->log, 0,
                           "zero size buf in writer "
@@ -101,15 +101,15 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
             return NGX_ERROR;
         }
 #endif
-        //µÃµ½bufµÄ´óÐ¡
+        //å¾—åˆ°bufçš„å¤§å°
         size += ngx_buf_size(cl->buf);
 
-        //¿´µ±´«ÊäÍê±ÏºóÊÇ·ñÒªË¢ÐÂbuf
+        //çœ‹å½“ä¼ è¾“å®Œæ¯•åŽæ˜¯å¦è¦åˆ·æ–°buf
         if (cl->buf->flush || cl->buf->recycled) {
             flush = 1;
         }
 
-        //¿´ÊÇ·ñÊÇ×îºóÒ»¸öbuf
+        //çœ‹æ˜¯å¦æ˜¯æœ€åŽä¸€ä¸ªbuf
         if (cl->buf->last_buf) {
             last = 1;
         }
@@ -137,7 +137,7 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
                        cl->buf->file_last - cl->buf->file_pos);
 
 #if 1
-        //Ð£Ñébuf
+        //æ ¡éªŒbuf
         if (ngx_buf_size(cl->buf) == 0 && !ngx_buf_special(cl->buf)) {
             ngx_log_error(NGX_LOG_ALERT, c->log, 0,
                           "zero size buf in writer "

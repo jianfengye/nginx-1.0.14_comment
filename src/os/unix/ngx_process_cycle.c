@@ -95,7 +95,7 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
     ngx_listening_t   *ls;
     ngx_core_conf_t   *ccf;
 
-    //ÆÁ±ÎÒ»ÏµÁĞĞÅºÅ£¬·ÀÖ¹±»´òÈÅ
+    //å±è”½ä¸€ç³»åˆ—ä¿¡å·ï¼Œé˜²æ­¢è¢«æ‰“æ‰°
     sigemptyset(&set);
     sigaddset(&set, SIGCHLD);
     sigaddset(&set, SIGALRM);
@@ -132,13 +132,13 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
 
     ngx_setproctitle(title);
 
-    //master½ø³Ì»ñÈ¡coreÄ£¿éÅäÖÃ£¬ccfÖĞÓĞÒª´´½¨¶àÉÙ¸öworkerµÄÉè¶¨
+    //masterè¿›ç¨‹è·å–coreæ¨¡å—é…ç½®ï¼Œccfä¸­æœ‰è¦åˆ›å»ºå¤šå°‘ä¸ªworkerçš„è®¾å®š
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
 
-    //Æô¶¯worker,ÕâÊ±ÒÑ¾­ÓĞÁËworker½ø³Ì
+    //å¯åŠ¨worker,è¿™æ—¶å·²ç»æœ‰äº†workerè¿›ç¨‹
     ngx_start_worker_processes(cycle, ccf->worker_processes,            
                                NGX_PROCESS_RESPAWN);
-    ngx_start_cache_manager_processes(cycle, 0);  //´´½¨ÓĞ¹ØcacheµÄ×Ó½ø³Ì
+    ngx_start_cache_manager_processes(cycle, 0);  //åˆ›å»ºæœ‰å…³cacheçš„å­è¿›ç¨‹
 
     ngx_new_binary = 0;
     delay = 0;
@@ -146,9 +146,9 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
     live = 1;
 
     for ( ;; ) {
-        //delayÓÃÀ´µÈ´ı×Ó½ø³ÌÍË³öµÄÊ±¼ä£¬ÓÉÓÚÎÒÃÇ½ÓÊÜµ½SIGINTĞÅºÅºó£¬ÎÒÃÇĞèÒªÏÈ·¢ËÍĞÅºÅ¸ø×Ó½ø³Ì£¬
-        //¶ø×Ó½ø³ÌµÄÍË³öĞèÒªÒ»¶¨µÄÊ±¼ä£¬³¬Ê±Ê±Èç¹û×Ó½ø³ÌÒÑÍË³ö£¬ÎÒÃÇ¸¸½ø³Ì¾ÍÖ±½ÓÍË³ö£¬
-        //·ñÔò·¢ËÍsigkillĞÅºÅ¸ø×Ó½ø³Ì(Ç¿ÖÆÍË³ö),È»ºóÔÙÍË³ö¡£  
+        //delayç”¨æ¥ç­‰å¾…å­è¿›ç¨‹é€€å‡ºçš„æ—¶é—´ï¼Œç”±äºæˆ‘ä»¬æ¥å—åˆ°SIGINTä¿¡å·åï¼Œæˆ‘ä»¬éœ€è¦å…ˆå‘é€ä¿¡å·ç»™å­è¿›ç¨‹ï¼Œ
+        //è€Œå­è¿›ç¨‹çš„é€€å‡ºéœ€è¦ä¸€å®šçš„æ—¶é—´ï¼Œè¶…æ—¶æ—¶å¦‚æœå­è¿›ç¨‹å·²é€€å‡ºï¼Œæˆ‘ä»¬çˆ¶è¿›ç¨‹å°±ç›´æ¥é€€å‡ºï¼Œ
+        //å¦åˆ™å‘é€sigkillä¿¡å·ç»™å­è¿›ç¨‹(å¼ºåˆ¶é€€å‡º),ç„¶åå†é€€å‡ºã€‚  
         if (delay) {
             if (ngx_sigalrm) {
                 sigio = 0;
@@ -164,7 +164,7 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
             itv.it_value.tv_sec = delay / 1000;
             itv.it_value.tv_usec = (delay % 1000 ) * 1000;
 
-            //ÉèÖÃ¶¨Ê±Æ÷
+            //è®¾ç½®å®šæ—¶å™¨
             if (setitimer(ITIMER_REAL, &itv, NULL) == -1) {
                 ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                               "setitimer() failed");
@@ -173,31 +173,31 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
 
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "sigsuspend");
 
-        //ÑÓÊ±£¬µÈ´ıĞÅºÅ
-        sigsuspend(&set);  //µ÷ÓÃÕâ¸ö½«master½ø³Ì¹ÒÆğÀ´
+        //å»¶æ—¶ï¼Œç­‰å¾…ä¿¡å·
+        sigsuspend(&set);  //è°ƒç”¨è¿™ä¸ªå°†masterè¿›ç¨‹æŒ‚èµ·æ¥
 
         ngx_time_update();
 
         ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                        "wake up, sigio %i", sigio);
         
-        //ngx_reapÎª1£¬ËµÃ÷ÓĞ×Ó½ø³ÌÒÑ¾­ÍË³ö
+        //ngx_reapä¸º1ï¼Œè¯´æ˜æœ‰å­è¿›ç¨‹å·²ç»é€€å‡º
         if (ngx_reap) {
             ngx_reap = 0;
             ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "reap children");
 
-            //Õâ¸öÀïÃæ´¦ÀíÍË³öµÄ×Ó½ø³Ì(ÓĞµÄworkerÒì³£ÍË³ö£¬ÕâÊ±ÎÒÃÇ¾ÍĞèÒªÖØÆôÕâ¸öworker )£¬Èç¹ûËùÓĞ×Ó½ø³Ì¶¼ÍË³öÔò»á·µ»Ø0.  
+            //è¿™ä¸ªé‡Œé¢å¤„ç†é€€å‡ºçš„å­è¿›ç¨‹(æœ‰çš„workerå¼‚å¸¸é€€å‡ºï¼Œè¿™æ—¶æˆ‘ä»¬å°±éœ€è¦é‡å¯è¿™ä¸ªworker )ï¼Œå¦‚æœæ‰€æœ‰å­è¿›ç¨‹éƒ½é€€å‡ºåˆ™ä¼šè¿”å›0.  
             live = ngx_reap_children(cycle);
         }
 
-        //Èç¹ûÃ»ÓĞ´æ»îµÄ×Ó½ø³Ì£¬²¢ÇÒÊÕµ½ÁËngx_terminate»òÕßngx_quitĞÅºÅ£¬ÔòmasterÍË³ö¡£ 
+        //å¦‚æœæ²¡æœ‰å­˜æ´»çš„å­è¿›ç¨‹ï¼Œå¹¶ä¸”æ”¶åˆ°äº†ngx_terminateæˆ–è€…ngx_quitä¿¡å·ï¼Œåˆ™masteré€€å‡ºã€‚ 
         if (!live && (ngx_terminate || ngx_quit)) {
             ngx_master_process_exit(cycle);
         }
     
-        //ÊÕµ½ÁËsigintĞÅºÅ
+        //æ”¶åˆ°äº†sigintä¿¡å·
         if (ngx_terminate) {
-            //ÉèÖÃÑÓÊ±
+            //è®¾ç½®å»¶æ—¶
             if (delay == 0) {
                 delay = 50;
             }
@@ -210,10 +210,10 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
             sigio = ccf->worker_processes + 2 /* cache processes */;
 
             if (delay > 1000) {
-                //Èç¹û³¬Ê±£¬ÔòÇ¿ÖÆÉ±ËÀworker 
+                //å¦‚æœè¶…æ—¶ï¼Œåˆ™å¼ºåˆ¶æ€æ­»worker 
                 ngx_signal_worker_processes(cycle, SIGKILL);
             } else {
-                //¸ºÔğ·¢ËÍsigint¸øworker£¬ÈÃËüÍË³ö
+                //è´Ÿè´£å‘é€sigintç»™workerï¼Œè®©å®ƒé€€å‡º
                 ngx_signal_worker_processes(cycle,
                                        ngx_signal_value(NGX_TERMINATE_SIGNAL));
             }
@@ -221,9 +221,9 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
             continue;
         }
 
-        //ÊÕµ½quitĞÅºÅ
+        //æ”¶åˆ°quitä¿¡å·
         if (ngx_quit) {
-            //·¢ËÍ¸øworker quitĞÅºÅ
+            //å‘é€ç»™worker quitä¿¡å·
             ngx_signal_worker_processes(cycle,
                                         ngx_signal_value(NGX_SHUTDOWN_SIGNAL));
 
@@ -240,11 +240,11 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
             continue;
         }
 
-        //ÊÕµ½ĞèÒªreconfigµÄĞÅºÅ 
+        //æ”¶åˆ°éœ€è¦reconfigçš„ä¿¡å· 
         if (ngx_reconfigure) {
             ngx_reconfigure = 0;
 
-            //ÅĞ¶ÏÊÇ·ñÈÈ´úÂëÌæ»»ºóµÄĞÂµÄ´úÂë»¹ÔÚÔËĞĞÖĞ(Ò²¾ÍÊÇ»¹Ã»ÍË³öµ±Ç°µÄmaster)¡£Èç¹û»¹ÔÚÔËĞĞÖĞ£¬Ôò²»ĞèÒªÖØĞÂ³õÊ¼»¯config
+            //åˆ¤æ–­æ˜¯å¦çƒ­ä»£ç æ›¿æ¢åçš„æ–°çš„ä»£ç è¿˜åœ¨è¿è¡Œä¸­(ä¹Ÿå°±æ˜¯è¿˜æ²¡é€€å‡ºå½“å‰çš„master)ã€‚å¦‚æœè¿˜åœ¨è¿è¡Œä¸­ï¼Œåˆ™ä¸éœ€è¦é‡æ–°åˆå§‹åŒ–config
             if (ngx_new_binary) {
                 ngx_start_worker_processes(cycle, ccf->worker_processes,
                                            NGX_PROCESS_RESPAWN);
@@ -256,7 +256,7 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
 
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reconfiguring");
             
-            //ÖØĞÂ³õÊ¼»¯config£¬²¢ÖØĞÂÆô¶¯ĞÂµÄworker
+            //é‡æ–°åˆå§‹åŒ–configï¼Œå¹¶é‡æ–°å¯åŠ¨æ–°çš„worker
             cycle = ngx_init_cycle(cycle);
             if (cycle == NULL) {
                 cycle = (ngx_cycle_t *) ngx_cycle;
@@ -282,7 +282,7 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
             live = 1;
         }
 
-        //ÖØĞÂ´ò¿ª
+        //é‡æ–°æ‰“å¼€
         if (ngx_reopen) {
             ngx_reopen = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reopening logs");
@@ -291,19 +291,19 @@ ngx_master_process_cycle(ngx_cycle_t *cycle)
                                         ngx_signal_value(NGX_REOPEN_SIGNAL));
         }
 
-        //ÈÈ´úÂëÌæ»»
+        //çƒ­ä»£ç æ›¿æ¢
         if (ngx_change_binary) {
             ngx_change_binary = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "changing binary");
-            //½øĞĞÈÈ´úÂëÌæ»»£¬ÕâÀïÊÇµ÷ÓÃexecveÀ´Ö´ĞĞĞÂµÄ´úÂë
+            //è¿›è¡Œçƒ­ä»£ç æ›¿æ¢ï¼Œè¿™é‡Œæ˜¯è°ƒç”¨execveæ¥æ‰§è¡Œæ–°çš„ä»£ç 
             ngx_new_binary = ngx_exec_new_binary(cycle, ngx_argv);
         }
 
-        //½ÓÊÜµ½Í£Ö¹acceptÁ¬½Ó£¬ÆäÊµÒ²¾ÍÊÇworkerÍË³ö(ÓĞÇø±ğµÄÊÇ£¬ÕâÀïmaster²»ĞèÒªÍË³ö)
+        //æ¥å—åˆ°åœæ­¢acceptè¿æ¥ï¼Œå…¶å®ä¹Ÿå°±æ˜¯workeré€€å‡º(æœ‰åŒºåˆ«çš„æ˜¯ï¼Œè¿™é‡Œmasterä¸éœ€è¦é€€å‡º)
         if (ngx_noaccept) {
             ngx_noaccept = 0;
             ngx_noaccepting = 1;
-            //¸øworker·¢ËÍĞÅºÅ
+            //ç»™workerå‘é€ä¿¡å·
             ngx_signal_worker_processes(cycle,
                                         ngx_signal_value(NGX_SHUTDOWN_SIGNAL));
         }
@@ -376,25 +376,25 @@ ngx_start_worker_processes(ngx_cycle_t *cycle, ngx_int_t n, ngx_int_t type)
 
     ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "start worker processes");
 
-    //´«µİ¸øÆäËû×Ó½ø³ÌµÄÃüÁî£¬´ò¿ªchannel
+    //ä¼ é€’ç»™å…¶ä»–å­è¿›ç¨‹çš„å‘½ä»¤ï¼Œæ‰“å¼€channel
     ch.command = NGX_CMD_OPEN_CHANNEL;
 
-    //´´½¨n¸öworker½ø³Ì
+    //åˆ›å»ºnä¸ªworkerè¿›ç¨‹
     for (i = 0; i < n; i++) {
 
         cpu_affinity = ngx_get_cpu_affinity(i);
         
-        //forkĞÂ½ø³ÌµÄ¾ßÌå¹¤×÷
+        //forkæ–°è¿›ç¨‹çš„å…·ä½“å·¥ä½œ
         ngx_spawn_process(cycle, ngx_worker_process_cycle, NULL,
                           "worker process", type);
 
-        //È«¾ÖÊı×é,¶¨ÒåÔÚsrc/os/unix/ngx_process.cÎÄ¼şÖĞ£¬´æ´¢ÔªËØÀàĞÍÊÇngx_process_t¡£
-        //×¢Òâ£¬ngx_process_slotÔÚspawnº¯ÊıÖĞÒÑ¾­¸³ÖµÍê±Ï£¬¾ÍÊÇµ±Ç°×Ó½ø³ÌµÄÎ»ÖÃ
+        //å…¨å±€æ•°ç»„,å®šä¹‰åœ¨src/os/unix/ngx_process.cæ–‡ä»¶ä¸­ï¼Œå­˜å‚¨å…ƒç´ ç±»å‹æ˜¯ngx_process_tã€‚
+        //æ³¨æ„ï¼Œngx_process_slotåœ¨spawnå‡½æ•°ä¸­å·²ç»èµ‹å€¼å®Œæ¯•ï¼Œå°±æ˜¯å½“å‰å­è¿›ç¨‹çš„ä½ç½®
         ch.pid = ngx_processes[ngx_process_slot].pid;
         ch.slot = ngx_process_slot;
         ch.fd = ngx_processes[ngx_process_slot].channel[0];
 
-        //½¨Á¢Í¨µÀ
+        //å»ºç«‹é€šé“
         ngx_pass_open_channel(cycle, &ch);
     }
 }
@@ -459,10 +459,10 @@ ngx_pass_open_channel(ngx_cycle_t *cycle, ngx_channel_t *ch)
 {
     ngx_int_t  i;
     
-    //±éÀúÕû¸ö½ø³Ì±í
+    //éå†æ•´ä¸ªè¿›ç¨‹è¡¨
     for (i = 0; i < ngx_last_process; i++) {
         
-        //Óöµ½·Ç´æ»îµÄ½ø³Ì¾ÍÌø¹ı
+        //é‡åˆ°éå­˜æ´»çš„è¿›ç¨‹å°±è·³è¿‡
         if (i == ngx_process_slot
             || ngx_processes[i].pid == -1
             || ngx_processes[i].channel[0] == -1)
@@ -478,7 +478,7 @@ ngx_pass_open_channel(ngx_cycle_t *cycle, ngx_channel_t *ch)
 
         /* TODO: NGX_AGAIN */
 
-        //´«µİchannel¸øÆäËû×Ó½ø³Ì£¨Ö÷ÒªÊÇ´«µİ¾ä±ú£©
+        //ä¼ é€’channelç»™å…¶ä»–å­è¿›ç¨‹ï¼ˆä¸»è¦æ˜¯ä¼ é€’å¥æŸ„ï¼‰
         ngx_write_channel(ngx_processes[i].channel[0],
                           ch, sizeof(ngx_channel_t), cycle->log);
     }
@@ -756,7 +756,7 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
 
     ngx_process = NGX_PROCESS_WORKER;
 
-    //³õÊ¼»¯worker½ø³Ì
+    //åˆå§‹åŒ–workerè¿›ç¨‹
     ngx_worker_process_init(cycle, 1);
 
     ngx_setproctitle("worker process");
@@ -809,11 +809,11 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
 
     for ( ;; ) {
 
-        //ngx_exitingÊÇµ±ÊÕµ½masterµÄquitÃüÁî£¨SIGQUITĞÅºÅ£©ºó£¬ÉèÖÃÎª1,È»ºóµÈ´ıÆäËû×ÊÔ´ÍË³ö
+        //ngx_exitingæ˜¯å½“æ”¶åˆ°masterçš„quitå‘½ä»¤ï¼ˆSIGQUITä¿¡å·ï¼‰åï¼Œè®¾ç½®ä¸º1,ç„¶åç­‰å¾…å…¶ä»–èµ„æºé€€å‡º
         if (ngx_exiting) {
 
             c = cycle->connections;
-            // worker½ø³ÌÍË³öÇ°£¬ÏÈ´¦ÀíÍêÃ¿¸öconnectionÉÏÒÑ¾­·¢ÉúµÄÊÂ¼ş
+            // workerè¿›ç¨‹é€€å‡ºå‰ï¼Œå…ˆå¤„ç†å®Œæ¯ä¸ªconnectionä¸Šå·²ç»å‘ç”Ÿçš„äº‹ä»¶
             for (i = 0; i < cycle->connection_n; i++) {
 
                 /* THREAD: lock */
@@ -824,7 +824,7 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
                 }
             }
 
-            //¶¨Ê±Æ÷³¬Ê±ÔòÍË³öworker; ´¦ÀíÍêËùÓĞÊÂ¼ş£¬worker½ø³ÌÍË³ö
+            //å®šæ—¶å™¨è¶…æ—¶åˆ™é€€å‡ºworker; å¤„ç†å®Œæ‰€æœ‰äº‹ä»¶ï¼Œworkerè¿›ç¨‹é€€å‡º
             if (ngx_event_timer_rbtree.root == ngx_event_timer_rbtree.sentinel)
             {
                 ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
@@ -834,17 +834,17 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
         }
 
         ngx_log_debug0(NGX_LOG_DEBUG_EVENT, cycle->log, 0, "worker cycle");
-        // ÕâÀïÊÇworker½ø³Ì´¦ÀíÊÂ¼şµÄºËĞÄ¡£
+        // è¿™é‡Œæ˜¯workerè¿›ç¨‹å¤„ç†äº‹ä»¶çš„æ ¸å¿ƒã€‚
         ngx_process_events_and_timers(cycle);
 
-        //ÊÕµ½shutdownÃüÁî£¨SIGINTĞÅºÅ£©ÔòworkerÖ±½ÓÍË³ö 
+        //æ”¶åˆ°shutdownå‘½ä»¤ï¼ˆSIGINTä¿¡å·ï¼‰åˆ™workerç›´æ¥é€€å‡º 
         if (ngx_terminate) {
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "exiting");
 
             ngx_worker_process_exit(cycle);
         }
 
-        //ÊÕµ½quitÃüÁî£¨SIGQUITĞÅºÅ£©
+        //æ”¶åˆ°quitå‘½ä»¤ï¼ˆSIGQUITä¿¡å·ï¼‰
         if (ngx_quit) {
             ngx_quit = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0,
@@ -852,13 +852,13 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
             ngx_setproctitle("worker process is shutting down");
 
             if (!ngx_exiting) {
-                //¹Ø±Õsocket£¬È»ºóÉèÖÃÍË³ö±êÖ¾
+                //å…³é—­socketï¼Œç„¶åè®¾ç½®é€€å‡ºæ ‡å¿—
                 ngx_close_listening_sockets(cycle);
                 ngx_exiting = 1;
             }
         }
 
-        //ÊÕµ½masterÖØĞÂ´ò¿ªlogµÄÃüÁî£¬worker½ø³ÌÊÕµ½ÁËSIGUSR1ĞÅºÅ
+        //æ”¶åˆ°masteré‡æ–°æ‰“å¼€logçš„å‘½ä»¤ï¼Œworkerè¿›ç¨‹æ”¶åˆ°äº†SIGUSR1ä¿¡å·
         if (ngx_reopen) {
             ngx_reopen = 0;
             ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reopening logs");
@@ -1004,37 +1004,37 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_uint_t priority)
 
     for (i = 0; ngx_modules[i]; i++) {
         if (ngx_modules[i]->init_process) {
-            //½ø³Ì³õÊ¼»¯, µ÷ÓÃÃ¿¸öÄ£¿éµÄinit_process,ÓÃËü×öÄ£¿é¿ª·¢µÄÊ±ºò£¬Ê¹ÓÃµÃÍ¦ÉÙµÄ 
-            //ÕâÀïÒªÌØ±ğ¿´µÄÊÇeventÄ£¿é:
-            //nginxµÄeventÄ£¿é°üº¬Ò»¸öinit_process,Ò²¾ÍÊÇngx_event_process_init(ngx_event.c).
-            //Õâ¸öº¯Êı¾ÍÊÇnginxµÄÇı¶¯Æ÷£¬Ëû³õÊ¼»¯ÊÂ¼şÇı¶¯Æ÷£¬Á¬½Ó³Ø£¬¶¨Ê±Æ÷£¬ÒÔ¼°¹ÒÔÚlisten ¾ä±úµÄ»Øµ÷º¯Êı
+            //è¿›ç¨‹åˆå§‹åŒ–, è°ƒç”¨æ¯ä¸ªæ¨¡å—çš„init_process,ç”¨å®ƒåšæ¨¡å—å¼€å‘çš„æ—¶å€™ï¼Œä½¿ç”¨å¾—æŒºå°‘çš„ 
+            //è¿™é‡Œè¦ç‰¹åˆ«çœ‹çš„æ˜¯eventæ¨¡å—:
+            //nginxçš„eventæ¨¡å—åŒ…å«ä¸€ä¸ªinit_process,ä¹Ÿå°±æ˜¯ngx_event_process_init(ngx_event.c).
+            //è¿™ä¸ªå‡½æ•°å°±æ˜¯nginxçš„é©±åŠ¨å™¨ï¼Œä»–åˆå§‹åŒ–äº‹ä»¶é©±åŠ¨å™¨ï¼Œè¿æ¥æ± ï¼Œå®šæ—¶å™¨ï¼Œä»¥åŠæŒ‚åœ¨listen å¥æŸ„çš„å›è°ƒå‡½æ•°
             if (ngx_modules[i]->init_process(cycle) == NGX_ERROR) {
                 /* fatal */
                 exit(2);
             }
         }
     }
-    // ÕâÀïÑ­»·ÓÃ»§¹Ø±ÕÆäËûworker½ø³ÌµÄÎŞÓÃchannel×ÊÔ´
+    // è¿™é‡Œå¾ªç¯ç”¨æˆ·å…³é—­å…¶ä»–workerè¿›ç¨‹çš„æ— ç”¨channelèµ„æº
     for (n = 0; n < ngx_last_process; n++) {
 
-        if (ngx_processes[n].pid == -1) { //nÎ»ÖÃµÄ½ø³Ì²»´æÔÚ£¬ÕâÀïÊÇÔ¤·ÀĞÔµÄ´úÂë
+        if (ngx_processes[n].pid == -1) { //nä½ç½®çš„è¿›ç¨‹ä¸å­˜åœ¨ï¼Œè¿™é‡Œæ˜¯é¢„é˜²æ€§çš„ä»£ç 
             continue;
         }
-        //ngx_process_slotÊÇ´´½¨worker½ø³ÌµÄÊ±ºò£¬´Ómaster½ø³Ì¸´ÖÆ¹ıÀ´µÄ£¬´Ë´¦¾ÍÊÇÖ¸±¾worker½ø³ÌÔÚÊı×éÖĞµÄË÷ÒıÎ»ÖÃ
+        //ngx_process_slotæ˜¯åˆ›å»ºworkerè¿›ç¨‹çš„æ—¶å€™ï¼Œä»masterè¿›ç¨‹å¤åˆ¶è¿‡æ¥çš„ï¼Œæ­¤å¤„å°±æ˜¯æŒ‡æœ¬workerè¿›ç¨‹åœ¨æ•°ç»„ä¸­çš„ç´¢å¼•ä½ç½®
         if (n == ngx_process_slot) {  
             continue;
         }
 
-        if (ngx_processes[n].channel[1] == -1) { // channel²»´æÔÚ£¬Ìø¹ı
+        if (ngx_processes[n].channel[1] == -1) { // channelä¸å­˜åœ¨ï¼Œè·³è¿‡
             continue;
         }
-        // ´´½¨worker½ø³ÌÊ±£¬»á½«masterµÄ×ÊÔ´¸´ÖÆ¹ıÀ´£¬Òò´ËĞèÒª¹Ø±ÕÎŞÓÃµÄchannel -- ÆäËûworker½ø³ÌµÄ¶Á¶ËÃèÊö·û
+        // åˆ›å»ºworkerè¿›ç¨‹æ—¶ï¼Œä¼šå°†masterçš„èµ„æºå¤åˆ¶è¿‡æ¥ï¼Œå› æ­¤éœ€è¦å…³é—­æ— ç”¨çš„channel -- å…¶ä»–workerè¿›ç¨‹çš„è¯»ç«¯æè¿°ç¬¦
         if (close(ngx_processes[n].channel[1]) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           "close() channel failed");
         }
     }
-    // ¹Ø±Õ±¾worker½ø³ÌµÄchannelµÄĞ´¶ËÃèÊö·û¡£
+    // å…³é—­æœ¬workerè¿›ç¨‹çš„channelçš„å†™ç«¯æè¿°ç¬¦ã€‚
     if (close(ngx_processes[ngx_process_slot].channel[0]) == -1) {
         ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                       "close() channel failed");
@@ -1043,7 +1043,7 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_uint_t priority)
 #if 0
     ngx_last_process = 0;
 #endif
-    // ½«channel·ÅÈënginx¹ØĞÄµÄ¼¯ºÏÖĞ£¬Í¬Ê±¹Ø×¢channelÉÏµÄ¶ÁÊÂ¼ş¡£
+    // å°†channelæ”¾å…¥nginxå…³å¿ƒçš„é›†åˆä¸­ï¼ŒåŒæ—¶å…³æ³¨channelä¸Šçš„è¯»äº‹ä»¶ã€‚
     if (ngx_add_channel_event(cycle, ngx_channel, NGX_READ_EVENT,
                               ngx_channel_handler)
         == NGX_ERROR)
@@ -1116,7 +1116,7 @@ ngx_worker_process_exit(ngx_cycle_t *cycle)
     exit(0);
 }
 
-//×Ó½ø³Ì¹ÜµÀ¿É¶ÁÊÂ¼ş×½²¶º¯Êı
+//å­è¿›ç¨‹ç®¡é“å¯è¯»äº‹ä»¶æ‰æ•å‡½æ•°
 static void
 ngx_channel_handler(ngx_event_t *ev)
 {
@@ -1135,7 +1135,7 @@ ngx_channel_handler(ngx_event_t *ev)
 
     for ( ;; ) {
 
-        //¶ÁÈ¡channel£¬¸³Öµch
+        //è¯»å–channelï¼Œèµ‹å€¼ch
         n = ngx_read_channel(c->fd, &ch, sizeof(ngx_channel_t), ev->log);
 
         ngx_log_debug1(NGX_LOG_DEBUG_CORE, ev->log, 0, "channel: %i", n);
@@ -1183,7 +1183,7 @@ ngx_channel_handler(ngx_event_t *ev)
                            "get channel s:%i pid:%P fd:%d",
                            ch.slot, ch.pid, ch.fd);
             
-            //¶Ôngx_processesÈ«¾Ö½ø³Ì±í½øĞĞ¸³Öµ
+            //å¯¹ngx_processeså…¨å±€è¿›ç¨‹è¡¨è¿›è¡Œèµ‹å€¼
             ngx_processes[ch.slot].pid = ch.pid;
             ngx_processes[ch.slot].channel[0] = ch.fd;
             break;

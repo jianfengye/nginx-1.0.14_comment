@@ -88,22 +88,22 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
 {
     u_long     on;
     ngx_pid_t  pid;
-    //±íÊ¾½«ÒªforkµÄ×Ó½ø³ÌÔÚngx_processÖĞµÄÎ»ÖÃ
+    //è¡¨ç¤ºå°†è¦forkçš„å­è¿›ç¨‹åœ¨ngx_processä¸­çš„ä½ç½®
     ngx_int_t  s;
 
-    //Èç¹û´«µİ½øÀ´µÄÀàĞÍ´óÓÚ0,Ôò¾ÍÊÇÒÑ¾­È·¶¨Õâ¸ö½ø³ÌÒÑ¾­ÍË³ö£¬ÎÒÃÇ¾Í¿ÉÒÔÖ±½ÓÈ·¶¨slot
+    //å¦‚æœä¼ é€’è¿›æ¥çš„ç±»å‹å¤§äº0,åˆ™å°±æ˜¯å·²ç»ç¡®å®šè¿™ä¸ªè¿›ç¨‹å·²ç»é€€å‡ºï¼Œæˆ‘ä»¬å°±å¯ä»¥ç›´æ¥ç¡®å®šslot
     if (respawn >= 0) {
         s = respawn;
 
     } else {
-        //±éÀúngx_processess£¬´Ó¶øÕÒµ½¿ÕÏĞµÄslot£¬´Ó¶øµÈ»áforkÍê±Ïºó,½«×Ó½ø³ÌĞÅÏ¢·ÅÈëÈ«¾Ö½ø³ÌĞÅÏ¢±íµÄÏàÓ¦µÄslot
+        //éå†ngx_processessï¼Œä»è€Œæ‰¾åˆ°ç©ºé—²çš„slotï¼Œä»è€Œç­‰ä¼šforkå®Œæ¯•å,å°†å­è¿›ç¨‹ä¿¡æ¯æ”¾å…¥å…¨å±€è¿›ç¨‹ä¿¡æ¯è¡¨çš„ç›¸åº”çš„slot
         for (s = 0; s < ngx_last_process; s++) {
             if (ngx_processes[s].pid == -1) {
                 break;
             }
         }
 
-        //µ½´ï×î´ó½ø³ÌÏŞÖÆ±¨´í
+        //åˆ°è¾¾æœ€å¤§è¿›ç¨‹é™åˆ¶æŠ¥é”™
         if (s == NGX_MAX_PROCESSES) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, 0,
                           "no more than %d processes can be spawned",
@@ -112,11 +112,11 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
         }
     }
 
-    //Èç¹ûÀàĞÍÎªNGX_PROCESS_DETACHED£¬ÔòËµÃ÷ÊÇÈÈ´úÂëÌæ»»(ÈÈ´úÂëÌæ»»Ò²ÊÇÍ¨¹ıÕâ¸öº¯Êı½øĞĞ´¦ÀíµÄ)£¬Òò´Ë²»ĞèÒªĞÂ½¨socketpair
+    //å¦‚æœç±»å‹ä¸ºNGX_PROCESS_DETACHEDï¼Œåˆ™è¯´æ˜æ˜¯çƒ­ä»£ç æ›¿æ¢(çƒ­ä»£ç æ›¿æ¢ä¹Ÿæ˜¯é€šè¿‡è¿™ä¸ªå‡½æ•°è¿›è¡Œå¤„ç†çš„)ï¼Œå› æ­¤ä¸éœ€è¦æ–°å»ºsocketpair
     if (respawn != NGX_PROCESS_DETACHED) {
 
         /* Solaris 9 still has no AF_LOCAL */
-        //´´½¨socketpair£¬²¢ÉèÖÃÏà¹ØÊôĞÔ
+        //åˆ›å»ºsocketpairï¼Œå¹¶è®¾ç½®ç›¸å…³å±æ€§
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, ngx_processes[s].channel) == -1)
         {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
@@ -129,7 +129,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
                        ngx_processes[s].channel[0],
                        ngx_processes[s].channel[1]);
         
-        //ÉèÖÃ·Ç×èÈûÄ£Ê½
+        //è®¾ç½®éé˜»å¡æ¨¡å¼
         if (ngx_nonblocking(ngx_processes[s].channel[0]) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           ngx_nonblocking_n " failed while spawning \"%s\"",
@@ -146,7 +146,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
             return NGX_INVALID_PID;
         }
 
-        //´ò¿ªÒì²½Ä£Ê½
+        //æ‰“å¼€å¼‚æ­¥æ¨¡å¼
         on = 1;
         if (ioctl(ngx_processes[s].channel[0], FIOASYNC, &on) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
@@ -155,7 +155,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
             return NGX_INVALID_PID;
         }
 
-        //ÉèÖÃÒì²½IOµÄËùÓĞÕß
+        //è®¾ç½®å¼‚æ­¥IOçš„æ‰€æœ‰è€…
         if (fcntl(ngx_processes[s].channel[0], F_SETOWN, ngx_pid) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           "fcntl(F_SETOWN) failed while spawning \"%s\"", name);
@@ -163,7 +163,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
             return NGX_INVALID_PID;
         }
 
-        //µ±Ö´ĞĞºó¹Ø±Õ¾ä±ú
+        //å½“æ‰§è¡Œåå…³é—­å¥æŸ„
         if (fcntl(ngx_processes[s].channel[0], F_SETFD, FD_CLOEXEC) == -1) {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           "fcntl(FD_CLOEXEC) failed while spawning \"%s\"",
@@ -180,7 +180,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
             return NGX_INVALID_PID;
         }
 
-        //ÉèÖÃµ±Ç°×Ó½ø³ÌµÄ¾ä±ú
+        //è®¾ç½®å½“å‰å­è¿›ç¨‹çš„å¥æŸ„
         ngx_channel = ngx_processes[s].channel[1];
 
     } else {
@@ -188,7 +188,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
         ngx_processes[s].channel[1] = -1;
     }
 
-    //ÉèÖÃÈ«¾ÖµÄngx_process_slot
+    //è®¾ç½®å…¨å±€çš„ngx_process_slot
     ngx_process_slot = s;
 
 
@@ -204,7 +204,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
 
     case 0:
         ngx_pid = ngx_getpid();
-        //ÔÚ×Ó½ø³ÌÖĞÖ´ĞĞ´«µİ½øÀ´µÄº¯Êı
+        //åœ¨å­è¿›ç¨‹ä¸­æ‰§è¡Œä¼ é€’è¿›æ¥çš„å‡½æ•°
         proc(cycle, data);
         break;
 
@@ -310,8 +310,8 @@ ngx_init_signals(ngx_log_t *log)
     return NGX_OK;
 }
 
-//ÔÚnginxÖĞ£¬workerºÍmasterµÄ½»»¥£¬ÊÇÍ¨¹ıÁ÷¹ÜµÀÒÔ¼°ĞÅºÅ¡£
-//¶ømasterÓëÍâ²¿µÄ½»»¥ÊÇÍ¨¹ıĞÅºÅÀ´½øĞĞµÄ,Õâ¸öº¯Êı¾ÍÊÇmaster´¦ÀíĞÅºÅµÄ³ÌĞò¡£
+//åœ¨nginxä¸­ï¼Œworkerå’Œmasterçš„äº¤äº’ï¼Œæ˜¯é€šè¿‡æµç®¡é“ä»¥åŠä¿¡å·ã€‚
+//è€Œmasterä¸å¤–éƒ¨çš„äº¤äº’æ˜¯é€šè¿‡ä¿¡å·æ¥è¿›è¡Œçš„,è¿™ä¸ªå‡½æ•°å°±æ˜¯masterå¤„ç†ä¿¡å·çš„ç¨‹åºã€‚
 void
 ngx_signal_handler(int signo)
 {
@@ -324,7 +324,7 @@ ngx_signal_handler(int signo)
 
     err = ngx_errno;
     
-    //µÃµ½µ±Ç°µÄĞÅºÅ
+    //å¾—åˆ°å½“å‰çš„ä¿¡å·
     for (sig = signals; sig->signo != 0; sig++) {
         if (sig->signo == signo) {
             break;
@@ -335,27 +335,27 @@ ngx_signal_handler(int signo)
 
     action = "";
 
-    //ÕâÀïngx_processÔÚmasterºÍworkerÖĞ¸³Öµ²»Í¬
+    //è¿™é‡Œngx_processåœ¨masterå’Œworkerä¸­èµ‹å€¼ä¸åŒ
     switch (ngx_process) {
 
     case NGX_PROCESS_MASTER:
     case NGX_PROCESS_SINGLE:
         switch (signo) {
 
-        //quitĞÅºÅ
+        //quitä¿¡å·
         case ngx_signal_value(NGX_SHUTDOWN_SIGNAL):
             ngx_quit = 1;
             action = ", shutting down";
             break;
 
-        //ÖÕÖ¹ĞÅºÅ
+        //ç»ˆæ­¢ä¿¡å·
         case ngx_signal_value(NGX_TERMINATE_SIGNAL):
         case SIGINT:
             ngx_terminate = 1;
             action = ", exiting";
             break;
 
-        //winchĞÅºÅ£¬Í£Ö¹½ÓÊÜaccept
+        //winchä¿¡å·ï¼Œåœæ­¢æ¥å—accept
         case ngx_signal_value(NGX_NOACCEPT_SIGNAL):
             if (ngx_daemonized) {
                 ngx_noaccept = 1;
@@ -363,19 +363,19 @@ ngx_signal_handler(int signo)
             }
             break;
 
-        //sighupĞÅºÅÓÃÀ´reconfig 
+        //sighupä¿¡å·ç”¨æ¥reconfig 
         case ngx_signal_value(NGX_RECONFIGURE_SIGNAL):
             ngx_reconfigure = 1;
             action = ", reconfiguring";
             break;
 
-        //ÓÃ»§ĞÅºÅ£¬ÓÃÀ´reopen
+        //ç”¨æˆ·ä¿¡å·ï¼Œç”¨æ¥reopen
         case ngx_signal_value(NGX_REOPEN_SIGNAL):
             ngx_reopen = 1;
             action = ", reopening logs";
             break;
 
-        //ÈÈ´úÂëÌæ»»
+        //çƒ­ä»£ç æ›¿æ¢
         case ngx_signal_value(NGX_CHANGEBIN_SIGNAL):
             if (getppid() > 1 || ngx_new_binary > 0) {
 
@@ -385,19 +385,19 @@ ngx_signal_handler(int signo)
                  * is still running.  Or ignore the signal in the old binary's
                  * process if the new binary's process is already running.
                  */
-                /* ÕâÀï¸ø³öÁËÏêÏ¸µÄ×¢ÊÍ£¬¸üÍ¨Ë×Ò»µãÀ´½²£¬¾ÍÊÇËµ£¬½ø³ÌÏÖÔÚÊÇÒ»¸ö 
-                * master(ĞÂµÄmaster½ø³Ì)£¬µ«ÊÇµ±ËûµÄ¸¸½ø³Ìold master»¹ÔÚÔËĞĞµÄ»°£¬ 
-                * ÕâÊ±ÊÕµ½ÁËUSR2ĞÅºÅ£¬ÎÒÃÇ¾ÍºöÂÔËü£¬²»È»¾Í³ÉÁËĞÂmasterÀïÓÖÒªÉú³É 
-                * master¡£¡£¡£ÁíÍâÒ»ÖÖÇé¿ö¾ÍÊÇ£¬old masterÒÑ¾­¿ªÊ¼ÁËÉú³ÉĞÂmasterµÄ¹ı³Ì 
-                * ÖĞ£¬ÕâÊ±Èç¹ûÓÖÓĞUSR2ĞÅºÅµ½À´£¬ÄÇÃ´Ò²ÒªºöÂÔµô¡£¡£¡£(²»ÖªµÀ¹»²»¹»Í¨Ë×=.=) 
-                ²Î¿¼ÎÄµµ£ºhttp://blog.csdn.net/dingyujie/article/details/7192144
+                /* è¿™é‡Œç»™å‡ºäº†è¯¦ç»†çš„æ³¨é‡Šï¼Œæ›´é€šä¿—ä¸€ç‚¹æ¥è®²ï¼Œå°±æ˜¯è¯´ï¼Œè¿›ç¨‹ç°åœ¨æ˜¯ä¸€ä¸ª 
+                * master(æ–°çš„masterè¿›ç¨‹)ï¼Œä½†æ˜¯å½“ä»–çš„çˆ¶è¿›ç¨‹old masterè¿˜åœ¨è¿è¡Œçš„è¯ï¼Œ 
+                * è¿™æ—¶æ”¶åˆ°äº†USR2ä¿¡å·ï¼Œæˆ‘ä»¬å°±å¿½ç•¥å®ƒï¼Œä¸ç„¶å°±æˆäº†æ–°masteré‡Œåˆè¦ç”Ÿæˆ 
+                * masterã€‚ã€‚ã€‚å¦å¤–ä¸€ç§æƒ…å†µå°±æ˜¯ï¼Œold masterå·²ç»å¼€å§‹äº†ç”Ÿæˆæ–°masterçš„è¿‡ç¨‹ 
+                * ä¸­ï¼Œè¿™æ—¶å¦‚æœåˆæœ‰USR2ä¿¡å·åˆ°æ¥ï¼Œé‚£ä¹ˆä¹Ÿè¦å¿½ç•¥æ‰ã€‚ã€‚ã€‚(ä¸çŸ¥é“å¤Ÿä¸å¤Ÿé€šä¿—=.=) 
+                å‚è€ƒæ–‡æ¡£ï¼šhttp://blog.csdn.net/dingyujie/article/details/7192144
                 */
                 action = ", ignoring";
                 ignore = 1;
                 break;
             }
 
-            //Õı³£Çé¿öÏÂ£¬ĞèÒªÈÈ´úÂëÌæ»»£¬ÉèÖÃ±êÖ¾Î»
+            //æ­£å¸¸æƒ…å†µä¸‹ï¼Œéœ€è¦çƒ­ä»£ç æ›¿æ¢ï¼Œè®¾ç½®æ ‡å¿—ä½
             ngx_change_binary = 1;
             action = ", changing binary";
             break;
@@ -417,7 +417,7 @@ ngx_signal_handler(int signo)
 
         break;
 
-    //workerµÄĞÅºÅ´¦Àí
+    //workerçš„ä¿¡å·å¤„ç†
     case NGX_PROCESS_WORKER:
     case NGX_PROCESS_HELPER:
         switch (signo) {
@@ -463,7 +463,7 @@ ngx_signal_handler(int signo)
                       "before either old or new binary's process");
     }
 
-    //×îÖÕÈç¹ûĞÅºÅÊÇsigchld£¬ÎÒÃÇÊÕ¸î½©Ê¬½ø³Ì(ÓÃwaitpid)
+    //æœ€ç»ˆå¦‚æœä¿¡å·æ˜¯sigchldï¼Œæˆ‘ä»¬æ”¶å‰²åƒµå°¸è¿›ç¨‹(ç”¨waitpid)
     if (signo == SIGCHLD) {
         ngx_process_get_status();
     }

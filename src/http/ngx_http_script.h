@@ -35,52 +35,52 @@ typedef struct {
     ngx_http_request_t         *request;
 } ngx_http_script_engine_t;
 
-//²Î¿¼ÎÄÕÂ£º
+//å‚è€ƒæ–‡ç« ï¼š
 //http://blog.csdn.net/dingyujie/article/details/7515904
 typedef struct {
-    ngx_conf_t                 *cf;  //ÅäÖÃĞÅÏ¢
-    ngx_str_t                  *source; //ĞèÒªcompileµÄ×Ö·û´®
+    ngx_conf_t                 *cf;  //é…ç½®ä¿¡æ¯
+    ngx_str_t                  *source; //éœ€è¦compileçš„å­—ç¬¦ä¸²
 
-    ngx_array_t               **flushes; //±£´æÆÕÍ¨±äÁ¿ÔÚ±äÁ¿±íÖĞµÄindex 
-    ngx_array_t               **lengths; //´¦Àí±äÁ¿³¤¶ÈµÄ´¦Àí×ÓÊı×é
-    ngx_array_t               **values;  //´¦Àí±äÁ¿ÄÚÈİµÄ´¦Àí×ÓÊı×é
+    ngx_array_t               **flushes; //ä¿å­˜æ™®é€šå˜é‡åœ¨å˜é‡è¡¨ä¸­çš„index 
+    ngx_array_t               **lengths; //å¤„ç†å˜é‡é•¿åº¦çš„å¤„ç†å­æ•°ç»„
+    ngx_array_t               **values;  //å¤„ç†å˜é‡å†…å®¹çš„å¤„ç†å­æ•°ç»„
 
-    ngx_uint_t                  variables; //ÆÕÍ¨±äÁ¿µÄ¸öÊı£¬¶ø·ÇÆäËûÈıÖÖ(args±äÁ¿£¬$n±äÁ¿ÒÔ¼°³£Á¿×Ö·û´®)  
-    ngx_uint_t                  ncaptures; //µ±Ç°´¦ÀíÊ±£¬³öÏÖµÄ$n±äÁ¿µÄ×î´óÖµ£¬ÈçÅäÖÃµÄ×î´óÎª$3£¬ÄÇÃ´ncaptures¾ÍµÈÓÚ3 
+    ngx_uint_t                  variables; //æ™®é€šå˜é‡çš„ä¸ªæ•°ï¼Œè€Œéå…¶ä»–ä¸‰ç§(argså˜é‡ï¼Œ$nå˜é‡ä»¥åŠå¸¸é‡å­—ç¬¦ä¸²)  
+    ngx_uint_t                  ncaptures; //å½“å‰å¤„ç†æ—¶ï¼Œå‡ºç°çš„$nå˜é‡çš„æœ€å¤§å€¼ï¼Œå¦‚é…ç½®çš„æœ€å¤§ä¸º$3ï¼Œé‚£ä¹ˆncaptureså°±ç­‰äº3 
     
     /* 
-     * ÒÔÎ»ÒÆµÄĞÎÊ½±£´æ$1,$2...$9µÈ±äÁ¿£¬¼´ÏìÓ¦Î»ÖÃÉÏÖÃ1À´±íÊ¾£¬Ö÷ÒªµÄ×÷ÓÃÊÇÎªdup_capture×¼±¸£¬ 
-     * ÕıÊÇÓÉÓÚÕâ¸ömaskµÄ´æÔÚ£¬²Å±È½ÏÈİÒ×µÃµ½ÊÇ·ñÓĞÖØ¸´µÄ$n³öÏÖ¡£ 
+     * ä»¥ä½ç§»çš„å½¢å¼ä¿å­˜$1,$2...$9ç­‰å˜é‡ï¼Œå³å“åº”ä½ç½®ä¸Šç½®1æ¥è¡¨ç¤ºï¼Œä¸»è¦çš„ä½œç”¨æ˜¯ä¸ºdup_captureå‡†å¤‡ï¼Œ 
+     * æ­£æ˜¯ç”±äºè¿™ä¸ªmaskçš„å­˜åœ¨ï¼Œæ‰æ¯”è¾ƒå®¹æ˜“å¾—åˆ°æ˜¯å¦æœ‰é‡å¤çš„$nå‡ºç°ã€‚ 
      */  
     ngx_uint_t                  captures_mask;
-    ngx_uint_t                  size;  //´ıcompileµÄ×Ö·û´®ÖĞ£¬¡±³£Á¿×Ö·û´®¡°µÄ×Ü³¤¶È  
+    ngx_uint_t                  size;  //å¾…compileçš„å­—ç¬¦ä¸²ä¸­ï¼Œâ€å¸¸é‡å­—ç¬¦ä¸²â€œçš„æ€»é•¿åº¦  
 
     /*  
-     * ¶ÔÓÚmainÕâ¸ö³ÉÔ±£¬ÓĞĞí¶àÒªÍÚ¾òµÄ¶«Î÷¡£mainÒ»°ãÓÃÀ´Ö¸ÏòÒ»¸ö 
-     * ngx_http_script_regex_code_tµÄ½á¹¹£¬ÄÇÃ´Õâ¸ömainµ½µ×Æğµ½ÁËÊ²Ã´×÷ÓÃÄØ£¿ 
-     * ÕâÀïÓĞ¶ÔËü½øĞĞ·ÖÎö¡£ 
+     * å¯¹äºmainè¿™ä¸ªæˆå‘˜ï¼Œæœ‰è®¸å¤šè¦æŒ–æ˜çš„ä¸œè¥¿ã€‚mainä¸€èˆ¬ç”¨æ¥æŒ‡å‘ä¸€ä¸ª 
+     * ngx_http_script_regex_code_tçš„ç»“æ„ï¼Œé‚£ä¹ˆè¿™ä¸ªmainåˆ°åº•èµ·åˆ°äº†ä»€ä¹ˆä½œç”¨å‘¢ï¼Ÿ 
+     * è¿™é‡Œæœ‰å¯¹å®ƒè¿›è¡Œåˆ†æã€‚ 
      */  
     void                       *main;
 
-    unsigned                    compile_args:1; //ÊÇ·ñĞèÒª´¦ÀíÇëÇó²ÎÊı 
-    unsigned                    complete_lengths:1; //ÊÇ·ñÉèÖÃlengthsÊı×éµÄÖÕÖ¹·û£¬¼´NULL
-    unsigned                    complete_values:1; //ÊÇ·ñÉèÖÃvaluesÊı×éµÄÖÕÖ¹·û 
-    unsigned                    zero:1; //valuesÊı×éÔËĞĞÊ±£¬µÃµ½µÄ×Ö·û´®ÊÇ·ñ×·¼Ó'\0'½áÎ² 
-    unsigned                    conf_prefix:1; //ÊÇ·ñÔÚÉú³ÉµÄÎÄ¼şÃûÇ°£¬×·¼ÓÂ·¾¶Ç°×º
-    unsigned                    root_prefix:1; //Í¬conf_prefix 
+    unsigned                    compile_args:1; //æ˜¯å¦éœ€è¦å¤„ç†è¯·æ±‚å‚æ•° 
+    unsigned                    complete_lengths:1; //æ˜¯å¦è®¾ç½®lengthsæ•°ç»„çš„ç»ˆæ­¢ç¬¦ï¼Œå³NULL
+    unsigned                    complete_values:1; //æ˜¯å¦è®¾ç½®valuesæ•°ç»„çš„ç»ˆæ­¢ç¬¦ 
+    unsigned                    zero:1; //valuesæ•°ç»„è¿è¡Œæ—¶ï¼Œå¾—åˆ°çš„å­—ç¬¦ä¸²æ˜¯å¦è¿½åŠ '\0'ç»“å°¾ 
+    unsigned                    conf_prefix:1; //æ˜¯å¦åœ¨ç”Ÿæˆçš„æ–‡ä»¶åå‰ï¼Œè¿½åŠ è·¯å¾„å‰ç¼€
+    unsigned                    root_prefix:1; //åŒconf_prefix 
 
     /* 
-     * Õâ¸ö±ê¼ÇÎ»Ö÷ÒªÔÚrewriteÄ£¿éÀïÊ¹ÓÃ£¬ÔÚngx_http_rewriteÖĞ£¬ 
+     * è¿™ä¸ªæ ‡è®°ä½ä¸»è¦åœ¨rewriteæ¨¡å—é‡Œä½¿ç”¨ï¼Œåœ¨ngx_http_rewriteä¸­ï¼Œ 
      * if (sc.variables == 0 && !sc.dup_capture) { 
      *     regex->lengths = NULL; 
      * } 
-     * Ã»ÓĞÖØ¸´µÄ$n£¬ÄÇÃ´regex->lengths±»ÖÃÎªNULL£¬Õâ¸öÉèÖÃºÜ¹Ø¼ü£¬ÔÚº¯Êı 
-     * ngx_http_script_regex_start_codeÖĞ¾ÍÊÇÍ¨¹ı¶Ôregex->lengthsµÄÅĞ¶Ï£¬À´×ö²»Í¬µÄ´¦Àí£¬ 
-     * ÒòÎªÔÚÃ»ÓĞÖØ¸´µÄ$nµÄÊ±ºò£¬¿ÉÒÔÍ¨¹ıÕıÔò×ÔÉíµÄcaptures»úÖÆÀ´»ñÈ¡$n£¬Ò»µ©³öÏÖÖØ¸´µÄ£¬ 
-     * ÄÇÃ´pcreÕıÔò×ÔÉíµÄcaptures²¢²»ÄÜÂú×ãÎÒÃÇµÄÒªÇó£¬ÎÒÃÇĞèÒªÓÃ×Ô¼ºhandlerÀ´´¦Àí¡£ 
+     * æ²¡æœ‰é‡å¤çš„$nï¼Œé‚£ä¹ˆregex->lengthsè¢«ç½®ä¸ºNULLï¼Œè¿™ä¸ªè®¾ç½®å¾ˆå…³é”®ï¼Œåœ¨å‡½æ•° 
+     * ngx_http_script_regex_start_codeä¸­å°±æ˜¯é€šè¿‡å¯¹regex->lengthsçš„åˆ¤æ–­ï¼Œæ¥åšä¸åŒçš„å¤„ç†ï¼Œ 
+     * å› ä¸ºåœ¨æ²¡æœ‰é‡å¤çš„$nçš„æ—¶å€™ï¼Œå¯ä»¥é€šè¿‡æ­£åˆ™è‡ªèº«çš„capturesæœºåˆ¶æ¥è·å–$nï¼Œä¸€æ—¦å‡ºç°é‡å¤çš„ï¼Œ 
+     * é‚£ä¹ˆpcreæ­£åˆ™è‡ªèº«çš„captureså¹¶ä¸èƒ½æ»¡è¶³æˆ‘ä»¬çš„è¦æ±‚ï¼Œæˆ‘ä»¬éœ€è¦ç”¨è‡ªå·±handleræ¥å¤„ç†ã€‚ 
      */  
     unsigned                    dup_capture:1;
-    unsigned                    args:1; //´ıcompileµÄ×Ö·û´®ÖĞÊÇ·ñ·¢ÏÖÁË'?'
+    unsigned                    args:1; //å¾…compileçš„å­—ç¬¦ä¸²ä¸­æ˜¯å¦å‘ç°äº†'?'
 } ngx_http_script_compile_t;
 
 

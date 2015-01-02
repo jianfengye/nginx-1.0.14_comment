@@ -22,19 +22,19 @@ ngx_int_t ngx_daemon(ngx_log_t *log)
         break;
 
     default:
-        exit(0);  //¸¸½ø³ÌÍË³ö
+        exit(0);  //çˆ¶è¿›ç¨‹é€€å‡º
     }
 
     ngx_pid = ngx_getpid();
 
-    if (setsid() == -1) {   //setsid´´½¨Ò»¸öĞÂ»á»°
+    if (setsid() == -1) {   //setsidåˆ›å»ºä¸€ä¸ªæ–°ä¼šè¯
         ngx_log_error(NGX_LOG_EMERG, log, ngx_errno, "setsid() failed");
         return NGX_ERROR;
     }
 
     umask(0);
 
-    //´ò¿ªÎÄ¼ş/dev/null,Ê¹µÃÆäÓµÓĞÊØ»¤½ø³ÌµÄ0£¬1£¬2¡£ÕâÑù·ÀÖ¹ÊØ»¤½ø³ÌÔÚÖÕ¶ËÉè±¸ÉÏÏÔÊ¾Êä³ö
+    //æ‰“å¼€æ–‡ä»¶/dev/null,ä½¿å¾—å…¶æ‹¥æœ‰å®ˆæŠ¤è¿›ç¨‹çš„0ï¼Œ1ï¼Œ2ã€‚è¿™æ ·é˜²æ­¢å®ˆæŠ¤è¿›ç¨‹åœ¨ç»ˆç«¯è®¾å¤‡ä¸Šæ˜¾ç¤ºè¾“å‡º
     fd = open("/dev/null", O_RDWR);
     if (fd == -1) {
         ngx_log_error(NGX_LOG_EMERG, log, ngx_errno,
@@ -60,7 +60,7 @@ ngx_int_t ngx_daemon(ngx_log_t *log)
 #endif
 
     if (fd > STDERR_FILENO) {
-        if (close(fd) == -1) {  //¹Ø±Õ²»ĞèÒªµÄÎÄ¼şÃèÊö·û
+        if (close(fd) == -1) {  //å…³é—­ä¸éœ€è¦çš„æ–‡ä»¶æè¿°ç¬¦
             ngx_log_error(NGX_LOG_EMERG, log, ngx_errno, "close() failed");
             return NGX_ERROR;
         }

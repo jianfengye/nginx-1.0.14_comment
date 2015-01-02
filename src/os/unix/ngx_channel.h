@@ -13,12 +13,12 @@
 #include <ngx_core.h>
 #include <ngx_event.h>
 
-//masterºÍworkerÖ®¼ä´«µİµÄÖ¸Áî¡£masterºÍworkerÊÇµ¥ÏòµÄ£¬Ö»ÄÜmasterÏòworker´«µİÖ¸Áî
+//masterå’Œworkerä¹‹é—´ä¼ é€’çš„æŒ‡ä»¤ã€‚masterå’Œworkeræ˜¯å•å‘çš„ï¼Œåªèƒ½masterå‘workerä¼ é€’æŒ‡ä»¤
 typedef struct {
-     ngx_uint_t  command;       //workerÒª²Ù×÷µÄÖ¸Áî
-     ngx_pid_t   pid;           //worker½ø³Ìid
-     ngx_int_t   slot;          //worker½ø³ÌÔÚngx_processÖĞµÄË÷Òı
-     ngx_fd_t    fd;            //ÓĞ¿ÉÄÜÓÃµ½µÄÎÄ¼şÃèÊö·û
+     ngx_uint_t  command;       //workerè¦æ“ä½œçš„æŒ‡ä»¤
+     ngx_pid_t   pid;           //workerè¿›ç¨‹id
+     ngx_int_t   slot;          //workerè¿›ç¨‹åœ¨ngx_processä¸­çš„ç´¢å¼•
+     ngx_fd_t    fd;            //æœ‰å¯èƒ½ç”¨åˆ°çš„æ–‡ä»¶æè¿°ç¬¦
 } ngx_channel_t;
 
 

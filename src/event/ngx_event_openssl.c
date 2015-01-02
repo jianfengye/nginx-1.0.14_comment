@@ -87,10 +87,10 @@ int  ngx_ssl_session_cache_index;
 ngx_int_t
 ngx_ssl_init(ngx_log_t *log)
 {
-    OPENSSL_config(NULL);  //ÏµÍ³º¯Êı£¬´ò¿ªSSLÅäÖÃ£¬¾ßÌå²Î¿¼£ºhttp://www.openssl.org/docs/crypto/OPENSSL_config.html
+    OPENSSL_config(NULL);  //ç³»ç»Ÿå‡½æ•°ï¼Œæ‰“å¼€SSLé…ç½®ï¼Œå…·ä½“å‚è€ƒï¼šhttp://www.openssl.org/docs/crypto/OPENSSL_config.html
 
-    SSL_library_init(); //¾ßÌå²Î¿¼http://linux.die.net/man/3/ssl_library_init
-    SSL_load_error_strings(); //¾ßÌå²Î¿¼ linxu.die.net
+    SSL_library_init(); //å…·ä½“å‚è€ƒhttp://linux.die.net/man/3/ssl_library_init
+    SSL_load_error_strings(); //å…·ä½“å‚è€ƒ linxu.die.net
 
     OpenSSL_add_all_algorithms();
 

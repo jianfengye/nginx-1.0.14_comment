@@ -14,7 +14,7 @@ static ngx_int_t ngx_enable_accept_events(ngx_cycle_t *cycle);
 static ngx_int_t ngx_disable_accept_events(ngx_cycle_t *cycle);
 static void ngx_close_accepted_connection(ngx_connection_t *c);
 
-//Õâ¸öº¯Êı±»µ÷ÓÃÊÇµ±listen ¾ä±úÓĞ¿É¶ÁÊÂ¼şÖ®ºó²Å±»µ÷ÓÃ
+//è¿™ä¸ªå‡½æ•°è¢«è°ƒç”¨æ˜¯å½“listen å¥æŸ„æœ‰å¯è¯»äº‹ä»¶ä¹‹åæ‰è¢«è°ƒç”¨
 void
 ngx_event_accept(ngx_event_t *ev)
 {
@@ -49,7 +49,7 @@ ngx_event_accept(ngx_event_t *ev)
 
     do {
         socklen = NGX_SOCKADDRLEN;
-//¿ªÊ¼accept¾ä±ú
+//å¼€å§‹acceptå¥æŸ„
 #if (NGX_HAVE_ACCEPT4)
         if (use_accept4) {
             s = accept4(lc->fd, (struct sockaddr *) sa, &socklen,
@@ -58,10 +58,10 @@ ngx_event_accept(ngx_event_t *ev)
             s = accept(lc->fd, (struct sockaddr *) sa, &socklen);
         }
 #else
-        s = accept(lc->fd, (struct sockaddr *) sa, &socklen);  // acceptÒ»¸öĞÂµÄÁ¬½Ó
+        s = accept(lc->fd, (struct sockaddr *) sa, &socklen);  // acceptä¸€ä¸ªæ–°çš„è¿æ¥
 #endif
 
-        if (s == -1) {  //Á¬½ÓµÄ´íÎó´¦Àí
+        if (s == -1) {  //è¿æ¥çš„é”™è¯¯å¤„ç†
             err = ngx_socket_errno;
 
             if (err == NGX_EAGAIN) {
@@ -103,11 +103,11 @@ ngx_event_accept(ngx_event_t *ev)
 #if (NGX_STAT_STUB)
         (void) ngx_atomic_fetch_add(ngx_stat_accepted, 1);
 #endif
-        //acceptµ½Ò»¸öĞÂµÄÁ¬½ÓÒÔºó£¬¾ÍÖØĞÂ¼ÆËãngx_accept_disabledµÄÖµ¡£ËüÖ÷ÒªÓÃÀ´×ö¸ºÔØ¾ùºâÊ¹ÓÃ
+        //acceptåˆ°ä¸€ä¸ªæ–°çš„è¿æ¥ä»¥åï¼Œå°±é‡æ–°è®¡ç®—ngx_accept_disabledçš„å€¼ã€‚å®ƒä¸»è¦ç”¨æ¥åšè´Ÿè½½å‡è¡¡ä½¿ç”¨
         ngx_accept_disabled = ngx_cycle->connection_n / 8
                               - ngx_cycle->free_connection_n;
 
-        //´ÓÁ¬½Ó³ØÈ¡µÃÁ¬½Ó£¬È»ºó´´½¨Á¬½ÓÀïÃæ°üº¬µÄÊı¾İ½á¹¹
+        //ä»è¿æ¥æ± å–å¾—è¿æ¥ï¼Œç„¶ååˆ›å»ºè¿æ¥é‡Œé¢åŒ…å«çš„æ•°æ®ç»“æ„
         c = ngx_get_connection(s, ev->log);
 
         if (c == NULL) {
@@ -123,14 +123,14 @@ ngx_event_accept(ngx_event_t *ev)
         (void) ngx_atomic_fetch_add(ngx_stat_active, 1);
 #endif
         
-        //´´½¨ÄÚ´æ³Ø
+        //åˆ›å»ºå†…å­˜æ± 
         c->pool = ngx_create_pool(ls->pool_size, ev->log);
         if (c->pool == NULL) {
             ngx_close_accepted_connection(c);
             return;
         }
         
-        //·ÖÅä¿Í»§¶ËµØÖ·
+        //åˆ†é…å®¢æˆ·ç«¯åœ°å€
         c->sockaddr = ngx_palloc(c->pool, socklen);
         if (c->sockaddr == NULL) {
             ngx_close_accepted_connection(c);
@@ -139,7 +139,7 @@ ngx_event_accept(ngx_event_t *ev)
 
         ngx_memcpy(c->sockaddr, sa, socklen);
 
-        //·ÖÅälog
+        //åˆ†é…log
         log = ngx_palloc(c->pool, sizeof(ngx_log_t));
         if (log == NULL) {
             ngx_close_accepted_connection(c);
@@ -171,7 +171,7 @@ ngx_event_accept(ngx_event_t *ev)
 
         *log = ls->log;
 
-        //ÉèÖÃ¶ÁÈ¡µÄ»Øµ÷£¬ÕâÀïÒÀÀµÓÚ²Ù×÷ÏµÍ³
+        //è®¾ç½®è¯»å–çš„å›è°ƒï¼Œè¿™é‡Œä¾èµ–äºæ“ä½œç³»ç»Ÿ
         c->recv = ngx_recv;
         c->send = ngx_send;
         c->recv_chain = ngx_recv_chain;
@@ -180,7 +180,7 @@ ngx_event_accept(ngx_event_t *ev)
         c->log = log;
         c->pool->log = log;
 
-        //ÉèÖÃclientµÄipµØÖ·
+        //è®¾ç½®clientçš„ipåœ°å€
         c->socklen = socklen;
         c->listening = ls;
         c->local_sockaddr = ls->sockaddr;
@@ -198,12 +198,12 @@ ngx_event_accept(ngx_event_t *ev)
         }
 #endif
         
-        //×¼±¸ÉèÖÃ¶ÁĞ´µÄ½á¹¹
+        //å‡†å¤‡è®¾ç½®è¯»å†™çš„ç»“æ„
         rev = c->read;
         wev = c->write;
 
         wev->ready = 1;
-        //ÕâÀïÊ¹ÓÃµÄepollÄ£ĞÍ£¬ÔÚÕâÀïÉèÖÃÁ¬½ÓÎªnonblocking
+        //è¿™é‡Œä½¿ç”¨çš„epollæ¨¡å‹ï¼Œåœ¨è¿™é‡Œè®¾ç½®è¿æ¥ä¸ºnonblocking
         if (ngx_event_flags & (NGX_USE_AIO_EVENT|NGX_USE_RTSIG_EVENT)) {
             /* rtsig, aio, iocp */
             rev->ready = 1;
@@ -216,7 +216,7 @@ ngx_event_accept(ngx_event_t *ev)
 #endif
         }
 
-        //ÉèÖÃlog
+        //è®¾ç½®log
         rev->log = log;
         wev->log = log;
 
@@ -289,8 +289,8 @@ ngx_event_accept(ngx_event_t *ev)
         log->data = NULL;
         log->handler = NULL;
 
-		//Ëü½«Íê³ÉĞÂÁ¬½ÓµÄ×îºó³õÊ¼»¯¹¤×÷£¬Í¬Ê±½«acceptµ½µÄĞÂÁ¬½Ó·ÅÈëepollÖĞ£¬¹ÒÔÚhandlerÉÏµÄº¯Êı¾ÍÊÇngx_http_init_connection
-        ls->handler(c);// ±»³õÊ¼»¯Îª ngx_http_init_connection
+		//å®ƒå°†å®Œæˆæ–°è¿æ¥çš„æœ€ååˆå§‹åŒ–å·¥ä½œï¼ŒåŒæ—¶å°†acceptåˆ°çš„æ–°è¿æ¥æ”¾å…¥epollä¸­ï¼ŒæŒ‚åœ¨handlerä¸Šçš„å‡½æ•°å°±æ˜¯ngx_http_init_connection
+        ls->handler(c);// è¢«åˆå§‹åŒ–ä¸º ngx_http_init_connection
 
         if (ngx_event_flags & NGX_USE_KQUEUE_EVENT) {
             ev->available--;

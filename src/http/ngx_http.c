@@ -134,27 +134,27 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-	//×îºËĞÄµÄµØ·½£¬¿ÉÒÔ¿´µ½ĞŞ¸ÄÁË´«µİ½øÀ´µÄconf
+	//æœ€æ ¸å¿ƒçš„åœ°æ–¹ï¼Œå¯ä»¥çœ‹åˆ°ä¿®æ”¹äº†ä¼ é€’è¿›æ¥çš„conf
     *(ngx_http_conf_ctx_t **) conf = ctx;
 
 
     /* count the number of the http modules and set up their indices */
-    //³õÊ¼»¯ËùÓĞµÄhttp moduleµÄctx_index
+    //åˆå§‹åŒ–æ‰€æœ‰çš„http moduleçš„ctx_index
     ngx_http_max_module = 0;
     for (m = 0; ngx_modules[m]; m++) {
         if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
             continue;
         }
         
-        //Ã¿¸öÄ£¿é¶¼ÓĞ×Ô¼º¶ÔÓ¦µÄË÷ÒıÖµ
+        //æ¯ä¸ªæ¨¡å—éƒ½æœ‰è‡ªå·±å¯¹åº”çš„ç´¢å¼•å€¼
         ngx_modules[m]->ctx_index = ngx_http_max_module++;
     }
 
-    //ÏÂÃæÊÇ´´½¨http moduleµÄ¶ÔÓ¦µÄmain,srv,loc config
+    //ä¸‹é¢æ˜¯åˆ›å»ºhttp moduleçš„å¯¹åº”çš„main,srv,loc config
     /* the http main_conf context, it is the same in the all http contexts */
     
-    //¿ªÊ¼³õÊ¼»¯£¬¿ÉÒÔ¿´µ½Ä¬ÈÏ»á·ÖÅämax¸öconfig 
-    //´´½¨HTTP¶ÔÓ¦µÄconf£¬ÒòÎªÃ¿¸ö¼¶±ğ(main/ser/loc)¶¼»á°üº¬Ä£¿éµÄconf
+    //å¼€å§‹åˆå§‹åŒ–ï¼Œå¯ä»¥çœ‹åˆ°é»˜è®¤ä¼šåˆ†é…maxä¸ªconfig 
+    //åˆ›å»ºHTTPå¯¹åº”çš„confï¼Œå› ä¸ºæ¯ä¸ªçº§åˆ«(main/ser/loc)éƒ½ä¼šåŒ…å«æ¨¡å—çš„conf
     ctx->main_conf = ngx_pcalloc(cf->pool,
                                  sizeof(void *) * ngx_http_max_module);
     if (ctx->main_conf == NULL) {
@@ -189,19 +189,19 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
      * of the all http modules
      */
 
-    //µ÷ÓÃ¶ÔÓ¦µÄcreate_xxx_conf»Øµ÷º¯Êı
-    //¿ªÊ¼±éÀú
+    //è°ƒç”¨å¯¹åº”çš„create_xxx_confå›è°ƒå‡½æ•°
+    //å¼€å§‹éå†
     for (m = 0; ngx_modules[m]; m++) {
         if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
             continue;
         }
         
-        //µÃµ½¶ÔÓ¦µÄmoduleÉÏÏÂÎÄ
+        //å¾—åˆ°å¯¹åº”çš„moduleä¸Šä¸‹æ–‡
         module = ngx_modules[m]->ctx;
-        //µÃµ½¶ÔÓ¦µÄË÷Òı 
+        //å¾—åˆ°å¯¹åº”çš„ç´¢å¼• 
         mi = ngx_modules[m]->ctx_index;
         
-        //Èç¹ûÓĞ¶ÔÓ¦µÄ»Øµ÷£¬Ôòµ÷ÓÃ»Øµ÷º¯Êı£¬È»ºó½«·µ»ØµÄÄ£¿éconfigÉèÖÃµ½ctxµÄ¶ÔÓ¦µÄconfÁĞ±íÖĞ
+        //å¦‚æœæœ‰å¯¹åº”çš„å›è°ƒï¼Œåˆ™è°ƒç”¨å›è°ƒå‡½æ•°ï¼Œç„¶åå°†è¿”å›çš„æ¨¡å—configè®¾ç½®åˆ°ctxçš„å¯¹åº”çš„confåˆ—è¡¨ä¸­
         if (module->create_main_conf) {
             ctx->main_conf[mi] = module->create_main_conf(cf);
             if (ctx->main_conf[mi] == NULL) {
@@ -224,9 +224,9 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
     }
 
-	//±£´æµ±Ç°Ê¹ÓÃµÄcf£¬ÒòÎªÎÒÃÇÖ»ÊÇÔÚ½âÎöHTTPÊ±ĞèÒª¸Ä±äµ±Ç°µÄcf
+	//ä¿å­˜å½“å‰ä½¿ç”¨çš„cfï¼Œå› ä¸ºæˆ‘ä»¬åªæ˜¯åœ¨è§£æHTTPæ—¶éœ€è¦æ”¹å˜å½“å‰çš„cf
     pcf = *cf;
-	//±£´æµ±Ç°Ä£¿éµÄÉÏÏÂÎÄ
+	//ä¿å­˜å½“å‰æ¨¡å—çš„ä¸Šä¸‹æ–‡
     cf->ctx = ctx;
 
     for (m = 0; ngx_modules[m]; m++) {
@@ -236,7 +236,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         module = ngx_modules[m]->ctx;
         
-        //Èç¹û´æÔÚpostconfiguratioÔòµ÷ÓÃ³õÊ¼»¯,ÕæÕı³õÊ¼»¯Ä£¿éÖ®Ç°ĞèÒªµ÷ÓÃpreconfigurationÀ´½øĞĞÒ»Ğ©²Ù×÷¡£
+        //å¦‚æœå­˜åœ¨postconfiguratioåˆ™è°ƒç”¨åˆå§‹åŒ–,çœŸæ­£åˆå§‹åŒ–æ¨¡å—ä¹‹å‰éœ€è¦è°ƒç”¨preconfigurationæ¥è¿›è¡Œä¸€äº›æ“ä½œã€‚
         if (module->preconfiguration) {
             if (module->preconfiguration(cf) != NGX_OK) {
                 return NGX_CONF_ERROR;
@@ -246,10 +246,10 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     /* parse inside the http{} block */
 
-	//ÉèÖÃÄ£¿éÀàĞÍºÍÃüÁîÀàĞÍ
+	//è®¾ç½®æ¨¡å—ç±»å‹å’Œå‘½ä»¤ç±»å‹
     cf->module_type = NGX_HTTP_MODULE;
     cf->cmd_type = NGX_HTTP_MAIN_CONF;
-    //¼ÌĞøparse config,ÕâÀï×¢Òâ´«µİ½øÈ¥µÄÎÄ¼şÃûÊÇ¿Õ
+    //ç»§ç»­parse config,è¿™é‡Œæ³¨æ„ä¼ é€’è¿›å»çš„æ–‡ä»¶åæ˜¯ç©º
     rv = ngx_conf_parse(cf, NULL);
 
     if (rv != NGX_CONF_OK) {
@@ -264,19 +264,19 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     cmcf = ctx->main_conf[ngx_http_core_module.ctx_index];
     cscfp = cmcf->servers.elts;
 
-    //µ±http blockÍêÈ«parseÍê±ÏÖ®ºó£¬¾ÍĞèÒªmerge(mainºÍsrv»òÕßsrvºÍloc)Ïà¹ØµÄconfigÁË¡£²»¹ıÔÚÃ¿´ÎmergeÖ®Ç°¶¼»áÊ×ÏÈ³õÊ¼»¯main conf¡£
+    //å½“http blockå®Œå…¨parseå®Œæ¯•ä¹‹åï¼Œå°±éœ€è¦merge(mainå’Œsrvæˆ–è€…srvå’Œloc)ç›¸å…³çš„configäº†ã€‚ä¸è¿‡åœ¨æ¯æ¬¡mergeä¹‹å‰éƒ½ä¼šé¦–å…ˆåˆå§‹åŒ–main confã€‚
     for (m = 0; ngx_modules[m]; m++) {
         if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
             continue;
         }
 
-        //Ê×ÏÈÈ¡µÃÄ£¿éÒÔ¼°¶ÔÓ¦Ë÷Òı
+        //é¦–å…ˆå–å¾—æ¨¡å—ä»¥åŠå¯¹åº”ç´¢å¼•
         module = ngx_modules[m]->ctx;
         mi = ngx_modules[m]->ctx_index;
 
         /* init http{} main_conf's */
 
-        //Èç¹ûÓĞinit_main_conf,ÔòÊ×ÏÈ³õÊ¼»¯main conf
+        //å¦‚æœæœ‰init_main_conf,åˆ™é¦–å…ˆåˆå§‹åŒ–main conf
         if (module->init_main_conf) {
             rv = module->init_main_conf(cf, ctx->main_conf[mi]);
             if (rv != NGX_CONF_OK) {
@@ -284,7 +284,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
             }
         }
 
-        //È»ºó¿ªÊ¼merge config
+        //ç„¶åå¼€å§‹merge config
         rv = ngx_http_merge_servers(cf, cmcf, module, mi);
         if (rv != NGX_CONF_OK) {
             goto failed;
@@ -293,7 +293,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
     /* create location trees */
-    //µ±mergeÍê±ÏÖ®ºó£¬È»ºó¾ÍÊÇ³õÊ¼»¯location tree£¬´´½¨handler phase£¬µ÷ÓÃpostconfiguration£¬ÒÔ¼°±äÁ¿µÄ³õÊ¼»¯
+    //å½“mergeå®Œæ¯•ä¹‹åï¼Œç„¶åå°±æ˜¯åˆå§‹åŒ–location treeï¼Œåˆ›å»ºhandler phaseï¼Œè°ƒç”¨postconfigurationï¼Œä»¥åŠå˜é‡çš„åˆå§‹åŒ–
     for (s = 0; s < cmcf->servers.nelts; s++) {
 
         clcf = cscfp[s]->ctx->loc_conf[ngx_http_core_module.ctx_index];
@@ -307,7 +307,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
     }
 
-    //³õÊ¼»¯handler phase 
+    //åˆå§‹åŒ–handler phase 
     if (ngx_http_init_phases(cf, cmcf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
@@ -316,7 +316,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-    //±éÀúÄ£¿é£¬È»ºóµ÷ÓÃ¶ÔÓ¦µÄpostconfiguration
+    //éå†æ¨¡å—ï¼Œç„¶åè°ƒç”¨å¯¹åº”çš„postconfiguration
     for (m = 0; ngx_modules[m]; m++) {
         if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
             continue;
@@ -324,7 +324,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         module = ngx_modules[m]->ctx;
         
-        //µ÷ÓÃ»Øµ÷
+        //è°ƒç”¨å›è°ƒ
         if (module->postconfiguration) {
             if (module->postconfiguration(cf) != NGX_OK) {
                 return NGX_CONF_ERROR;
@@ -332,7 +332,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
     }
     
-    //¿ªÊ¼³õÊ¼»¯±äÁ¿
+    //å¼€å§‹åˆå§‹åŒ–å˜é‡
     if (ngx_http_variables_init_vars(cf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
@@ -342,7 +342,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
      * and in postconfiguration process
      */
 
-	//»Ö¸´cf
+	//æ¢å¤cf
     *cf = pcf;
 
 
@@ -352,7 +352,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
     /* optimize the lists of ports, addresses and server names */
-    //³õÊ¼»¯socketÏà¹ØµÄ¶«Î÷
+    //åˆå§‹åŒ–socketç›¸å…³çš„ä¸œè¥¿
     if (ngx_http_optimize_servers(cf, cmcf, cmcf->ports) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
@@ -595,7 +595,7 @@ ngx_http_merge_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
     saved = *ctx;
     rv = NGX_CONF_OK;
     
-    //±éÀúËùÓĞµÄserver£¬È»ºóÅĞ¶ÏÄ£¿éÊÇ·ñÓĞmerge»Øµ÷º¯Êı£¬Èç¹ûÓĞµÄ»°£¬¾Íµ÷ÓÃ»Øµ÷º¯Êı
+    //éå†æ‰€æœ‰çš„serverï¼Œç„¶ååˆ¤æ–­æ¨¡å—æ˜¯å¦æœ‰mergeå›è°ƒå‡½æ•°ï¼Œå¦‚æœæœ‰çš„è¯ï¼Œå°±è°ƒç”¨å›è°ƒå‡½æ•°
     for (s = 0; s < cmcf->servers.nelts; s++) {
 
         /* merge the server{}s' srv_conf's */
@@ -1418,7 +1418,7 @@ ngx_http_add_server(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
     return NGX_OK;
 }
 
-//Ö÷Òª¹¦ÄÜ¾ÍÊÇ´´½¨listening½á¹¹£¬È»ºó³õÊ¼»¯
+//ä¸»è¦åŠŸèƒ½å°±æ˜¯åˆ›å»ºlisteningç»“æ„ï¼Œç„¶ååˆå§‹åŒ–
 static ngx_int_t
 ngx_http_optimize_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
     ngx_array_t *ports)
@@ -1456,7 +1456,7 @@ ngx_http_optimize_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
                 }
             }
         }
-        //³õÊ¼»¯listen½á¹¹ 
+        //åˆå§‹åŒ–listenç»“æ„ 
         if (ngx_http_init_listening(cf, &port[p]) != NGX_OK) {
             return NGX_ERROR;
         }
@@ -1698,7 +1698,7 @@ ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
             continue;
         }
         
-        //Õâ¸öº¯ÊıÀïÃæ½«»á´´½¨£¬²¢ÇÒ³õÊ¼»¯listen½á¹¹
+        //è¿™ä¸ªå‡½æ•°é‡Œé¢å°†ä¼šåˆ›å»ºï¼Œå¹¶ä¸”åˆå§‹åŒ–listenç»“æ„
         ls = ngx_http_add_listening(cf, &addr[i]);
         if (ls == NULL) {
             return NGX_ERROR;
@@ -1729,7 +1729,7 @@ ngx_http_init_listening(ngx_conf_t *cf, ngx_http_conf_port_t *port)
             break;
 #endif
         default: /* AF_INET */
-            //³õÊ¼»¯ĞéÄâÖ÷»úÏà¹ØµÄµØÖ·£¬ÉèÖÃhashµÈµÈ
+            //åˆå§‹åŒ–è™šæ‹Ÿä¸»æœºç›¸å…³çš„åœ°å€ï¼Œè®¾ç½®hashç­‰ç­‰
             if (ngx_http_add_addrs(cf, hport, addr) != NGX_OK) {
                 return NGX_ERROR;
             }
@@ -1751,7 +1751,7 @@ ngx_http_add_listening(ngx_conf_t *cf, ngx_http_conf_addr_t *addr)
     ngx_http_core_loc_conf_t  *clcf;
     ngx_http_core_srv_conf_t  *cscf;
 
-    //´´½¨listen½á¹¹Ìå
+    //åˆ›å»ºlistenç»“æ„ä½“
     ls = ngx_create_listening(cf, &addr->opt.u.sockaddr, addr->opt.socklen);
     if (ls == NULL) {
         return NULL;
@@ -1759,7 +1759,7 @@ ngx_http_add_listening(ngx_conf_t *cf, ngx_http_conf_addr_t *addr)
 
     ls->addr_ntop = 1;
 
-    //ÉèÖÃlisten¾ä±úµÄ»Øµ÷,×¢ÒâÕâ¸öhandler²¢²»ÊÇaccept handler£¬¶øÊÇµ±accpetÍêÖ®ºó£¬´¦Àíacceptµ½µÄ¾ä±úµÄ²Ù×÷
+    //è®¾ç½®listenå¥æŸ„çš„å›è°ƒ,æ³¨æ„è¿™ä¸ªhandlerå¹¶ä¸æ˜¯accept handlerï¼Œè€Œæ˜¯å½“accpetå®Œä¹‹åï¼Œå¤„ç†acceptåˆ°çš„å¥æŸ„çš„æ“ä½œ
     ls->handler = ngx_http_init_connection;
 
     cscf = addr->default_server;
@@ -1785,7 +1785,7 @@ ngx_http_add_listening(ngx_conf_t *cf, ngx_http_conf_addr_t *addr)
     }
 #endif
     
-    //ÉèÖÃ¶ÔÓ¦µÄÊôĞÔ,backlog,¶ÁĞ´buf
+    //è®¾ç½®å¯¹åº”çš„å±æ€§,backlog,è¯»å†™buf
     ls->backlog = addr->opt.backlog;
     ls->rcvbuf = addr->opt.rcvbuf;
     ls->sndbuf = addr->opt.sndbuf;
