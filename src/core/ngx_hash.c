@@ -244,7 +244,7 @@ ngx_hash_find_combined(ngx_hash_combined_t *hash, ngx_uint_t key, u_char *name,
     return NULL;
 }
 
-//计算ngx_hash_elt_t结构大小，name为ngx_hash_elt_t结构指针
+//璁＄畻ngx_hash_elt_t缁撴瀯澶у皬锛宯ame涓簄gx_hash_elt_t缁撴瀯鎸囬拡
 #define NGX_HASH_ELT_SIZE(name)                                               \
     (sizeof(void *) + ngx_align((name)->key.len + 2, sizeof(void *)))
 

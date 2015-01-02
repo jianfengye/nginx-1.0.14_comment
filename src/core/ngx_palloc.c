@@ -12,24 +12,24 @@
 static void *ngx_palloc_block(ngx_pool_t *pool, size_t size);
 static void *ngx_palloc_large(ngx_pool_t *pool, size_t size);
 
-//�����ڴ��
+//创建内存池
 ngx_pool_t *
 ngx_create_pool(size_t size, ngx_log_t *log)
 {
     ngx_pool_t  *p;
 
-    p = ngx_memalign(NGX_POOL_ALIGNMENT, size, log);  // �����ڴ溯����uinx,windows�ֿ���
+    p = ngx_memalign(NGX_POOL_ALIGNMENT, size, log);  // 分配内存函数，uinx,windows分开走
     if (p == NULL) {
         return NULL;
     }
 
-    p->d.last = (u_char *) p + sizeof(ngx_pool_t); //��ʼָ�� ngx_pool_t �ṹ�����
-    p->d.end = (u_char *) p + size; //�����ṹ�Ľ�β����
+    p->d.last = (u_char *) p + sizeof(ngx_pool_t); //初始指向 ngx_pool_t 结构体后面
+    p->d.end = (u_char *) p + size; //整个结构的结尾后面
     p->d.next = NULL;
     p->d.failed = 0;
 
     size = size - sizeof(ngx_pool_t);
-    p->max = (size < NGX_MAX_ALLOC_FROM_POOL) ? size : NGX_MAX_ALLOC_FROM_POOL; //��󲻳��� NGX_MAX_ALLOC_FROM_POOL,Ҳ����getpagesize()-1 ��С
+    p->max = (size < NGX_MAX_ALLOC_FROM_POOL) ? size : NGX_MAX_ALLOC_FROM_POOL; //最大不超过 NGX_MAX_ALLOC_FROM_POOL,也就是getpagesize()-1 大小
 
     p->current = p;
     p->chain = NULL;
@@ -40,7 +40,7 @@ ngx_create_pool(size_t size, ngx_log_t *log)
     return p;
 }
 
-//�����ڴ��
+//销毁内存池
 void
 ngx_destroy_pool(ngx_pool_t *pool)
 {
@@ -124,7 +124,7 @@ ngx_palloc(ngx_pool_t *pool, size_t size)
         p = pool->current;
 
         do {
-            m = ngx_align_ptr(p->d.last, NGX_ALIGNMENT); // �����ڴ�ָ�룬�ӿ��ȡ�ٶ�
+            m = ngx_align_ptr(p->d.last, NGX_ALIGNMENT); // 对齐内存指针，加快存取速度
 
             if ((size_t) (p->d.end - m) >= size) {
                 p->d.last = m + size;
@@ -212,7 +212,7 @@ ngx_palloc_block(ngx_pool_t *pool, size_t size)
     return m;
 }
 
-//���ƴ���ڴ������
+//控制大块内存的申请
 static void *
 ngx_palloc_large(ngx_pool_t *pool, size_t size)
 {
@@ -276,7 +276,7 @@ ngx_pmemalign(ngx_pool_t *pool, size_t size, size_t alignment)
     return p;
 }
 
-//���ƴ���ڴ���ͷš�ע�⣬�������ֻ���ͷŴ��ڴ棬�����ͷ����Ӧ��ͷ���ṹ������������ͷ���ṹ������һ��������ڴ�֮��
+//控制大块内存的释放。注意，这个函数只会释放大内存，不会释放其对应的头部结构，遗留下来的头部结构会做下一次申请大内存之用
 ngx_int_t
 ngx_pfree(ngx_pool_t *pool, void *p)
 {
@@ -310,7 +310,7 @@ ngx_pcalloc(ngx_pool_t *pool, size_t size)
     return p;
 }
 
-//ע��cleanup�ؽк������ṹ�壩
+//注册cleanup回叫函数（结构体）
 ngx_pool_cleanup_t *
 ngx_pool_cleanup_add(ngx_pool_t *p, size_t size)
 {

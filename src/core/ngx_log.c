@@ -271,7 +271,7 @@ ngx_log_init(u_char *prefix)
     ngx_log.file = &ngx_log_file;
     ngx_log.log_level = NGX_LOG_NOTICE;
 
-    name = (u_char *) NGX_ERROR_LOG_PATH;  // ����nginx_errlog��path���������ngx_auto_config.h���ж��塰logs/error.log��
+    name = (u_char *) NGX_ERROR_LOG_PATH;  // 设置nginx_errlog的path，这个宏在ngx_auto_config.h中有定义“logs/error.log”
 
     /*
      * we use ngx_strlen() here since BCC warns about
@@ -281,7 +281,7 @@ ngx_log_init(u_char *prefix)
     nlen = ngx_strlen(name);
 
     if (nlen == 0) {
-        ngx_log_file.fd = ngx_stderr;  //���û��������־����ļ�����Ĭ�ϲ��ñ�׼���������, ���Ｘ��ֻ����һ��Ԥ���ԵĴ���
+        ngx_log_file.fd = ngx_stderr;  //如果没有设置日志输出文件，就默认采用标准错误输出流, 这里几乎只是做一个预防性的代码
         return &ngx_log;
     }
 
@@ -292,7 +292,7 @@ ngx_log_init(u_char *prefix)
 #else
     if (name[0] != '/') {
 #endif
-        // �������ʱ���Ƿ���prefix�������prefix�ͽ�log·��������
+        // 检查编译的时候是否有prefix，如果有prefix就将log路径串起来
         if (prefix) {
             plen = ngx_strlen(prefix);
 
@@ -304,7 +304,7 @@ ngx_log_init(u_char *prefix)
             plen = 0;
 #endif
         }
-        // ����Ƿ���·��ǰ׺�����оͼӵ�ǰ�棬ʹ�þ���·���ϵ���־�ļ������û�У�ʹ�õ�ǰĿ¼�µ���־�ļ�
+        // 检查是否有路径前缀，如有就加到前面，使用绝对路径上的日志文件，如果没有，使用当前目录下的日志文件
         if (plen) {
             name = malloc(plen + nlen + 2);
             if (name == NULL) {
@@ -322,7 +322,7 @@ ngx_log_init(u_char *prefix)
             p = name;
         }
     }
-    // ֻд׷�ӷ�ʽ�򿪣�����������򴴽��� ����Ҳ��windows ��unix �ֿ���
+    // 只写追加方式打开，如果不存在则创建， 这里也是windows 和unix 分开走
     ngx_log_file.fd = ngx_open_file(name, NGX_FILE_APPEND,
                                     NGX_FILE_CREATE_OR_OPEN,
                                     NGX_FILE_DEFAULT_ACCESS);

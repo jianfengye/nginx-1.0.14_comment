@@ -84,11 +84,11 @@ ngx_time_update(void)
         return;
     }
 
-    ngx_gettimeofday(&tv); //»ñÈ¡Ê±¼ä£¬unixºÍwindow×ßµÄÊÇ²»Í¬º¯Êı£¬µ«ÊÇÔÚÕâÀïÍ³Ò»±»·â×°ÁË
+    ngx_gettimeofday(&tv); //è·å–æ—¶é—´ï¼Œunixå’Œwindowèµ°çš„æ˜¯ä¸åŒå‡½æ•°ï¼Œä½†æ˜¯åœ¨è¿™é‡Œç»Ÿä¸€è¢«å°è£…äº†
 
     sec = tv.tv_sec;
-    msec = tv.tv_usec / 1000;   //´ÓÎ¢ÃëusecÖĞ¼ÆËãºÁÃëmsec
-    // »ñÈ¡ºÁÃî¾«¶ÈµÄÊ±¼ä£¬¿ÉÒÔ¿´³önginx¾«È·µ½ºÁÃë
+    msec = tv.tv_usec / 1000;   //ä»å¾®ç§’usecä¸­è®¡ç®—æ¯«ç§’msec
+    // è·å–æ¯«å¦™ç²¾åº¦çš„æ—¶é—´ï¼Œå¯ä»¥çœ‹å‡ºnginxç²¾ç¡®åˆ°æ¯«ç§’
     ngx_current_msec = (ngx_msec_t) sec * 1000 + msec;
 
     tp = &cached_time[slot];
@@ -98,13 +98,13 @@ ngx_time_update(void)
         ngx_unlock(&ngx_time_lock);
         return;
     }
-    // µ±cached_timeÊı×é±£´æµÄÊ±¼ä´ïµ½NGX_TIME_SLOTSÉÏÏŞµÄÊ±ºò£¬´ÓĞÂ¿ªÊ¼°ÑÊ±¼ä±£´æÏÂÀ´
+    // å½“cached_timeæ•°ç»„ä¿å­˜çš„æ—¶é—´è¾¾åˆ°NGX_TIME_SLOTSä¸Šé™çš„æ—¶å€™ï¼Œä»æ–°å¼€å§‹æŠŠæ—¶é—´ä¿å­˜ä¸‹æ¥
     if (slot == NGX_TIME_SLOTS - 1) {
         slot = 0;
     } else {
         slot++;
     }
-    // Ã¿µ÷ÓÃngx_time_update£¨£©Ò»´Î£¬±£´æÒ»´ÎÊ±¼ä
+    // æ¯è°ƒç”¨ngx_time_updateï¼ˆï¼‰ä¸€æ¬¡ï¼Œä¿å­˜ä¸€æ¬¡æ—¶é—´
     tp = &cached_time[slot];
 
     tp->sec = sec;
@@ -112,7 +112,7 @@ ngx_time_update(void)
 
     ngx_gmtime(sec, &gmt);
 
-    // °ÑÊ±¼ä×ªÎªhttp¸ñÊ½µÄÊ±¼ä×Ö·û´®,p0¾ÍÉèÖÃÎªÖîÈç¡°Fri, 27 Jul 2012 01:09:17 GMT¡±
+    // æŠŠæ—¶é—´è½¬ä¸ºhttpæ ¼å¼çš„æ—¶é—´å­—ç¬¦ä¸²,p0å°±è®¾ç½®ä¸ºè¯¸å¦‚â€œFri, 27 Jul 2012 01:09:17 GMTâ€
     p0 = &cached_http_time[slot][0];
 
     (void) ngx_sprintf(p0, "%s, %02d %s %4d %02d:%02d:%02d GMT",
@@ -121,7 +121,7 @@ ngx_time_update(void)
                        gmt.ngx_tm_hour, gmt.ngx_tm_min, gmt.ngx_tm_sec);
 
 #if (NGX_HAVE_GETTIMEZONE)
-    // ÕâÀïÊÇ»ñÈ¡Ê±Çø£¬unixºÍwindowsÒ²ÊÇ·Ö¿ª×ßµÄ£¬ÕâÀïµÄtmÊÇ½øĞĞÊ±ÇøĞŞ¸ÄºóµÄÖµ
+    // è¿™é‡Œæ˜¯è·å–æ—¶åŒºï¼Œunixå’Œwindowsä¹Ÿæ˜¯åˆ†å¼€èµ°çš„ï¼Œè¿™é‡Œçš„tmæ˜¯è¿›è¡Œæ—¶åŒºä¿®æ”¹åçš„å€¼
     tp->gmtoff = ngx_gettimezone();
     ngx_gmtime(sec + tp->gmtoff * 60, &tm);
 
@@ -139,7 +139,7 @@ ngx_time_update(void)
 
 #endif
 
-    // p1´æÖîÈç¡°2012/07/27 09:09:17¡±
+    // p1å­˜è¯¸å¦‚â€œ2012/07/27 09:09:17â€
     p1 = &cached_err_log_time[slot][0];
 
     (void) ngx_sprintf(p1, "%4d/%02d/%02d %02d:%02d:%02d",
@@ -147,7 +147,7 @@ ngx_time_update(void)
                        tm.ngx_tm_mday, tm.ngx_tm_hour,
                        tm.ngx_tm_min, tm.ngx_tm_sec);
 
-    // p2´æ´¢ÖîÈç¡°27/Jul/2012:09:09:17 +0800¡±
+    // p2å­˜å‚¨è¯¸å¦‚â€œ27/Jul/2012:09:09:17 +0800â€
     p2 = &cached_http_log_time[slot][0];
 
     (void) ngx_sprintf(p2, "%02d/%s/%d:%02d:%02d:%02d %c%02d%02d",
@@ -156,7 +156,7 @@ ngx_time_update(void)
                        tm.ngx_tm_min, tm.ngx_tm_sec,
                        tp->gmtoff < 0 ? '-' : '+',
                        ngx_abs(tp->gmtoff / 60), ngx_abs(tp->gmtoff % 60));
-    // P3´æ´¢ÖîÈç¡°2012-07-27T09:09:17+08:00¡±
+    // P3å­˜å‚¨è¯¸å¦‚â€œ2012-07-27T09:09:17+08:00â€
     p3 = &cached_http_log_iso8601[slot][0];
 
     (void) ngx_sprintf(p3, "%4d-%02d-%02dT%02d:%02d:%02d%c%02d:%02d",
@@ -168,14 +168,14 @@ ngx_time_update(void)
 
 
     ngx_memory_barrier();
-    // µ÷ÓÃnginx_time_update()Ä¿µÄ¾ÍÊÇ¸üĞÂÕâ¼¸¸öÊ±¼ä±äÁ¿
+    // è°ƒç”¨nginx_time_update()ç›®çš„å°±æ˜¯æ›´æ–°è¿™å‡ ä¸ªæ—¶é—´å˜é‡
     ngx_cached_time = tp;
     ngx_cached_http_time.data = p0;
-    ngx_cached_err_log_time.data = p1;  //error logÖĞÊ¹ÓÃµÄÊ±¼ä£¬Èç¡°2012/07/07 18:56:16 [error] 28451#0: *8941 open() ¡±
-    ngx_cached_http_log_time.data = p2;  //access log ÖĞÊ¹ÓÃµÄÊ±¼ä£¬Èç¡°192.168.100.251 - - [07/Jul/2012:18:56:17 +0800] "GET /rails_¡±
+    ngx_cached_err_log_time.data = p1;  //error logä¸­ä½¿ç”¨çš„æ—¶é—´ï¼Œå¦‚â€œ2012/07/07 18:56:16 [error] 28451#0: *8941 open() â€
+    ngx_cached_http_log_time.data = p2;  //access log ä¸­ä½¿ç”¨çš„æ—¶é—´ï¼Œå¦‚â€œ192.168.100.251 - - [07/Jul/2012:18:56:17 +0800] "GET /rails_â€
     ngx_cached_http_log_iso8601.data = p3;  
 
-    ngx_unlock(&ngx_time_lock); // ½âËø£¬ÕâÀï¶ÔnginxµÄÊ±¼ä½øĞĞ¸üĞÂÊ¹ÓÃÁËngx_time_lockËø¡£
+    ngx_unlock(&ngx_time_lock); // è§£é”ï¼Œè¿™é‡Œå¯¹nginxçš„æ—¶é—´è¿›è¡Œæ›´æ–°ä½¿ç”¨äº†ngx_time_locké”ã€‚
 }
 
 

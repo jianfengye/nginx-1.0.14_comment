@@ -99,10 +99,10 @@ ngx_conf_param(ngx_conf_t *cf)
 }
 
 
-//Õâ¸öº¯ÊıµÄÏêÏ¸½âÎö
-//Çë²Î¿´:http://www.pagefault.info/?p=188  nginxµÄÆô¶¯Á÷³Ì·ÖÎö(Ò»)
+//è¿™ä¸ªå‡½æ•°çš„è¯¦ç»†è§£æ
+//è¯·å‚çœ‹:http://www.pagefault.info/?p=188  nginxçš„å¯åŠ¨æµç¨‹åˆ†æ(ä¸€)
 //			http://www.pagefault.info/?p=368
-//µÚ¶ş¸ö²ÎÊı¿ÉÒÔÎª¿ÕµÄ£¬Èç¹ûÎª¿Õ£¬ÔòËµÃ÷½«Òª½âÎöµÄÊÇblockÖĞµÄÄÚÈİ»òÕßparam
+//ç¬¬äºŒä¸ªå‚æ•°å¯ä»¥ä¸ºç©ºçš„ï¼Œå¦‚æœä¸ºç©ºï¼Œåˆ™è¯´æ˜å°†è¦è§£æçš„æ˜¯blockä¸­çš„å†…å®¹æˆ–è€…param
 char *
 ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
 {
@@ -125,7 +125,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
     if (filename) {
 
         /* open configuration file */
-        // ´ò¿ªÅäÖÃÎÄ¼ş
+        // æ‰“å¼€é…ç½®æ–‡ä»¶
         fd = ngx_open_file(filename->data, NGX_FILE_RDONLY, NGX_FILE_OPEN, 0);
         if (fd == NGX_INVALID_FILE) {
             ngx_conf_log_error(NGX_LOG_EMERG, cf, ngx_errno,
@@ -137,7 +137,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
         prev = cf->conf_file;
 
         cf->conf_file = &conf_file;
-        // »ñÈ¡ÎÄ¼şĞÅÏ¢
+        // è·å–æ–‡ä»¶ä¿¡æ¯
         if (ngx_fd_info(fd, &cf->conf_file->file.info) == -1) {
             ngx_log_error(NGX_LOG_EMERG, cf->log, ngx_errno,
                           ngx_fd_info_n " \"%s\" failed", filename->data);
@@ -154,7 +154,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
         buf.last = buf.start;
         buf.end = buf.last + NGX_CONF_BUFFER;
         buf.temporary = 1;
-        // ±£´æÅäÖÃÎÄ¼şµÄ»ù±¾ĞÅÏ¢
+        // ä¿å­˜é…ç½®æ–‡ä»¶çš„åŸºæœ¬ä¿¡æ¯
         cf->conf_file->file.fd = fd;
         cf->conf_file->file.name.len = filename->len;
         cf->conf_file->file.name.data = filename->data;
@@ -172,10 +172,10 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
         type = parse_param;
     }
 
-    //Ñ­»·±éÀúÃ¿Ò»ĞĞÅäÖÃÎÄ¼ş£¬¶ÁÈ¡ÅäÖÃÄÚÈİ
+    //å¾ªç¯éå†æ¯ä¸€è¡Œé…ç½®æ–‡ä»¶ï¼Œè¯»å–é…ç½®å†…å®¹
     for ( ;; ) {
-		//¶ÁÈëÒ»¸ötoken£¬Ò»°ãÊÇÒ»ĞĞ
-		//¶Áµ½µÄÅäÖÃ²ÎÊı·Åµ½: (ngx_str_t*)(*((*cf).args)).elts
+		//è¯»å…¥ä¸€ä¸ªtokenï¼Œä¸€èˆ¬æ˜¯ä¸€è¡Œ
+		//è¯»åˆ°çš„é…ç½®å‚æ•°æ”¾åˆ°: (ngx_str_t*)(*((*cf).args)).elts
         rc = ngx_conf_read_token(cf);
 
         /*
@@ -224,8 +224,8 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
         }
 
         /* rc == NGX_OK || rc == NGX_CONF_BLOCK_START */
-        //ÅĞ¶ÏcfÊÇ·ñÓĞhandler»Øµ÷£¬Èç¹ûÓĞµÄ»°£¬ÓÅÏÈµ÷ÓÃhandler»Øµ÷£¬Èç¹ûÃ»ÓĞ£¬Ôò»á½øÈëngx_conf_handler½øĞĞÒ»°ã´¦Àí
-        //ÌØ±ğËµÒ»ÏÂ£¬httpµÄÄ£¿éÊ¹ÓÃhandlerÊÇngx_http_block£¬¾ßÌåÇë¿´ngx_http.c
+        //åˆ¤æ–­cfæ˜¯å¦æœ‰handlerå›è°ƒï¼Œå¦‚æœæœ‰çš„è¯ï¼Œä¼˜å…ˆè°ƒç”¨handlerå›è°ƒï¼Œå¦‚æœæ²¡æœ‰ï¼Œåˆ™ä¼šè¿›å…¥ngx_conf_handlerè¿›è¡Œä¸€èˆ¬å¤„ç†
+        //ç‰¹åˆ«è¯´ä¸€ä¸‹ï¼Œhttpçš„æ¨¡å—ä½¿ç”¨handleræ˜¯ngx_http_blockï¼Œå…·ä½“è¯·çœ‹ngx_http.c
         if (cf->handler) {
 
             /*
@@ -233,7 +233,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
              * "types { ... }" directive
              */
             
-            //Ê¹ÓÃhandler´¦Àí
+            //ä½¿ç”¨handlerå¤„ç†
             rv = (*cf->handler)(cf, NULL, cf->handler_conf);
             if (rv == NGX_CONF_OK) {
                 continue;
@@ -248,7 +248,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
             goto failed;
         }
 
-        //·ñÔò½øÈëÒ»°ã´¦Àí£¬ µ÷ÓÃngx_conf_handler¶Ôµ±Ç°µÄtoken½øĞĞ´¦Àí
+        //å¦åˆ™è¿›å…¥ä¸€èˆ¬å¤„ç†ï¼Œ è°ƒç”¨ngx_conf_handlerå¯¹å½“å‰çš„tokenè¿›è¡Œå¤„ç†
         rc = ngx_conf_handler(cf, rc);
 
         if (rc == NGX_ERROR) {
@@ -293,11 +293,11 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
     ngx_uint_t      i, multi;
     ngx_str_t      *name;
     ngx_command_t  *cmd;
-    // »ñÈ¡tokenÕâ¸ö¹Ø¼ü×ÖÃüÁîµÄÃû×Ö
+    // è·å–tokenè¿™ä¸ªå…³é”®å­—å‘½ä»¤çš„åå­—
     name = cf->args->elts;
 
     multi = 0;
-    // ±éÀúÃ¿¸öÄ£¿é£¬¼ì²étoken£¨¾ÍÊÇÉÏÃæµÄname£¬±ÈÈçÕâÀïµÄname¿ÉÄÜÊÇworker_process£©ÊÇÔÚÄÄ¸öÄ£¿éÖĞ±»¶¨Òå£¬²¢ÇÒ½øĞĞ´¦Àí
+    // éå†æ¯ä¸ªæ¨¡å—ï¼Œæ£€æŸ¥tokenï¼ˆå°±æ˜¯ä¸Šé¢çš„nameï¼Œæ¯”å¦‚è¿™é‡Œçš„nameå¯èƒ½æ˜¯worker_processï¼‰æ˜¯åœ¨å“ªä¸ªæ¨¡å—ä¸­è¢«å®šä¹‰ï¼Œå¹¶ä¸”è¿›è¡Œå¤„ç†
     for (i = 0; ngx_modules[i]; i++) {
 
         /* look up the directive in the appropriate modules */
@@ -313,10 +313,10 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
             continue;
         }
 
-		//Ã¿¸öÄ£¿é¶¼ÓĞÒ»¸öcommandÊı×é£¬²Î¿¼:ngx_http_browser_commands »òngx_http_commands »òÆäËüngx_command_t±äÁ¿¶¨Òå
-        //±éÀúÄ£¿éµÄcommand£¬±È½ÏÃû×Ö£¬È»ºóµ÷ÓÃ»Øµ÷º¯Êıset
+		//æ¯ä¸ªæ¨¡å—éƒ½æœ‰ä¸€ä¸ªcommandæ•°ç»„ï¼Œå‚è€ƒ:ngx_http_browser_commands æˆ–ngx_http_commands æˆ–å…¶å®ƒngx_command_tå˜é‡å®šä¹‰
+        //éå†æ¨¡å—çš„commandï¼Œæ¯”è¾ƒåå­—ï¼Œç„¶åè°ƒç”¨å›è°ƒå‡½æ•°set
         for ( /* void */ ; cmd->name.len; cmd++) {
-            // ÕâÀïÏÈ±È½Ïname£¨ÅäÖÃÎÄ¼şÖĞµÄÃüÁî£©ºÍcmd->name£¨Ä£¿éÖĞ¶¨ÒåµÄÃüÁî£©µÄ³¤¶È£¬ÔÙ±È½ÏÄÚÈİ
+            // è¿™é‡Œå…ˆæ¯”è¾ƒnameï¼ˆé…ç½®æ–‡ä»¶ä¸­çš„å‘½ä»¤ï¼‰å’Œcmd->nameï¼ˆæ¨¡å—ä¸­å®šä¹‰çš„å‘½ä»¤ï¼‰çš„é•¿åº¦ï¼Œå†æ¯”è¾ƒå†…å®¹
             if (name->len != cmd->name.len) {
                 continue;
             }
@@ -387,18 +387,18 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
 
             conf = NULL;
 			
-			//×îºËĞÄµÄµØ·½£¬
+			//æœ€æ ¸å¿ƒçš„åœ°æ–¹ï¼Œ
 
             if (cmd->type & NGX_DIRECT_CONF) {
-				//ÎÒÃÇ»¹¼ÇµÃ×î¿ªÊ¼ctxÊÇ°üº¬ÁËËùÓĞcoreÄ£¿éµÄconf(create_conf»Øµ÷),Òò´ËÕâÀïÈ¡³ö¶ÔÓ¦µÄÄ£¿éconf.
+				//æˆ‘ä»¬è¿˜è®°å¾—æœ€å¼€å§‹ctxæ˜¯åŒ…å«äº†æ‰€æœ‰coreæ¨¡å—çš„conf(create_confå›è°ƒ),å› æ­¤è¿™é‡Œå–å‡ºå¯¹åº”çš„æ¨¡å—conf.
                 conf = ((void **) cf->ctx)[ngx_modules[i]->index];
 
             } else if (cmd->type & NGX_MAIN_CONF) {
-            	//Èç¹û²»ÊÇDIRECT_CONF²¢ÇÒÊÇMAIN£¬ÔòËµÃ÷ÎÒÃÇĞèÒªÔÚÅäÖÃÖĞ´´½¨×Ô¼ºÄ£¿éµÄÉÏÏÂÎÄ(Ò²¾ÍÊÇĞèÒª½øÈë¶ş¼¶Ä£¿é)
+            	//å¦‚æœä¸æ˜¯DIRECT_CONFå¹¶ä¸”æ˜¯MAINï¼Œåˆ™è¯´æ˜æˆ‘ä»¬éœ€è¦åœ¨é…ç½®ä¸­åˆ›å»ºè‡ªå·±æ¨¡å—çš„ä¸Šä¸‹æ–‡(ä¹Ÿå°±æ˜¯éœ€è¦è¿›å…¥äºŒçº§æ¨¡å—)
                 conf = &(((void **) cf->ctx)[ngx_modules[i]->index]);
 
             } else if (cf->ctx) {
-            	//·ñÔò½øÈë¶ş¼¶Ä£¿é´¦Àí
+            	//å¦åˆ™è¿›å…¥äºŒçº§æ¨¡å—å¤„ç†
                 confp = *(void **) ((char *) cf->ctx + cmd->conf);
 
                 if (confp) {
@@ -406,7 +406,7 @@ ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
                 }
             }
 
-            //µ÷ÓÃ¶ÔÓ¦ÃüÁîµÄ´¦Àíº¯Êı£¬±ÈÈçworker_processÕâÃüÁîÔÚnginx.cÖĞ¶ÔÓ¦µÄ´¦Àíº¯ÊıÊÇngx_conf_set_num_slot£¬ÕâÀïµÄset¾ÍÊÇngx_conf_set_num_slot
+            //è°ƒç”¨å¯¹åº”å‘½ä»¤çš„å¤„ç†å‡½æ•°ï¼Œæ¯”å¦‚worker_processè¿™å‘½ä»¤åœ¨nginx.cä¸­å¯¹åº”çš„å¤„ç†å‡½æ•°æ˜¯ngx_conf_set_num_slotï¼Œè¿™é‡Œçš„setå°±æ˜¯ngx_conf_set_num_slot
             rv = cmd->set(cf, cmd, conf);
 
             if (rv == NGX_CONF_OK) {
@@ -474,7 +474,7 @@ ngx_conf_read_token(ngx_conf_t *cf)
     start_line = cf->conf_file->line;
 
     file_size = ngx_file_size(&cf->conf_file->file.info);
-    // Ñ­»·½âÎöÅäÖÃÎÄ¼ş£¬Öğ×Ö·û
+    // å¾ªç¯è§£æé…ç½®æ–‡ä»¶ï¼Œé€å­—ç¬¦
     for ( ;; ) {
 
         if (b->pos >= b->last) {
@@ -532,7 +532,7 @@ ngx_conf_read_token(ngx_conf_t *cf)
             if (size > b->end - (b->start + len)) {
                 size = b->end - (b->start + len);
             }
-            //¶Á³öÅäÖÃÎÄ¼şÄÚÈİµ½»º³åÇøbÖĞ
+            //è¯»å‡ºé…ç½®æ–‡ä»¶å†…å®¹åˆ°ç¼“å†²åŒºbä¸­
             n = ngx_read_file(&cf->conf_file->file, b->start + len, size,
                               cf->conf_file->file.offset);
 
@@ -554,15 +554,15 @@ ngx_conf_read_token(ngx_conf_t *cf)
         }
 
         ch = *b->pos++;
-        //¼ì²éÊÇ·ñµ½ĞĞÎ²
+        //æ£€æŸ¥æ˜¯å¦åˆ°è¡Œå°¾
         if (ch == LF) {
             cf->conf_file->line++;
-            // Èç¹ûÇ°ÃæÒ»ĞĞÊÇ×¢ÊÍĞĞ£¬ÄÇÃ´ÏÖÔÚ¿ªÊ¼ÉèÖÃĞÂĞĞµÄ±êÖ¾Îª£º·Ç×¢ÊÍĞĞ
+            // å¦‚æœå‰é¢ä¸€è¡Œæ˜¯æ³¨é‡Šè¡Œï¼Œé‚£ä¹ˆç°åœ¨å¼€å§‹è®¾ç½®æ–°è¡Œçš„æ ‡å¿—ä¸ºï¼šéæ³¨é‡Šè¡Œ
             if (sharp_comment) {
                 sharp_comment = 0;
             }
         }
-        //×¢ÊÍĞĞµÄ»°£¬Ìø¹ı
+        //æ³¨é‡Šè¡Œçš„è¯ï¼Œè·³è¿‡
         if (sharp_comment) {
             continue;
         }
@@ -690,12 +690,12 @@ ngx_conf_read_token(ngx_conf_t *cf)
             } else if (ch == ' ' || ch == '\t' || ch == CR || ch == LF
                        || ch == ';' || ch == '{')
             {
-            	//¿Õ¸ñ¡¢TAB¡¢»»ĞĞ¡¢·ÖºÅ£¬´óÀ¨ºÅµÈ
+            	//ç©ºæ ¼ã€TABã€æ¢è¡Œã€åˆ†å·ï¼Œå¤§æ‹¬å·ç­‰
                 last_space = 1;
                 found = 1;
             }
 
-            if (found) {//ÕÒµ½ÁËÒ»¸ö×Ö·û´®
+            if (found) {//æ‰¾åˆ°äº†ä¸€ä¸ªå­—ç¬¦ä¸²
                 word = ngx_array_push(cf->args);
                 if (word == NULL) {
                     return NGX_ERROR;
@@ -706,9 +706,9 @@ ngx_conf_read_token(ngx_conf_t *cf)
                     return NGX_ERROR;
                 }
 
-				//Ã»ÓĞÖ±½Ó¿½±´£¬¶øÊÇÖğ¸ö×Ö·û¶ÁÈë£¬²¢×öÁË×ªÒå×Ö·ûµÄ½âÎö
-				//ÔÚ³ÌĞòÆô¶¯½×¶Î×öµÄ£¬ĞÔÄÜ²»ÊÇ×î×îÖØÒªµÄ£¬¶øÊÇÅäÖÃÎÄ¼şµÄÁé»îĞÔ
-				//½âÎöÍêÃüÁîºó£¬»áÔÚ×Ö·û´®½áÎ²¼Ó'\0'½áÎ²·û
+				//æ²¡æœ‰ç›´æ¥æ‹·è´ï¼Œè€Œæ˜¯é€ä¸ªå­—ç¬¦è¯»å…¥ï¼Œå¹¶åšäº†è½¬ä¹‰å­—ç¬¦çš„è§£æ
+				//åœ¨ç¨‹åºå¯åŠ¨é˜¶æ®µåšçš„ï¼Œæ€§èƒ½ä¸æ˜¯æœ€æœ€é‡è¦çš„ï¼Œè€Œæ˜¯é…ç½®æ–‡ä»¶çš„çµæ´»æ€§
+				//è§£æå®Œå‘½ä»¤åï¼Œä¼šåœ¨å­—ç¬¦ä¸²ç»“å°¾åŠ '\0'ç»“å°¾ç¬¦
                 for (dst = word->data, src = start, len = 0;
                      src < b->pos - 1;
                      len++)
@@ -1199,7 +1199,7 @@ ngx_conf_set_keyval_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-// ¶ÔworkerµÄÊıÁ¿½øĞĞÉèÖÃ
+// å¯¹workerçš„æ•°é‡è¿›è¡Œè®¾ç½®
 char *
 ngx_conf_set_num_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -1217,7 +1217,7 @@ ngx_conf_set_num_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     value = cf->args->elts;
-    *np = ngx_atoi(value[1].data, value[1].len); //°ÑvalueºóÃæµÄbufferÇ¿ÖÆ×ªÎªÒ»¸östr
+    *np = ngx_atoi(value[1].data, value[1].len); //æŠŠvalueåé¢çš„bufferå¼ºåˆ¶è½¬ä¸ºä¸€ä¸ªstr
     if (*np == NGX_ERROR) {
         return "invalid number";
     }
@@ -1327,7 +1327,7 @@ ngx_conf_set_msec_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     return NGX_CONF_OK;
 }
 
-//ÉèÖÃtime_t²ÎÊı£¬ÒÔÃë×÷Îªµ¥Î»
+//è®¾ç½®time_tå‚æ•°ï¼Œä»¥ç§’ä½œä¸ºå•ä½
 char *
 ngx_conf_set_sec_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {

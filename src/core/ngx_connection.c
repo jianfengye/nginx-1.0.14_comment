@@ -736,7 +736,7 @@ ngx_get_connection(ngx_socket_t s, ngx_log_t *log)
 
         return NULL;
     }
-    // ÒÆ¶¯free_connectionsÖ¸Õëµ½»ñÈ¡µÄcµÄÏÂÒ»¸ö¿ÉÓÃslotÉÏ
+    // ç§»åŠ¨free_connectionsæŒ‡é’ˆåˆ°èŽ·å–çš„cçš„ä¸‹ä¸€ä¸ªå¯ç”¨slotä¸Š
     ngx_cycle->free_connections = c->data;
     ngx_cycle->free_connection_n--;
 
