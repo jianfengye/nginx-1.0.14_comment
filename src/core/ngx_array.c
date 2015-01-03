@@ -20,6 +20,7 @@ ngx_array_create(ngx_pool_t *p, ngx_uint_t n, size_t size)
         return NULL;
     }
 
+    // 分配存放n个元素，单个元素大小为size的内存空间
     a->elts = ngx_palloc(p, n * size);
     if (a->elts == NULL) {
         return NULL;
