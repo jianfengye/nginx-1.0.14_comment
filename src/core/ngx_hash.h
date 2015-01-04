@@ -65,6 +65,7 @@ typedef struct {
 } ngx_hash_wildcard_t;
 
 
+// <key,value> 结构
 typedef struct {
     ngx_str_t         key;      //key，为nginx的字符串结构
     ngx_uint_t        key_hash; //由该key计算出的hash值(通过hash函数如ngx_hash_key_lc())

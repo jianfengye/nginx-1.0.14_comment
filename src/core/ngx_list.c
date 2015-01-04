@@ -8,7 +8,11 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-// 创建一个ngx_list_t链表
+//该函数创建一个ngx_list_t类型的对象,并对该list的第一个节点分配存放元素的内存空间。
+//
+//pool:	分配内存使用的pool。
+//n:	每个节点(ngx_list_part_t)最多可以存放的元素个数
+//size:	每个元素所占用的内存大小
 ngx_list_t *
 ngx_list_create(ngx_pool_t *pool, ngx_uint_t n, size_t size)
 {

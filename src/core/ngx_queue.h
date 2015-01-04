@@ -12,6 +12,14 @@
 #ifndef _NGX_QUEUE_H_INCLUDED_
 #define _NGX_QUEUE_H_INCLUDED_
 
+/*
+`ngx_queue_t` 是Nginx提供的一个轻量级双向链表容器，它不负责分配内存来存放链表元素。
+其具备下列特点：
+- 可以高效的执行插入、删除、合并等操作
+- 具有排序功能
+- 支持两个链表间的合并
+- 支持将一个链表一分为二的拆分动作
+ */
 
 typedef struct ngx_queue_s  ngx_queue_t;
 
@@ -22,7 +30,7 @@ struct ngx_queue_s {
     ngx_queue_t  *next;   //下一个
 };
 
-//初始化队列  
+//初始化队列
 #define ngx_queue_init(q)                                                     \
     (q)->prev = q;                                                            \
     (q)->next = q
