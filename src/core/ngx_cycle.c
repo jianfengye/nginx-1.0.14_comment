@@ -89,7 +89,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     cycle->new_log.log_level = NGX_LOG_ERR;
     cycle->old_cycle = old_cycle;
 
-    //配置路径的前缀  
+    //配置路径的前缀
     cycle->conf_prefix.len = old_cycle->conf_prefix.len;
     cycle->conf_prefix.data = ngx_pstrdup(pool, &old_cycle->conf_prefix);
     if (cycle->conf_prefix.data == NULL) {
@@ -97,7 +97,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
     
-    //系统路径的前缀  
+    //系统路径的前缀
     cycle->prefix.len = old_cycle->prefix.len;
     cycle->prefix.data = ngx_pstrdup(pool, &old_cycle->prefix);
     if (cycle->prefix.data == NULL) {
@@ -105,7 +105,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
-    //配置文件路径  
+    //配置文件路径
     cycle->conf_file.len = old_cycle->conf_file.len;
     cycle->conf_file.data = ngx_pnalloc(pool, old_cycle->conf_file.len + 1);
     if (cycle->conf_file.data == NULL) {
@@ -115,7 +115,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     ngx_cpystrn(cycle->conf_file.data, old_cycle->conf_file.data,
                 old_cycle->conf_file.len + 1);
 
-    //配置参数设定  
+    //配置参数设定
     cycle->conf_param.len = old_cycle->conf_param.len;
     cycle->conf_param.data = ngx_pstrdup(pool, &old_cycle->conf_param);
     if (cycle->conf_param.data == NULL) {
@@ -137,7 +137,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     cycle->pathes.nalloc = n;
     cycle->pathes.pool = pool;
     // 每个打开的文件都会放到cycle中的open_files中。每个共享内存段都会放到shared_memory链表中
-    //如果原来结构中有文件，那么直接统计原来打开的文件，否则默认20  
+    //如果原来结构中有文件，那么直接统计原来打开的文件，否则默认20
     if (old_cycle->open_files.part.nelts) {
         n = old_cycle->open_files.part.nelts;
         for (part = old_cycle->open_files.part.next; part; part = part->next) {
@@ -156,7 +156,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
-    //如果原来结构中共享内存，那么直接统计原来共享内存数，否则默认20  
+    //如果原来结构中共享内存，那么直接统计原来共享内存数，否则默认20
     if (old_cycle->shared_memory.part.nelts) {
         n = old_cycle->shared_memory.part.nelts;
         for (part = old_cycle->shared_memory.part.next; part; part = part->next)
@@ -176,7 +176,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
-    //创建监听者，并初始化 
+    //创建监听者，并初始化
     n = old_cycle->listening.nelts ? old_cycle->listening.nelts : 10;
 
     cycle->listening.elts = ngx_pcalloc(pool, n * sizeof(ngx_listening_t));
@@ -220,14 +220,18 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     ngx_strlow(cycle->hostname.data, (u_char *) hostname, cycle->hostname.len); //将主机名变为消息，所以这里主机名是不分大小写的
 
-    //调用核心模块的配置创建函数， cycle->conf_ctx 中对应的指针指向创建的配置 
+    //调用核心模块的配置创建函数， cycle->conf_ctx 中对应的指针指向创建的配置
     //创建所有core module的configure.它通过调用每个core module的ngx_xxx_module_create_conf方法，来创建对应的conf，
-    //然后将这个conf对象保存在全局的conf_ctx中 
+    //然后将这个conf对象保存在全局的conf_ctx中
     for (i = 0; ngx_modules[i]; i++) {
         if (ngx_modules[i]->type != NGX_CORE_MODULE) {
-            continue; //这里只对核心模块进行处理，核心模块就是ngx_core_module，ngx_errlog_module，ngx_events_module和ngx_http_module，实际上只有ngx_core_module_create_conf
+        	//非核心模块直接跳过
+            continue;
         }
         
+        //这里只对核心模块进行处理，核心模块就是ngx_core_module，ngx_errlog_module，ngx_events_module和ngx_http_module
+        //实际上只有ngx_core_module_create_conf
+
         //得到core modules
         module = ngx_modules[i]->ctx;
 
@@ -246,7 +250,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     senv = environ;
 
-    //对指令结构进行初始化:参数，内存池 
+    //对指令结构进行初始化:参数，内存池
     ngx_memzero(&conf, sizeof(ngx_conf_t));
     /* STUB: init array ? */
     conf.args = ngx_array_create(pool, 10, sizeof(ngx_str_t));
@@ -261,7 +265,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
-    //指令结果赋值  
+    //指令结果赋值
     conf.ctx = cycle->conf_ctx;
     conf.cycle = cycle;
     conf.pool = pool;
@@ -280,7 +284,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     }
 
     //开始解析配置文件了，解析配置文件它会一行行读取，然后如果遇到指令
-    //则会查找到对应的ngx_command_t对象，然后执行对应的回调set方法。这里所有动作都在ngx_conf_parse这个函数中进行. 
+    //则会查找到对应的ngx_command_t对象，然后执行对应的回调set方法。这里所有动作都在ngx_conf_parse这个函数中进行.
     //这函数是立即模块的核心函数，对配置文件边解析边处理
     if (ngx_conf_parse(&conf, &cycle->conf_file) != NGX_CONF_OK) {
         environ = senv;

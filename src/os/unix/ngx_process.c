@@ -212,6 +212,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
         break;
     }
 
+    // 回到父进程执行
     ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "start %s %P", name, pid);
 
     ngx_processes[s].pid = pid;
@@ -310,6 +311,8 @@ ngx_init_signals(ngx_log_t *log)
     return NGX_OK;
 }
 
+//就目前nginx代码来看，子进程并没有往父进程发送任何消息，子进程之间也没有相互通信的逻辑，也许是因为nginx有其它一些更好的进程通信方式，比如共享内存等，所以这种channel通信目前仅做为父进程往子进程发送消息使用，但由于有这个基础在这，如果未来要使用channel做这样的事情，的确是可以的。
+
 //在nginx中，worker和master的交互，是通过流管道以及信号。
 //而master与外部的交互是通过信号来进行的,这个函数就是master处理信号的程序。
 void
@@ -363,7 +366,7 @@ ngx_signal_handler(int signo)
             }
             break;
 
-        //sighup信号用来reconfig 
+        //sighup信号用来reconfig
         case ngx_signal_value(NGX_RECONFIGURE_SIGNAL):
             ngx_reconfigure = 1;
             action = ", reconfiguring";
@@ -385,11 +388,11 @@ ngx_signal_handler(int signo)
                  * is still running.  Or ignore the signal in the old binary's
                  * process if the new binary's process is already running.
                  */
-                /* 这里给出了详细的注释，更通俗一点来讲，就是说，进程现在是一个 
-                * master(新的master进程)，但是当他的父进程old master还在运行的话， 
-                * 这时收到了USR2信号，我们就忽略它，不然就成了新master里又要生成 
-                * master。。。另外一种情况就是，old master已经开始了生成新master的过程 
-                * 中，这时如果又有USR2信号到来，那么也要忽略掉。。。(不知道够不够通俗=.=) 
+                /* 这里给出了详细的注释，更通俗一点来讲，就是说，进程现在是一个
+                * master(新的master进程)，但是当他的父进程old master还在运行的话，
+                * 这时收到了USR2信号，我们就忽略它，不然就成了新master里又要生成
+                * master。。。另外一种情况就是，old master已经开始了生成新master的过程
+                * 中，这时如果又有USR2信号到来，那么也要忽略掉。。。(不知道够不够通俗=.=)
                 参考文档：http://blog.csdn.net/dingyujie/article/details/7192144
                 */
                 action = ", ignoring";

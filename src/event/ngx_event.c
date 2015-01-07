@@ -697,7 +697,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     //初始化读事件
     for (i = 0; i < cycle->connection_n; i++) {
         rev[i].closed = 1;
-        //防止stale event 
+        //防止stale event
         rev[i].instance = 1;
 #if (NGX_THREADS)
         rev[i].lock = &c[i].lock;
@@ -743,7 +743,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 #endif
     } while (i);
 
-    //设置free 连接 
+    //设置free 连接
     cycle->free_connections = next;
     cycle->free_connection_n = cycle->connection_n;
 
@@ -751,7 +751,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
     //下面这段初始化listen 事件 ，创建socket句柄，绑定事件回调，然后加入到事件驱动中
 
     ls = cycle->listening.elts;  // 为每一个监听套接字从connection数组中分配一个连接，即一个slot
-    //开始遍历listen 
+    //开始遍历listen
     for (i = 0; i < cycle->listening.nelts; i++) {
         
         //从连接池取得连接
@@ -833,7 +833,7 @@ ngx_event_process_init(ngx_cycle_t *cycle)
 
 #else
         
-        //设置listen句柄的事件回调，这个回调里面会accept，然后进行后续处理，这个函数是nginx事件驱动的第一个函数 
+        //设置listen句柄的事件回调，这个回调里面会accept，然后进行后续处理，这个函数是nginx事件驱动的第一个函数
         rev->handler = ngx_event_accept;
 
         //如果默认使用mutex，则会继续下面操作
@@ -915,18 +915,22 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         ngx_modules[i]->ctx_index = ngx_event_max_module++;
     }
-    // 为每个事件模块分配一个指针，用以保存相应配置结构的地址。
+
+
     ctx = ngx_pcalloc(cf->pool, sizeof(void *));
     if (ctx == NULL) {
         return NGX_CONF_ERROR;
     }
 
+    // 为每个事件模块分配一个指针，用以保存相应配置结构的地址。
     *ctx = ngx_pcalloc(cf->pool, ngx_event_max_module * sizeof(void *));
     if (*ctx == NULL) {
         return NGX_CONF_ERROR;
     }
 
+    // 将事件ctx指针保存到全局的conf ctx中
     *(void **) conf = ctx;
+
     // 循环调用每个事件模块的create_conf函数，创建配置结构
     for (i = 0; ngx_modules[i]; i++) {
         if (ngx_modules[i]->type != NGX_EVENT_MODULE) {
@@ -943,13 +947,17 @@ ngx_events_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
     }
 
+    // 保存全局的conf
     pcf = *cf;
     cf->ctx = ctx;
     cf->module_type = NGX_EVENT_MODULE;
     cf->cmd_type = NGX_EVENT_CONF;
+
     // 完成配置文件中events{}这个block的解析，从而调用其下的所有的配置指令的回调函数
+    // 这里是递归调用
     rv = ngx_conf_parse(cf, NULL);
 
+    // 恢复全局的conf
     *cf = pcf;
 
     if (rv != NGX_CONF_OK)

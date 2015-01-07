@@ -21,20 +21,18 @@ typedef void (*ngx_spawn_proc_pt) (ngx_cycle_t *cycle, void *data);
 typedef struct {
     // 进程ID
     ngx_pid_t           pid;  
-    // 由waitpid系统调用获取到的进程状态          
+    // 由waitpid系统调用获取到的进程状态
     int                 status;        
-    /*
-    这是由socketpair系统调用产生出的用于进程间通信的socket句柄，这一对socket句柄可以互相通信，
-    目前用于master 父进程与worker子进程间的通信。
-    */
+
+    //这是由socketpair系统调用产生出的用于进程间通信的socket句柄，这一对socket句柄可以互相通信，
+    //目前用于master 父进程与worker子进程间的通信。
     ngx_socket_t        channel[2];     
 
     // 子进程的循环执行方法，当父进程调用ngx_spawn_process 生成子进程时使用
     ngx_spawn_proc_pt   proc;          
-    /*
-    上米昂的ngx_spawn_proc_pt方法中第二个参数需要传递一个指针，它是可选的。例如worker子进程就不需要，
-    而cache manage进程就需要ngx_cache_manager_ctx上下文成员。这时data一般与ngx_spawn_proc_pt方法中第二个参数是等价的。
-    */
+
+    //上面的ngx_spawn_proc_pt方法中第二个参数需要传递一个指针，它是可选的。例如worker子进程就不需要，
+    //而cache manage进程就需要ngx_cache_manager_ctx上下文成员。这时data一般与ngx_spawn_proc_pt方法中第二个参数是等价的。
     void               *data;
     // 进程名称。操作系统中显示的进程名称与name相同
     char               *name;

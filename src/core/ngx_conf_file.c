@@ -744,6 +744,7 @@ ngx_conf_read_token(ngx_conf_t *cf)
                 word->len = len;
 
                 if (ch == ';') {
+                	// Nginx的每一行配置以 ';' 结尾，因此此处返回OK，表面解析到一个token
                     return NGX_OK;
                 }
 

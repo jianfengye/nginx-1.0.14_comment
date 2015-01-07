@@ -36,8 +36,13 @@ struct ngx_shm_zone_s {
 
 
 struct ngx_cycle_s {
-    /* 保存着所有模块存储配置项的结构体指针，它首先是一个数组，每个数组成员又是一个指针，
-    这个指针指向另一个存储着指针的数组，因此会看到void ****
+    /*
+     保存着所有模块存储配置项的结构体指针，
+     它首先是一个数组，数组大小为ngx_max_module，正好与Nginx的module个数一样；
+     每个数组成员又是一个指针，指向另一个存储着指针的数组，因此会看到void ****
+
+    请见陶辉所著《深入理解Nginx-模块开发与架构解析》一书302页插图。
+    另外，这个图也不错：http://img.my.csdn.net/uploads/201202/9/0_1328799724GTUk.gif
     */
     void                  ****conf_ctx; 
     // 内存池
@@ -64,7 +69,7 @@ struct ngx_cycle_s {
 
     // 可用连接池，与free_connection_n配合使用
     ngx_connection_t         *free_connections;
-    // 可用连接池中连接的总数    
+    // 可用连接池中连接的总数
     ngx_uint_t                free_connection_n;    
 
     /* 双向链表容器，元素类型是ngx_connection_t结构体，表示可重复使用连接队列 */
@@ -98,7 +103,7 @@ struct ngx_cycle_s {
     ngx_event_t              *write_events;  
 
     /*
-    旧的ngx_cycle_t 对象用于引用上一个ngx_cycle_t 对象中的成员。例如ngx_init_cycle 方法，在启动初期， 
+    旧的ngx_cycle_t 对象用于引用上一个ngx_cycle_t 对象中的成员。例如ngx_init_cycle 方法，在启动初期，
     需要建立一个临时的ngx_cycle_t对象保存一些变量，再调用ngx_init_cycle 方法时就可以把旧的ngx_cycle_t 对象传进去，
     而这时old_cycle对象就会保存这个前期的ngx_cycle_t对象。
     */
@@ -106,15 +111,15 @@ struct ngx_cycle_s {
 
     // 配置文件相对于安装目录的路径名称
     ngx_str_t                 conf_file;
-    // nginx 处理配置文件时需要特殊处理的在命令行携带的参数，一般是-g 选项携带的参数     
+    // nginx 处理配置文件时需要特殊处理的在命令行携带的参数，一般是-g 选项携带的参数
     ngx_str_t                 conf_param;      
     // nginx配置文件所在目录的路径
     ngx_str_t                 conf_prefix;
-    //nginx安装目录的路径    
+    //nginx安装目录的路径
     ngx_str_t                 prefix;
-    // 用于进程间同步的文件锁名称         
+    // 用于进程间同步的文件锁名称
     ngx_str_t                 lock_file;
-    // 使用gethostname系统调用得到的主机名      
+    // 使用gethostname系统调用得到的主机名
     ngx_str_t                 hostname;   
 };
 
