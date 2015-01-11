@@ -134,7 +134,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-	//最核心的地方，可以看到修改了传递进来的conf
+	//最核心的地方，可以看到修改了传递进来的conf，也就是将该ctx的指针保存到了全局的cycle->conf_ctx[n]中
     *(ngx_http_conf_ctx_t **) conf = ctx;
 
 
@@ -153,8 +153,8 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     //下面是创建http module的对应的main,srv,loc config
     /* the http main_conf context, it is the same in the all http contexts */
     
-    //开始初始化，可以看到默认会分配max个config 
-    //创建HTTP对应的conf，因为每个级别(main/ser/loc)都会包含模块的conf
+    //开始初始化，可以看到默认会分配max个config
+    //创建HTTP对应的conf，因为每个级别(main_conf/srv_conf/loc_conf)都会包含模块的conf
     ctx->main_conf = ngx_pcalloc(cf->pool,
                                  sizeof(void *) * ngx_http_max_module);
     if (ctx->main_conf == NULL) {
@@ -197,8 +197,9 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
         
         //得到对应的module上下文
+        //疑问：这个“ngx_modules[m]->ctx”是什么时候赋值的呢？？？？
         module = ngx_modules[m]->ctx;
-        //得到对应的索引 
+        //得到对应的索引
         mi = ngx_modules[m]->ctx_index;
         
         //如果有对应的回调，则调用回调函数，然后将返回的模块config设置到ctx的对应的conf列表中
@@ -307,7 +308,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
     }
 
-    //初始化handler phase 
+    //初始化handler phase
     if (ngx_http_init_phases(cf, cmcf) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
@@ -1456,7 +1457,7 @@ ngx_http_optimize_servers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf,
                 }
             }
         }
-        //初始化listen结构 
+        //初始化listen结构
         if (ngx_http_init_listening(cf, &port[p]) != NGX_OK) {
             return NGX_ERROR;
         }

@@ -24,15 +24,15 @@ typedef struct ngx_buf_s  ngx_buf_t;
 struct ngx_buf_s {
     // 处理内存数据
     u_char          *pos;       //告知需要处理的内存数据的起始位置
-    u_char          *last;      //告知需要处理的内存数据的结束位置，即pos到last是希望处理的数据
+    u_char          *last;      //告知需要处理的内存数据的结束位置，即希望处理的数据为[pos,last)
 
     // 处理文件数据
     off_t            file_pos;  //告知需要处理的文件数据的起始位置
     off_t            file_last; //告知需要处理的文件数据的结束位置
 
-    // 处理内存数据
-    u_char          *start;      //处理的内存的起始地址，这个和pos不同的是pos会大于start
-    u_char          *end;        //处理的内存的结束位置，这个和last不同的是last会小于end
+    // buf内存数据区域
+    u_char          *start;      //buf内存的起始地址，这个和pos不同的是pos会大于等于start
+    u_char          *end;        //buf内存的结束位置，这个和last不同的是last会小于等于end
     ngx_buf_tag_t    tag;        //当前缓冲区的类型。例如由哪个模块使用，就指向这个模块ngx_module_t变量的地址
     ngx_file_t      *file;       //文件数据所引用的文件
 
@@ -127,9 +127,9 @@ struct ngx_output_chain_ctx_s {
     ngx_pool_t                  *pool;              //缓存池
     ngx_int_t                    allocated;         //已经allocated的大小
     ngx_bufs_t                   bufs;              //对应的bufs的大小，这个值就是我们loc conf中设置的bufs
-    ngx_buf_tag_t                tag;               //表示现在处于那个模块（因为upstream也会调用output_chain) 
+    ngx_buf_tag_t                tag;               //表示现在处于那个模块（因为upstream也会调用output_chain)
 
-    ngx_output_chain_filter_pt   output_filter;     //这个值一般是ngx_http_next_filter,也就是继续调用filter链 
+    ngx_output_chain_filter_pt   output_filter;     //这个值一般是ngx_http_next_filter,也就是继续调用filter链
     void                        *filter_ctx;        //当前filter的上下文，这里也是由于upstream也会调用output_chain
 };
 

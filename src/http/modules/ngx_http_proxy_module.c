@@ -49,8 +49,20 @@ typedef struct {
     ngx_array_t                   *body_set;
     ngx_array_t                   *headers_set_len;
     ngx_array_t                   *headers_set;
+
+    /*
+     "proxy_headers_hash"
+     根据headers_source来生成一个hashtable，运行期间能够快速查找。
+     */
     ngx_hash_t                     headers_set_hash;
 
+    /* 其元素数据结构为：ngx_keyval_t，用来存放HTTP Header上的key/value对，对应的配置信息如下：
+        proxy_set_header Connection  "";
+        proxy_set_header Host        $host;
+        proxy_set_header X-Real-IP   $remote_addr;
+        proxy_set_header REMOTE-HOST $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    */
     ngx_array_t                   *headers_source;
 
     ngx_array_t                   *proxy_lengths;
@@ -615,6 +627,7 @@ ngx_http_proxy_handler(ngx_http_request_t *r)
 
     u->accel = 1;
 
+    // 在这里注册ngx_http_upstream_init回调函数，读取完请求体后就会触发
     rc = ngx_http_read_client_request_body(r, ngx_http_upstream_init);
 
     if (rc >= NGX_HTTP_SPECIAL_RESPONSE) {
