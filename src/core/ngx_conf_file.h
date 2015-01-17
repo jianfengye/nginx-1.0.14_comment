@@ -40,17 +40,17 @@
                               |NGX_CONF_TAKE4)
 
 #define NGX_CONF_ARGS_NUMBER 0x000000ff
-#define NGX_CONF_BLOCK       0x00000100
+#define NGX_CONF_BLOCK       0x00000100		//配置指令可以接受一个配置块，如server
 #define NGX_CONF_FLAG        0x00000200
 #define NGX_CONF_ANY         0x00000400
 #define NGX_CONF_1MORE       0x00000800
 #define NGX_CONF_2MORE       0x00001000
 #define NGX_CONF_MULTI       0x00002000
 
-#define NGX_DIRECT_CONF      0x00010000
+#define NGX_DIRECT_CONF      0x00010000		//可以出现在配置文件的最外层，例如master_process、daemon
 
-#define NGX_MAIN_CONF        0x01000000
-#define NGX_ANY_CONF         0x0F000000
+#define NGX_MAIN_CONF        0x01000000		//http、events等
+#define NGX_ANY_CONF         0x0F000000		//该配置指令可以出现在任意配置级别上
 
 
 
@@ -83,7 +83,9 @@ struct ngx_command_s {
 
     //出现了name中制定的配置项后，将会调用set方法处理配置项参数。
     //这个可以使用nginx预设的14个解析配置方法，也可以使用自定义的。
-    char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
+	//cf参数保存了从配置文件中读取到的原始字符串以及相关的一些信息，其中有一个args字段，它表示配置指令以及该配置指令的参数，ngx_str_t类型。
+    //conf就是定义的存储这个配置值的结构体，在使用的时候需要转换成自己使用的类型。
+	char               *(*set)(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 
     //在配置文件中的偏移量，它的取值范围是：
     /*
@@ -92,10 +94,12 @@ struct ngx_command_s {
     NGX_HTTP_LOC_CONF_OFFSET
     */
     //因为有可能模块同时会有main，srv，loc三种配置结构体，但是这个配置项解析完后要放在哪个结构体内呢？
+	//当设置为0时，就是NGX_HTTP_MAIN_CONF_OFFSET
     ngx_uint_t            conf;     
 
     //表示当前配置项在整个存储配置项的结构体中的偏移位置，
-    //可以使用offsetof(test_stru, b)来获取    
+    //可以使用offsetof(test_stru, b)来获取
+	//对于有些配置项，它的值不需要保存，就可以设置为0。
     ngx_uint_t            offset;
 
     //命令处理完后的回调指针，对于set的14种预设的解析配置方法， 可能的结构有：
