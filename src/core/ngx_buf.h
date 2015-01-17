@@ -31,8 +31,8 @@ struct ngx_buf_s {
     off_t            file_last; //告知需要处理的文件数据的结束位置
 
     // 处理内存数据
-    u_char          *start;      //当一整块内存被包含在多个buf中的时候，那么这些buf里面的start和end都指向这块内存的起始位置和终止位置
-    u_char          *end;        //见start分析
+    u_char          *start;      //当一整块内存被包含在多个buf中的时候，那么这些buf里面的start和end都指向这块内存的起始位置和终止位置，和pos不同，pos会大于等于start
+    u_char          *end;        //见start分析，和last不同，last会小于等于end
     ngx_buf_tag_t    tag;        //当前缓冲区的类型。例如由哪个模块使用，就指向这个模块ngx_module_t变量的地址
     ngx_file_t      *file;       //文件数据所引用的文件
 
