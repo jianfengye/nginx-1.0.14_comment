@@ -5,6 +5,11 @@
  */
 
 
+ 
+ /*
+ * 该模块提供对于特定host的客户端访问控制。
+ * 可以限定特定host的客户端对于服务器端全部或者摸个server或者某个location访问。
+ */
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
@@ -33,7 +38,9 @@ typedef struct {
 #endif
 } ngx_http_access_loc_conf_t;
 
-
+//该模块的主处理函数。
+//根据客户端地址的类型，选择调用ngx_http_access_inet来处理ipv4。
+//还是选择调用ngx_http_access_inet6来处理ipv6。
 static ngx_int_t ngx_http_access_handler(ngx_http_request_t *r);
 static ngx_int_t ngx_http_access_inet(ngx_http_request_t *r,
     ngx_http_access_loc_conf_t *alcf, in_addr_t addr);
@@ -41,12 +48,16 @@ static ngx_int_t ngx_http_access_inet(ngx_http_request_t *r,
 static ngx_int_t ngx_http_access_inet6(ngx_http_request_t *r,
     ngx_http_access_loc_conf_t *alcf, u_char *p);
 #endif
+
 static ngx_int_t ngx_http_access_found(ngx_http_request_t *r, ngx_uint_t deny);
 static char *ngx_http_access_rule(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 static void *ngx_http_access_create_loc_conf(ngx_conf_t *cf);
 static char *ngx_http_access_merge_loc_conf(ngx_conf_t *cf,
     void *parent, void *child);
+
+//该函数被挂在到了NGX_HTTP_ACCESS_PHASE阶段的handler上
+//因此其调用时机在NGX_HTTP_CONTENT_PHASE之前
 static ngx_int_t ngx_http_access_init(ngx_conf_t *cf);
 
 

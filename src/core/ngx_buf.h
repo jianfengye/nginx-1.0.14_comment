@@ -30,13 +30,16 @@ struct ngx_buf_s {
     off_t            file_pos;  //告知需要处理的文件数据的起始位置
     off_t            file_last; //告知需要处理的文件数据的结束位置
 
-    // buf内存数据区域
-    u_char          *start;      //buf内存的起始地址，这个和pos不同的是pos会大于等于start
-    u_char          *end;        //buf内存的结束位置，这个和last不同的是last会小于等于end
+    // 处理内存数据
+    u_char          *start;      //当一整块内存被包含在多个buf中的时候，那么这些buf里面的start和end都指向这块内存的起始位置和终止位置，和pos不同，pos会大于等于start
+    u_char          *end;        //见start分析，和last不同，last会小于等于end
+
     ngx_buf_tag_t    tag;        //当前缓冲区的类型。例如由哪个模块使用，就指向这个模块ngx_module_t变量的地址
     ngx_file_t      *file;       //文件数据所引用的文件
 
     // 当前缓冲区的影子缓冲区，这个成员很少使用到。
+	//当一个buf完整的copy另一buf的所有字段的时候，那么这两个buf指向的实际上是同一个内存或者同一个文件。
+	//此时的两个buf的shadow是相互指向对方的，那么对于这样的两个buf在释放的时候需要特别小心。
     ngx_buf_t       *shadow;
 
     /* the buf's content could be changed */
@@ -53,10 +56,18 @@ struct ngx_buf_s {
     /* the buf's content is mmap()ed and must not be changed */
     // 标志位，1表示这段内存是用mmap系统调用映射过来的，不可以被修改
     unsigned         mmap:1; 
+	
+	//标志位，1表示可以被回收，通常配合shadow字段一起使用；
+	//当使用ngx_create_temp_buf函数创建的buf同时也是另一个buf的shadow的时候，表示这个buf是可释放的
+    unsigned         recycled:1;  
 
-    unsigned         recycled:1;    //标志位，1表示可以被回收
+	
     unsigned         in_file:1;     //标志位，1表示是处理文件数据，而不是内存数据
-    unsigned         flush:1;       //标志位，1表示需要执行flush操作
+	
+	
+	//遇到有flush字段被设置为1的buf的chain，则该chain的数据即使不是最后结束的数据也会进行输出；
+	//不会受postpone_output配置的限制。
+    unsigned         flush:1;
 
     //标志位，对于操作这个缓冲区时是否使用同步方式，需要谨慎考虑。
     //这有可能会阻塞nginx进程，nginx中所有操作几乎都是异步的。
@@ -69,10 +80,12 @@ struct ngx_buf_s {
     //标志位，是否是ngx_chain_t中的最后一块缓冲区
     unsigned         last_in_chain:1; 
 
-    //标志位，是否是最后一个影子缓冲区，与shadow配合使用，通常不建议使用
+    //标志位，是否是最后一个影子缓冲区，与shadow配合使用，通常不建议使用；
+	//在创建一个buf的shadow的时候，通常将新创建的一个buf的last_shadow设置为1.
     unsigned         last_shadow:1;
 
     //标志位，是否属于临时文件
+	//由于受到内存使用的限制，有时候一些buf的内容需要被写到磁盘上的临时文件。
     unsigned         temp_file:1;
 
     /* STUB */ int   num;
