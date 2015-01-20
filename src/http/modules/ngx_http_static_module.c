@@ -4,7 +4,11 @@
  * Copyright (C) Nginx, Inc.
  */
 
-
+/*
+ * 本模块的作用是：
+ * 1.读取磁盘上的静态文件。
+ * 2.把读取到的静态文件作为产生的输出。
+ */
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
@@ -44,7 +48,7 @@ ngx_module_t  ngx_http_static_module = {
     NGX_MODULE_V1_PADDING
 };
 
-
+//核心处理函数
 static ngx_int_t
 ngx_http_static_handler(ngx_http_request_t *r)
 {
@@ -58,11 +62,15 @@ ngx_http_static_handler(ngx_http_request_t *r)
     ngx_chain_t                out;
     ngx_open_file_info_t       of;
     ngx_http_core_loc_conf_t  *clcf;
-
+	
+	//检查客户端请求的类型(r->method)如果请求类型不是GET、HEAD、POST则拒绝客户端发起的请求。
+	//否则，继续处理。
     if (!(r->method & (NGX_HTTP_GET|NGX_HTTP_HEAD|NGX_HTTP_POST))) {
         return NGX_HTTP_NOT_ALLOWED;
     }
-
+	
+	//判断请求的uri的结尾字符是不是斜杠'/'；
+	//如果是，说明求情不是一个文件，给后续的handler处理。
     if (r->uri.data[r->uri.len - 1] == '/') {
         return NGX_DECLINED;
     }
@@ -73,7 +81,8 @@ ngx_http_static_handler(ngx_http_request_t *r)
      * ngx_http_map_uri_to_path() allocates memory for terminating '\0'
      * so we do not need to reserve memory for '/' for possible redirect
      */
-
+	
+	//ngx_http_map_uri_to_paht函数的作用是把请求的http协议的路径转化为文件系统的路径
     last = ngx_http_map_uri_to_path(r, &path, &root, 0);
     if (last == NULL) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
@@ -87,14 +96,17 @@ ngx_http_static_handler(ngx_http_request_t *r)
     clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
 
     ngx_memzero(&of, sizeof(ngx_open_file_info_t));
-
+	
     of.read_ahead = clcf->read_ahead;
     of.directio = clcf->directio;
     of.valid = clcf->open_file_cache_valid;
     of.min_uses = clcf->open_file_cache_min_uses;
     of.errors = clcf->open_file_cache_errors;
     of.events = clcf->open_file_cache_events;
-
+	
+	//根据相关配置项，对文件做两种检查
+	//1.如果求情的文件是一个symbol link，根据配置是否应许符号连接，不应许则返回错误。
+	//2.如果请求的是一个目录名称，则也返回错误。
     if (ngx_open_cached_file(clcf->open_file_cache, &path, &of, r->pool)
         != NGX_OK)
     {
@@ -178,7 +190,7 @@ ngx_http_static_handler(ngx_http_request_t *r)
          * we do not need to set the r->headers_out.location->hash and
          * r->headers_out.location->key fields
          */
-
+		
         r->headers_out.location->value.len = len;
         r->headers_out.location->value.data = location;
 
@@ -258,7 +270,7 @@ ngx_http_static_handler(ngx_http_request_t *r)
     return ngx_http_output_filter(r, &out);
 }
 
-
+//解析完配置项后调用，仅仅是把handler挂载到NGX_HTTP_CONTENT_PHASE处理阶段
 static ngx_int_t
 ngx_http_static_init(ngx_conf_t *cf)
 {
