@@ -196,6 +196,16 @@ static char        *ngx_signal;
 static char **ngx_os_environ;
 
 
+//1.时间、正则、错误日志、ssl等初始化
+//2.读入命令行参数
+//3.OS相关初始化
+//4.读入并解析配置
+//5.核心模块初始化
+//6.创建各种临时文件和目录
+//7.创建共享内存
+//8.打开listen的端口
+//9.所有模块初始化
+//10.启动worker进程
 int ngx_cdecl
 main(int argc, char *const *argv)
 {
