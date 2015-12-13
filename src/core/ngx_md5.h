@@ -50,9 +50,9 @@ typedef struct {
 } ngx_md5_t;
 
 
-void ngx_md5_init(ngx_md5_t *ctx);
-void ngx_md5_update(ngx_md5_t *ctx, const void *data, size_t size);
-void ngx_md5_final(u_char result[16], ngx_md5_t *ctx);
+void ngx_md5_init(ngx_md5_t *ctx);										//[p]初始化ngx_md5_t变量
+void ngx_md5_update(ngx_md5_t *ctx, const void *data, size_t size);		//[p]输入数据"data",和长度"size"
+void ngx_md5_final(u_char result[16], ngx_md5_t *ctx);					//[p]输出MD5值
 
 
 #endif

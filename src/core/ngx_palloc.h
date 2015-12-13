@@ -54,6 +54,7 @@ typedef struct {
 } ngx_pool_data_t;
 
 //该结构维护整个内存池的头部信息
+//Nginx使用内存池时总是只申请,不释放,使用完毕后直接destroy整个内存池
 struct ngx_pool_s {
     ngx_pool_data_t       d;       //数据块
     size_t                max;     //数据块大小，即小块内存的最大值
@@ -64,11 +65,11 @@ struct ngx_pool_s {
     ngx_log_t            *log;
 };
 
-
+/*ngx_pool_cleanup_t中的*data成员通常指向ngx_pool_cleanup_file_t结构体*/
 typedef struct {
-    ngx_fd_t              fd;
-    u_char               *name;
-    ngx_log_t            *log;
+    ngx_fd_t              fd;	//[p]文件句柄
+    u_char               *name;	//[p]文件名称
+    ngx_log_t            *log;	//[p]日志对象
 } ngx_pool_cleanup_file_t;
 
 //使用malloc分配内存空间
@@ -77,12 +78,12 @@ void *ngx_alloc(size_t size, ngx_log_t *log);
 //使用malloc分配内存空间，并且将空间内容初始化为0
 void *ngx_calloc(size_t size, ngx_log_t *log);
 
-//创建内存池
+//通过ngx_create_pool可以创建一个内存池
 ngx_pool_t *ngx_create_pool(size_t size, ngx_log_t *log);
 void ngx_destroy_pool(ngx_pool_t *pool);
 void ngx_reset_pool(ngx_pool_t *pool);
 
-void *ngx_palloc(ngx_pool_t *pool, size_t size);    //palloc取得的内存是对齐的
+void *ngx_palloc(ngx_pool_t *pool, size_t size);    //通过ngx_palloc可以从内存池中分配指定大小的内存. palloc取得的内存是对齐的
 void *ngx_pnalloc(ngx_pool_t *pool, size_t size);   //pnalloc取得的内存是不对齐的
 void *ngx_pcalloc(ngx_pool_t *pool, size_t size);   //pcalloc直接调用palloc分配好内存，然后进行一次0初始化操作
 void *ngx_pmemalign(ngx_pool_t *pool, size_t size, size_t alignment); //在分配size大小的内存，并按照alignment对齐，然后挂到large字段下

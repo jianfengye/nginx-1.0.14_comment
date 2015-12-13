@@ -156,7 +156,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         return NULL;
     }
 
-    //如果原来结构中共享内存，那么直接统计原来共享内存数，否则默认20
+    //如果原来结构中共享内存，那么遍历old_cycle，统计上一次系统中分配了多少块共享内存，接着就按这个数据初始化当前cycle中共享内存的规模;
     if (old_cycle->shared_memory.part.nelts) {
         n = old_cycle->shared_memory.part.nelts;
         for (part = old_cycle->shared_memory.part.next; part; part = part->next)
@@ -164,7 +164,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
             n += part->nelts;
         }
 
-    } else {
+    } else {    //否则默认20
         n = 1;
     }
 
@@ -224,7 +224,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     //创建所有core module的configure.它通过调用每个core module的ngx_xxx_module_create_conf方法，来创建对应的conf，
     //然后将这个conf对象保存在全局的conf_ctx中
     for (i = 0; ngx_modules[i]; i++) {
-        if (ngx_modules[i]->type != NGX_CORE_MODULE) {
+        if (ngx_modules[i]->type != NGX_CORE_MODULE) {  //筛选出core模块
         	//非核心模块直接跳过
             continue;
         }
@@ -237,6 +237,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
         //如果create_conf存在，则直接创建config
         if (module->create_conf) {
+			//core的create_conf回调函数，实际上指向ngx_core_module_crate_conf
             rv = module->create_conf(cycle); //对每个模块调用模块内部的钩子ngx_xxx_module_create_conf，当然第一个模块是core
             if (rv == NULL) {
                 ngx_destroy_pool(pool);
@@ -276,14 +277,15 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 #if 0
     log->log_level = NGX_LOG_DEBUG_ALL;
 #endif
-
+	//panzg:内部解析nginx配置文件,此处是解析nginx命令行参数"-g"加入的配置
     if (ngx_conf_param(&conf) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
         return NULL;
     }
 
-    //开始解析配置文件了，解析配置文件它会一行行读取，然后如果遇到指令
+    //第二次调用ngx_conf_parse函数，此处才是解析nginx配置文件
+	//开始解析配置文件了，解析配置文件它会一行行读取，然后如果遇到指令
     //则会查找到对应的ngx_command_t对象，然后执行对应的回调set方法。这里所有动作都在ngx_conf_parse这个函数中进行.
     //这函数是立即模块的核心函数，对配置文件边解析边处理
     if (ngx_conf_parse(&conf, &cycle->conf_file) != NGX_CONF_OK) {
@@ -305,6 +307,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
         module = ngx_modules[i]->ctx;
 
+		//core的init_conf回调函数，实际上指向的是ngx_core_module_init_conf
         //调用ngx_xxx_module_init_conf
         if (module->init_conf) {
             if (module->init_conf(cycle, cycle->conf_ctx[ngx_modules[i]->index])
@@ -323,6 +326,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
 
+	//创建新的pid文件
     if (ngx_test_config) {
 
         if (ngx_create_pidfile(&ccf->pid, log) != NGX_OK) {
@@ -1016,7 +1020,7 @@ ngx_create_pidfile(ngx_str_t *name, ngx_log_t *log)
                       ngx_open_file_n " \"%s\" failed", file.name.data);
         return NGX_ERROR;
     }
-
+	
     if (!ngx_test_config) {
         len = ngx_snprintf(pid, NGX_INT64_LEN + 2, "%P%N", ngx_pid) - pid;
 
@@ -1066,7 +1070,7 @@ ngx_signal_process(ngx_cycle_t *cycle, char *sig)
 
     file.name = ccf->pid;
     file.log = cycle->log;
-
+	//[p] file.name即为配置文件中指定pid所在的文件，该文件存放master的pid。通过配置文件中的pid字段，指明存放进程id文件的地址。
     file.fd = ngx_open_file(file.name.data, NGX_FILE_RDONLY,
                             NGX_FILE_OPEN, NGX_FILE_DEFAULT_ACCESS);
 

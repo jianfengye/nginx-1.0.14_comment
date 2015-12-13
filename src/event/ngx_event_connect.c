@@ -22,12 +22,12 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
     ngx_event_t       *rev, *wev;
     ngx_connection_t  *c;
 
-    rc = pc->get(pc, pc->data);
+    rc = pc->get(pc, pc->data);					//[p]调用get函调函数
     if (rc != NGX_OK) {
         return rc;
     }
 
-    s = ngx_socket(pc->sockaddr->sa_family, SOCK_STREAM, 0);
+    s = ngx_socket(pc->sockaddr->sa_family, SOCK_STREAM, 0);//[p]创建socket对象
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pc->log, 0, "socket %d", s);
 

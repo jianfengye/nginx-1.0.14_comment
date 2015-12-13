@@ -11,12 +11,12 @@
 
 static char *ngx_error_log(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 
-
+//[p] ngx_errlog_module指令数组
 static ngx_command_t  ngx_errlog_commands[] = {
 
     {ngx_string("error_log"),
      NGX_MAIN_CONF|NGX_CONF_1MORE,
-     ngx_error_log,
+     ngx_error_log,   //[p] 指令解析函数
      0,
      0,
      NULL},
@@ -24,10 +24,10 @@ static ngx_command_t  ngx_errlog_commands[] = {
     ngx_null_command
 };
 
-
+//[p] ngx_errlog_module模块定义
 static ngx_core_module_t  ngx_errlog_module_ctx = {
-    ngx_string("errlog"),
-    NULL,
+    ngx_string("errlog"),  //[p] 模块名字
+    NULL,                  //[p] 不需要配置结构
     NULL
 };
 
@@ -52,7 +52,7 @@ static ngx_log_t        ngx_log;
 static ngx_open_file_t  ngx_log_file;
 ngx_uint_t              ngx_use_stderr = 1;
 
-
+//数组err_levels与nginx日志级别对应
 static ngx_str_t err_levels[] = {
     ngx_null_string,
     ngx_string("emerg"),
@@ -423,8 +423,7 @@ ngx_log_set_levels(ngx_conf_t *cf, ngx_log_t *log)
 
     return NGX_CONF_OK;
 }
-
-
+//[p] ngx_errlog_module指令解析函数
 static char *
 ngx_error_log(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -454,6 +453,6 @@ ngx_error_log(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     }
 
     cf->cycle->new_log.log_level = 0;
-
+	//[p] 设置ngx_cycle_t中的log变量
     return ngx_log_set_levels(cf, &cf->cycle->new_log);
 }

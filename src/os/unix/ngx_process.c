@@ -12,10 +12,10 @@
 
 
 typedef struct {
-    int     signo;
-    char   *signame;
-    char   *name;
-    void  (*handler)(int signo);
+    int     signo;  //信号的编号
+    char   *signame; //信号的字符串表现形式
+    char   *name; //信号名称
+    void  (*handler)(int signo); //信号处理函数
 } ngx_signal_t;
 
 
@@ -34,7 +34,7 @@ ngx_socket_t     ngx_channel;
 ngx_int_t        ngx_last_process;
 ngx_process_t    ngx_processes[NGX_MAX_PROCESSES];
 
-
+//此处定义了所有nginx所支持的信号
 ngx_signal_t  signals[] = {
     { ngx_signal_value(NGX_RECONFIGURE_SIGNAL),
       "SIG" ngx_value(NGX_RECONFIGURE_SIGNAL),
@@ -81,7 +81,7 @@ ngx_signal_t  signals[] = {
     { 0, NULL, "", NULL }
 };
 
-
+/*[p] master进程通过调用ngx_spwan_process创建工作进程，其中proc指针指向工作进程要执行的具体函数*/
 ngx_pid_t
 ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
     char *name, ngx_int_t respawn)
@@ -116,7 +116,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
     if (respawn != NGX_PROCESS_DETACHED) {
 
         /* Solaris 9 still has no AF_LOCAL */
-        //创建socketpair，并设置相关属性
+        //[p]创建socketpair，并设置相关属性,用于进程间通信,nginx中使用socket进行进程间通信
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, ngx_processes[s].channel) == -1)
         {
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
@@ -130,7 +130,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
                        ngx_processes[s].channel[1]);
         
         //设置非阻塞模式
-        if (ngx_nonblocking(ngx_processes[s].channel[0]) == -1) {
+        if (ngx_nonblocking(ngx_processes[s].channel[0]) == -1) { //[p]设置channel[0]非阻塞,ngx_nonblocking为ioctl系统调用的封装
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           ngx_nonblocking_n " failed while spawning \"%s\"",
                           name);
@@ -138,7 +138,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
             return NGX_INVALID_PID;
         }
 
-        if (ngx_nonblocking(ngx_processes[s].channel[1]) == -1) {
+        if (ngx_nonblocking(ngx_processes[s].channel[1]) == -1) { //[p]设置channel[1]非阻塞
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           ngx_nonblocking_n " failed while spawning \"%s\"",
                           name);
@@ -191,7 +191,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
     //设置全局的ngx_process_slot
     ngx_process_slot = s;
 
-
+	//创建子进程
     pid = fork();
 
     switch (pid) {
@@ -204,7 +204,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
 
     case 0:
         ngx_pid = ngx_getpid();
-        //在子进程中执行传递进来的函数
+        //在子进程中执行传递进来的函数，即工作进程的具体工作
         proc(cycle, data);
         break;
 
@@ -226,7 +226,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
     ngx_processes[s].data = data;
     ngx_processes[s].name = name;
     ngx_processes[s].exiting = 0;
-
+	//根据传入的respawn标记对nginx当前的进程进行相关设置，比如执行函数，运行状态。。。
     switch (respawn) {
 
     case NGX_PROCESS_NORESPAWN:
@@ -290,7 +290,7 @@ ngx_execute_proc(ngx_cycle_t *cycle, void *data)
     exit(1);
 }
 
-
+//[p]ngx_init_signals方法会初始化signals数组中所有的信号，ngx_init_signals其实是调用了sigaction方法注册信号的回调方法。
 ngx_int_t
 ngx_init_signals(ngx_log_t *log)
 {
@@ -333,7 +333,7 @@ ngx_signal_handler(int signo)
             break;
         }
     }
-
+	//[p]整个nginx源码中，仅此一处调用ngx_time_sigsafe_update函数，因此调用时间更新函数的频率很低
     ngx_time_sigsafe_update();
 
     action = "";
@@ -601,7 +601,7 @@ ngx_debug_point(void)
     }
 }
 
-
+/*[p] 信号处理，根据name到ngx_signal_t的名字中去匹配，找到信号，然后通过kill向master发送消息。*/
 ngx_int_t
 ngx_os_signal_process(ngx_cycle_t *cycle, char *name, ngx_int_t pid)
 {

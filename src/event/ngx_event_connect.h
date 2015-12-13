@@ -35,7 +35,7 @@ typedef void (*ngx_event_save_peer_session_pt)(ngx_peer_connection_t *pc,
     void *data);
 #endif
 
-
+//[p]定义了load_balance模块实现负载均衡算法的回调函数和相关字段
 struct ngx_peer_connection_s {
     // 一个主动连接实际上也需要ngx_connection_t结构体中的大部分成员，并且出于重用的考虑而定义了connection成员
     ngx_connection_t                *connection;

@@ -31,12 +31,12 @@ static ngx_int_t ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc,
 static char *ngx_http_upstream_ip_hash(ngx_conf_t *cf, ngx_command_t *cmd,
     void *conf);
 
-
+//[p]ip_hash指令
 static ngx_command_t  ngx_http_upstream_ip_hash_commands[] = {
 
     { ngx_string("ip_hash"),
       NGX_HTTP_UPS_CONF|NGX_CONF_NOARGS,
-      ngx_http_upstream_ip_hash,
+      ngx_http_upstream_ip_hash,				//[p]指令解析函数
       0,
       0,
       NULL },
@@ -79,11 +79,11 @@ ngx_module_t  ngx_http_upstream_ip_hash_module = {
 ngx_int_t
 ngx_http_upstream_init_ip_hash(ngx_conf_t *cf, ngx_http_upstream_srv_conf_t *us)
 {
-    if (ngx_http_upstream_init_round_robin(cf, us) != NGX_OK) {
+    if (ngx_http_upstream_init_round_robin(cf, us) != NGX_OK) {	//[p]调用round robin函数初始化IP地址表
         return NGX_ERROR;
     }
 
-    us->peer.init = ngx_http_upstream_init_ip_hash_peer;
+    us->peer.init = ngx_http_upstream_init_ip_hash_peer;		//[p]设置自己的算法初始化函数
 
     return NGX_OK;
 }
@@ -133,7 +133,7 @@ ngx_http_upstream_init_ip_hash_peer(ngx_http_request_t *r,
     return NGX_OK;
 }
 
-
+//[p]该函数为IP散列算法的具体实现，根据地址计算散列值，然后从列表中选择一个地址
 static ngx_int_t
 ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc, void *data)
 {
@@ -149,13 +149,13 @@ ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc, void *data)
 
     /* TODO: cached */
 
-    if (iphp->tries > 20 || iphp->rrp.peers->single) {
-        return iphp->get_rr_peer(pc, &iphp->rrp);
+    if (iphp->tries > 20 || iphp->rrp.peers->single) {           //[p]重试次数过多
+        return iphp->get_rr_peer(pc, &iphp->rrp);				//[p]退化为round robin
     }
 
     now = ngx_time();
 
-    pc->cached = 0;
+    pc->cached = 0;												//[p]不使用磁盘缓存
     pc->connection = NULL;
 
     hash = iphp->hash;
@@ -166,7 +166,7 @@ ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc, void *data)
             hash = (hash * 113 + iphp->addr[i]) % 6271;
         }
 
-        p = hash % iphp->rrp.peers->number;
+        p = hash % iphp->rrp.peers->number;						//[p]算法计算散列值
 
         n = p / (8 * sizeof(uintptr_t));
         m = (uintptr_t) 1 << p % (8 * sizeof(uintptr_t));
@@ -176,7 +176,7 @@ ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc, void *data)
             ngx_log_debug2(NGX_LOG_DEBUG_HTTP, pc->log, 0,
                            "get ip hash peer, hash: %ui %04XA", p, m);
 
-            peer = &iphp->rrp.peers->peer[p];
+            peer = &iphp->rrp.peers->peer[p];				//[p]得到一个地址
 
             /* ngx_lock_mutex(iphp->rrp.peers->mutex); */
 
@@ -215,10 +215,10 @@ ngx_http_upstream_get_ip_hash_peer(ngx_peer_connection_t *pc, void *data)
     iphp->rrp.tried[n] |= m;
     iphp->hash = hash;
 
-    return NGX_OK;
+    return NGX_OK;							//[p]成功过的一个上游地址
 }
 
-
+//[p]解析ip_hash指令配置
 static char *
 ngx_http_upstream_ip_hash(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -226,7 +226,7 @@ ngx_http_upstream_ip_hash(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     uscf = ngx_http_conf_get_module_srv_conf(cf, ngx_http_upstream_module);
 
-    uscf->peer.init_upstream = ngx_http_upstream_init_ip_hash;
+    uscf->peer.init_upstream = ngx_http_upstream_init_ip_hash;		//[p]设置算法入口
 
     uscf->flags = NGX_HTTP_UPSTREAM_CREATE
                   |NGX_HTTP_UPSTREAM_MAX_FAILS

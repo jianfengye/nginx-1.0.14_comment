@@ -560,7 +560,7 @@ ngx_epoll_del_connection(ngx_connection_t *c, ngx_uint_t flags)
     return NGX_OK;
 }
 
-
+/*[p]epoll事件驱动模型的实现*/
 static ngx_int_t
 ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
 {
@@ -582,7 +582,7 @@ ngx_epoll_process_events(ngx_cycle_t *cycle, ngx_msec_t timer, ngx_uint_t flags)
     err = (events == -1) ? ngx_errno : 0;
 
     if (flags & NGX_UPDATE_TIME || ngx_event_timer_alarm) {
-        ngx_time_update(); //执行一次事件更新，nginx将时间缓存到一组全局变量中，方便程序高效的获取事件
+        ngx_time_update(); //[p]执行一次时间更新，nginx将时间缓存到一组全局变量中，方便程序高效的获取事件
     }
     //处理wait错误
     if (err) {

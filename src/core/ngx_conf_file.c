@@ -59,7 +59,7 @@ static ngx_uint_t argument_number[] = {
     NGX_CONF_TAKE7
 };
 
-
+/*panzg:解析nginx配置参数*/
 char *
 ngx_conf_param(ngx_conf_t *cf)
 {
@@ -73,7 +73,7 @@ ngx_conf_param(ngx_conf_t *cf)
     if (param->len == 0) {
         return NGX_CONF_OK;
     }
-
+	//panzg:初始化保存配置信息的结构体
     ngx_memzero(&conf_file, sizeof(ngx_conf_file_t));
 
     ngx_memzero(&b, sizeof(ngx_buf_t));
@@ -90,7 +90,7 @@ ngx_conf_param(ngx_conf_t *cf)
 
     cf->conf_file = &conf_file;
     cf->conf_file->buffer = &b;
-
+	//panzg:执行具体的配置文件解析工作
     rv = ngx_conf_parse(cf, NULL);
 
     cf->conf_file = NULL;
@@ -172,7 +172,7 @@ ngx_conf_parse(ngx_conf_t *cf, ngx_str_t *filename)
         type = parse_param;
     }
 
-    //循环遍历每一行配置文件，读取配置内容
+    //循环遍历每一行配置文件，读取配置内容,“读取一条、检查一条、解析一条”
     for ( ;; ) {
 		//读入一个token，一般是一行
 		//读到的配置参数放到: (ngx_str_t*)(*((*cf).args)).elts
@@ -284,7 +284,7 @@ done:
     return NGX_CONF_OK;
 }
 
-
+/*主要完成配置文件的解析工作*/
 static ngx_int_t
 ngx_conf_handler(ngx_conf_t *cf, ngx_int_t last)
 {
@@ -446,7 +446,7 @@ invalid:
     return NGX_ERROR;
 }
 
-
+/*将配置文件中当前的一条配置指令读取到内存中，判断配置语法是否正确*/
 static ngx_int_t
 ngx_conf_read_token(ngx_conf_t *cf)
 {

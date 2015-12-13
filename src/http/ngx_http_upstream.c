@@ -370,25 +370,25 @@ ngx_conf_bitmask_t  ngx_http_upstream_ignore_headers_masks[] = {
     { ngx_null_string, 0 }
 };
 
-
+//[p]nginx的请求转发机制，需要调函该函数来创建upstream对象
 ngx_int_t
 ngx_http_upstream_create(ngx_http_request_t *r)
 {
     ngx_http_upstream_t  *u;
 
-    u = r->upstream;
+    u = r->upstream;//[p]upstream对象
 
     if (u && u->cleanup) {
         r->main->count++;
         ngx_http_upstream_cleanup(r);
     }
 
-    u = ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_t));
+    u = ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_t));//[p]创建对象
     if (u == NULL) {
         return NGX_ERROR;
     }
 
-    r->upstream = u;
+    r->upstream = u;//[p]指针赋值
 
     u->peer.log = r->connection->log;
     u->peer.log_error = NGX_ERROR_ERR;
@@ -403,7 +403,7 @@ ngx_http_upstream_create(ngx_http_request_t *r)
     return NGX_OK;
 }
 
-
+//[p]启动upstream机制
 void
 ngx_http_upstream_init(ngx_http_request_t *r)
 {
@@ -553,7 +553,7 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
                                                NGX_HTTP_INTERNAL_SERVER_ERROR);
                 return;
             }
-
+			//[p]连接上游服务器
             ngx_http_upstream_connect(r, u);
 
             return;
@@ -622,7 +622,7 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
     }
 
 found:
-
+	//[p]初始化负载均衡算法
     if (uscf->peer.init(r, uscf) != NGX_OK) {
         ngx_http_upstream_finalize_request(r, u,
                                            NGX_HTTP_INTERNAL_SERVER_ERROR);
@@ -1070,7 +1070,7 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r,
     }
 }
 
-
+//[p]连接上游服务器
 static void
 ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
 {
@@ -1101,7 +1101,7 @@ ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
     u->state->response_sec = tp->sec;
     u->state->response_msec = tp->msec;
 
-    rc = ngx_event_connect_peer(&u->peer);
+    rc = ngx_event_connect_peer(&u->peer);						//[p]连接上游服务器
 
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                    "http upstream connect: %i", rc);
@@ -1845,7 +1845,7 @@ ngx_http_upstream_process_headers(ngx_http_request_t *r, ngx_http_upstream_t *u)
             }
 
             hh = ngx_hash_find(&umcf->headers_in_hash, h[i].hash,
-                               h[i].lowcase_key, h[i].key.len);
+                               h[i].lowcase_key,00 h[i].key.len);
 
             if (hh && hh->redirect) {
                 if (hh->copy_handler(r, &h[i], hh->conf) != NGX_OK) {
@@ -4211,7 +4211,7 @@ invalid:
     return NGX_CONF_ERROR;
 }
 
-
+//[p]配置上游服务器列表
 ngx_http_upstream_srv_conf_t *
 ngx_http_upstream_add(ngx_conf_t *cf, ngx_url_t *u, ngx_uint_t flags)
 {
@@ -4493,11 +4493,11 @@ ngx_http_upstream_create_main_conf(ngx_conf_t *cf)
     return umcf;
 }
 
-
+//[p]upstream初始化
 static char *
 ngx_http_upstream_init_main_conf(ngx_conf_t *cf, void *conf)
 {
-    ngx_http_upstream_main_conf_t  *umcf = conf;
+    ngx_http_upstream_main_conf_t  *umcf = conf;//[p]main配置
 
     ngx_uint_t                      i;
     ngx_array_t                     headers_in;
@@ -4505,16 +4505,17 @@ ngx_http_upstream_init_main_conf(ngx_conf_t *cf, void *conf)
     ngx_hash_init_t                 hash;
     ngx_http_upstream_init_pt       init;
     ngx_http_upstream_header_t     *header;
-    ngx_http_upstream_srv_conf_t  **uscfp;
+    ngx_http_upstream_srv_conf_t  **uscfp;//[p]服务器配置数组
 
-    uscfp = umcf->upstreams.elts;
+    uscfp = umcf->upstreams.elts;//[p]得到所有的upstreams块
 
-    for (i = 0; i < umcf->upstreams.nelts; i++) {
+    for (i = 0; i < umcf->upstreams.nelts; i++) {//[p]遍历数组
 
-        init = uscfp[i]->peer.init_upstream ? uscfp[i]->peer.init_upstream:
-                                            ngx_http_upstream_init_round_robin;
+        init = uscfp[i]->peer.init_upstream ? //[p]是否有模块初始化函数
+			uscfp[i]->peer.init_upstream://[p]使用算法的初始化函数
+			ngx_http_upstream_init_round_robin;//[p]默认使用round robin
 
-        if (init(cf, uscfp[i]) != NGX_OK) {
+        if (init(cf, uscfp[i]) != NGX_OK) {//[p]执行初始化函数
             return NGX_CONF_ERROR;
         }
     }

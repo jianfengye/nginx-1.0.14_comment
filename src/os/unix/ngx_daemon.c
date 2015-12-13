@@ -8,7 +8,7 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-
+/*创建守护进程，具体创建方法可以参考《unix环境高级编程》*/
 ngx_int_t ngx_daemon(ngx_log_t *log)
 {
     int  fd;
@@ -18,7 +18,7 @@ ngx_int_t ngx_daemon(ngx_log_t *log)
         ngx_log_error(NGX_LOG_EMERG, log, ngx_errno, "fork() failed");
         return NGX_ERROR;
 
-    case 0:
+    case 0:          //子进程作为守护进程
         break;
 
     default:

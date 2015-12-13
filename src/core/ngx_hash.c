@@ -639,7 +639,7 @@ ngx_hash_wildcard_init(ngx_hash_init_t *hinit, ngx_hash_key_t *names,
     return NGX_OK;
 }
 
-
+//[p] 计算hash值
 ngx_uint_t
 ngx_hash_key(u_char *data, size_t len)
 {
@@ -654,7 +654,7 @@ ngx_hash_key(u_char *data, size_t len)
     return key;
 }
 
-
+//[p]计算hash值
 ngx_uint_t
 ngx_hash_key_lc(u_char *data, size_t len)
 {
@@ -669,7 +669,7 @@ ngx_hash_key_lc(u_char *data, size_t len)
     return key;
 }
 
-
+//[p]小写化的同时计算出hash值
 ngx_uint_t
 ngx_hash_strlow(u_char *dst, u_char *src, size_t n)
 {

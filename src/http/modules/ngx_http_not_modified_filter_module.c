@@ -29,7 +29,7 @@ static ngx_http_module_t  ngx_http_not_modified_filter_module_ctx = {
     NULL                                   /* merge location configuration */
 };
 
-
+//[p]该模块是ngx_modules模块的最后一个元素，同时也是过滤链表的第一个元素，它处理响应头，检查if_modified_since头，决定是否返回304状态码
 ngx_module_t  ngx_http_not_modified_filter_module = {
     NGX_MODULE_V1,
     &ngx_http_not_modified_filter_module_ctx, /* module context */
@@ -48,7 +48,7 @@ ngx_module_t  ngx_http_not_modified_filter_module = {
 
 static ngx_http_output_header_filter_pt  ngx_http_next_header_filter;
 
-
+//[p]检查请求头，如果文件没有被修改，就设置HTTP状态码为NGX_HTTP_NOT_MODIFIED，然后调用ngx_http_next_header_filter执行后续的过滤模块
 static ngx_int_t
 ngx_http_not_modified_header_filter(ngx_http_request_t *r)
 {
@@ -136,8 +136,9 @@ ngx_http_test_not_modified(ngx_http_request_t *r)
 static ngx_int_t
 ngx_http_not_modified_filter_init(ngx_conf_t *cf)
 {
+	//[p]向链表添加节点
     ngx_http_next_header_filter = ngx_http_top_header_filter;
-    ngx_http_top_header_filter = ngx_http_not_modified_header_filter;
+    ngx_http_top_header_filter = ngx_http_not_modified_header_filter;//[p]ngx_http_not_modified_header_filter为模块的处理函数
 
     return NGX_OK;
 }

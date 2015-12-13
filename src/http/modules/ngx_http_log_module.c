@@ -4,7 +4,7 @@
  * Copyright (C) Nginx, Inc.
  */
 
-
+//[p]该模块提供了对于每一个http请求进行记录的功能，也就是我们见到的access.log。当然这个模块对于log提供了一些配置指令，使得可以比较方便的定制access.log
 #include <ngx_config.h>
 #include <ngx_core.h>
 #include <ngx_http.h>
@@ -1345,7 +1345,7 @@ ngx_http_log_init(ngx_conf_t *cf)
     }
 
     cmcf = ngx_http_conf_get_module_main_conf(cf, ngx_http_core_module);
-
+	//[p]挂载在NGX_HTTP_LOG_PHASE阶段
     h = ngx_array_push(&cmcf->phases[NGX_HTTP_LOG_PHASE].handlers);
     if (h == NULL) {
         return NGX_ERROR;

@@ -25,6 +25,7 @@ static ngx_atomic_t      ngx_time_lock;
 
 volatile ngx_msec_t      ngx_current_msec;
 volatile ngx_time_t     *ngx_cached_time;
+//下面是关于时间缓存的四个变量
 volatile ngx_str_t       ngx_cached_err_log_time;
 volatile ngx_str_t       ngx_cached_http_time;
 volatile ngx_str_t       ngx_cached_http_log_time;
@@ -40,7 +41,7 @@ volatile ngx_str_t       ngx_cached_http_log_iso8601;
 
 static ngx_int_t         cached_gmtoff;
 #endif
-
+/*cached_time,nginx通过维护多个时间slot的方法来减少读操作冲突，因为时间读没有进行加锁*/
 static ngx_time_t        cached_time[NGX_TIME_SLOTS];
 static u_char            cached_err_log_time[NGX_TIME_SLOTS]
                                     [sizeof("1970/09/28 12:00:00")];
@@ -69,7 +70,11 @@ ngx_time_init(void)
     ngx_time_update();
 }
 
-
+/*[p]nginx时间管理的核心函数,该函数被调用有三个时机：
+1.nginx进程捕捉、处理完一个信号返回的时候；
+2.缓存索引管理进程中，调用此函数用于标记缓存数据的事件属性；
+3.nginx工作进程在进行事件处理时调用此函数；
+*/
 void
 ngx_time_update(void)
 {
@@ -79,18 +84,18 @@ ngx_time_update(void)
     ngx_uint_t       msec;
     ngx_time_t      *tp;
     struct timeval   tv;
-
+	//使用ngx_time_lock进行加锁，一致性问题
     if (!ngx_trylock(&ngx_time_lock)) {
         return;
     }
 
-    ngx_gettimeofday(&tv); //获取时间，unix和window走的是不同函数，但是在这里统一被封装了
+    ngx_gettimeofday(&tv); //[p]宏定义，获取时间，？unix和window走的是不同函数，但是在这里统一被封装了 ？
 
     sec = tv.tv_sec;
     msec = tv.tv_usec / 1000;   //从微秒usec中计算毫秒msec
     // 获取毫妙精度的时间，可以看出nginx精确到毫秒
     ngx_current_msec = (ngx_msec_t) sec * 1000 + msec;
-
+	//[p]有关cache_time的作用，请见其定义处,需要重点理解这种设计思想
     tp = &cached_time[slot];
 
     if (tp->sec == sec) {
@@ -98,7 +103,8 @@ ngx_time_update(void)
         ngx_unlock(&ngx_time_lock);
         return;
     }
-    // 当cached_time数组保存的时间达到NGX_TIME_SLOTS上限的时候，从新开始把时间保存下来
+    // 当cached_time数组保存的时间达到NGX_TIME_SLOTS上限的时候，重新开始把时间保存下来
+	//[p]循环使用slot数组，确定当前要更新的时间的slot
     if (slot == NGX_TIME_SLOTS - 1) {
         slot = 0;
     } else {
@@ -109,9 +115,10 @@ ngx_time_update(void)
 
     tp->sec = sec;
     tp->msec = msec;
-
+	//[p]将获取到的时间转成可读的时间格式，保存在gmt结构体中
     ngx_gmtime(sec, &gmt);
 
+	//[p]p0用来记录http请求的时间
     // 把时间转为http格式的时间字符串,p0就设置为诸如“Fri, 27 Jul 2012 01:09:17 GMT”
     p0 = &cached_http_time[slot][0];
 
@@ -139,7 +146,7 @@ ngx_time_update(void)
 
 #endif
 
-    // p1存诸如“2012/07/27 09:09:17”
+    //[p] p1存诸如“2012/07/27 09:09:17”，p1记录错误日志的时间
     p1 = &cached_err_log_time[slot][0];
 
     (void) ngx_sprintf(p1, "%4d/%02d/%02d %02d:%02d:%02d",
@@ -147,7 +154,7 @@ ngx_time_update(void)
                        tm.ngx_tm_mday, tm.ngx_tm_hour,
                        tm.ngx_tm_min, tm.ngx_tm_sec);
 
-    // p2存储诸如“27/Jul/2012:09:09:17 +0800”
+    //[p] p2存储诸如“27/Jul/2012:09:09:17 +0800”，p2记录http请求日志的时间
     p2 = &cached_http_log_time[slot][0];
 
     (void) ngx_sprintf(p2, "%02d/%s/%d:%02d:%02d:%02d %c%02d%02d",
@@ -156,7 +163,7 @@ ngx_time_update(void)
                        tm.ngx_tm_min, tm.ngx_tm_sec,
                        tp->gmtoff < 0 ? '-' : '+',
                        ngx_abs(tp->gmtoff / 60), ngx_abs(tp->gmtoff % 60));
-    // P3存储诸如“2012-07-27T09:09:17+08:00”
+    //[p] P3存储诸如“2012-07-27T09:09:17+08:00”，p3记录符合ISO8601的时间
     p3 = &cached_http_log_iso8601[slot][0];
 
     (void) ngx_sprintf(p3, "%4d-%02d-%02dT%02d:%02d:%02d%c%02d:%02d",
@@ -166,7 +173,8 @@ ngx_time_update(void)
                        tp->gmtoff < 0 ? '-' : '+',
                        ngx_abs(tp->gmtoff / 60), ngx_abs(tp->gmtoff % 60));
 
-
+	/*[p]ngx_memory_barrier是一个宏定义，在gcc编译器环境下是volatile关键字，作用是防止编译器对接下来的语句进行重排序优化，
+	因为只有把上面的语句执行完，才能接着进行时间更新，保证数据一致性*/
     ngx_memory_barrier();
     // 调用nginx_time_update()目的就是更新这几个时间变量
     ngx_cached_time = tp;
@@ -180,7 +188,7 @@ ngx_time_update(void)
 
 
 #if !(NGX_WIN32)
-
+/*[p]nginx服务器中更新缓存机制中的一个特例，主要是用来更新ngx_cached_err_log_time的时间，整个nginx源码中，该函数只被ngx_signal_handler调用了一次*/
 void
 ngx_time_sigsafe_update(void)
 {
@@ -200,7 +208,7 @@ ngx_time_sigsafe_update(void)
 
     tp = &cached_time[slot];
 
-    if (tp->sec == sec) {
+    if (tp->sec == sec) {           //[p]如果和缓存的时间一样，就不需要进行更新
         ngx_unlock(&ngx_time_lock);
         return;
     }
@@ -222,7 +230,7 @@ ngx_time_sigsafe_update(void)
 
     ngx_memory_barrier();
 
-    ngx_cached_err_log_time.data = p;
+    ngx_cached_err_log_time.data = p;  //[p]更新ngx_cached_err_log_time的时间
 
     ngx_unlock(&ngx_time_lock);
 }
@@ -274,7 +282,7 @@ ngx_http_cookie_time(u_char *buf, time_t t)
                        tm.ngx_tm_sec);
 }
 
-
+//将获取到的时间转成可读的时间格式，保存在tp结构体中
 void
 ngx_gmtime(time_t t, ngx_tm_t *tp)
 {

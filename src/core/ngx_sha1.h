@@ -23,9 +23,9 @@
 typedef SHA_CTX  ngx_sha1_t;
 
 
-#define ngx_sha1_init    SHA1_Init
-#define ngx_sha1_update  SHA1_Update
-#define ngx_sha1_final   SHA1_Final
+#define ngx_sha1_init    SHA1_Init	//[p]初始化
+#define ngx_sha1_update  SHA1_Update//[p]输入数据
+#define ngx_sha1_final   SHA1_Final //[p]输出SHA1值
 
 
 #endif /* _NGX_SHA1_H_INCLUDED_ */

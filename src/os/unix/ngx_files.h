@@ -54,12 +54,12 @@ typedef struct {
 #ifdef __CYGWIN__
 
 #define NGX_HAVE_CASELESS_FILESYSTEM  1
-
+//[p]封装
 #define ngx_open_file(name, mode, create, access)                            \
     open((const char *) name, mode|create|O_BINARY, access)
 
 #else
-
+//[p]封装
 #define ngx_open_file(name, mode, create, access)                            \
     open((const char *) name, mode|create, access)
 

@@ -515,7 +515,7 @@ extern ngx_event_actions_t   ngx_event_actions;
 
 
 #define ngx_process_changes  ngx_event_actions.process_changes
-#define ngx_process_events   ngx_event_actions.process_events
+#define ngx_process_events   ngx_event_actions.process_events /*[p]ngx_event_actions为nginx程序的IO模型接口函数结构体，封装了selet,poll,epoll等事件驱动模型*/
 #define ngx_done_events      ngx_event_actions.done
 
 #define ngx_add_event        ngx_event_actions.add

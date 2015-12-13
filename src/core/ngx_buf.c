@@ -8,7 +8,7 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-
+//[p] 从内存池中分配一块size大小的缓冲区，内部成员初始化好，temporary设为1
 ngx_buf_t *
 ngx_create_temp_buf(ngx_pool_t *pool, size_t size)
 {
@@ -43,7 +43,7 @@ ngx_create_temp_buf(ngx_pool_t *pool, size_t size)
     return b;
 }
 
-
+//[p]从内存池中获取ngx_chian_t对象
 ngx_chain_t *
 ngx_alloc_chain_link(ngx_pool_t *pool)
 {
@@ -64,7 +64,7 @@ ngx_alloc_chain_link(ngx_pool_t *pool)
     return cl;
 }
 
-
+//[p]一次创建多个缓冲区，返回一个连接好的链表
 ngx_chain_t *
 ngx_create_chain_of_bufs(ngx_pool_t *pool, ngx_bufs_t *bufs)
 {

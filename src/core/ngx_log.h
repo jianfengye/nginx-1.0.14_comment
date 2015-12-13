@@ -12,7 +12,7 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-
+//日志级别，由低到高，1-8
 #define NGX_LOG_STDERR            0
 #define NGX_LOG_EMERG             1
 #define NGX_LOG_ALERT             2
@@ -23,13 +23,13 @@
 #define NGX_LOG_INFO              7
 #define NGX_LOG_DEBUG             8
 
-#define NGX_LOG_DEBUG_CORE        0x010
-#define NGX_LOG_DEBUG_ALLOC       0x020
-#define NGX_LOG_DEBUG_MUTEX       0x040
-#define NGX_LOG_DEBUG_EVENT       0x080
-#define NGX_LOG_DEBUG_HTTP        0x100
-#define NGX_LOG_DEBUG_MAIL        0x200
-#define NGX_LOG_DEBUG_MYSQL       0x400
+#define NGX_LOG_DEBUG_CORE        0x010		//[p]Nginx核心模块的调试日志
+#define NGX_LOG_DEBUG_ALLOC       0x020		//[p]nginx在分配内存时使用的调试日志
+#define NGX_LOG_DEBUG_MUTEX       0x040		//[p]nginx在使用进程锁时使用的调试日志
+#define NGX_LOG_DEBUG_EVENT       0x080		//[p]nginx事件模块的调试日志
+#define NGX_LOG_DEBUG_HTTP        0x100		//[p]nginx http模块的调试日志
+#define NGX_LOG_DEBUG_MAIL        0x200		//[p]nginx 邮件模块的调试日志
+#define NGX_LOG_DEBUG_MYSQL       0x400		//[p]表示与mysql相关的nginx模块所使用的调试日志
 
 /*
  * do not forget to update debug_levels[] in src/core/ngx_log.c
@@ -46,10 +46,10 @@ typedef u_char *(*ngx_log_handler_pt) (ngx_log_t *log, u_char *buf, size_t len);
 
 
 struct ngx_log_s {
-    ngx_uint_t           log_level;
-    ngx_open_file_t     *file;
+    ngx_uint_t           log_level;//[p]日志级别或者日志类型
+    ngx_open_file_t     *file;		//[p]日志文件
 
-    ngx_atomic_uint_t    connection;
+    ngx_atomic_uint_t    connection;//[p]连接数，不为0时会输出到日志中
 
     ngx_log_handler_pt   handler;
     void                *data;
@@ -104,7 +104,7 @@ void ngx_log_error_core(ngx_uint_t level, ngx_log_t *log, ngx_err_t err,
 #else /* NO VARIADIC MACROS */
 
 #define NGX_HAVE_VARIADIC_MACROS  0
-
+//[p]fmt就是可变参数
 void ngx_cdecl ngx_log_error(ngx_uint_t level, ngx_log_t *log, ngx_err_t err,
     const char *fmt, ...);
 void ngx_log_error_core(ngx_uint_t level, ngx_log_t *log, ngx_err_t err,

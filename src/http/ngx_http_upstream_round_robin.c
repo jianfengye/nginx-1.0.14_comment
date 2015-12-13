@@ -24,7 +24,7 @@ static void ngx_http_upstream_empty_save_session(ngx_peer_connection_t *pc,
 
 #endif
 
-
+//[p]从配置文件中得到所有的服务器IP地址，然后构建出可用的IP地址列表
 ngx_int_t
 ngx_http_upstream_init_round_robin(ngx_conf_t *cf,
     ngx_http_upstream_srv_conf_t *us)
@@ -34,42 +34,42 @@ ngx_http_upstream_init_round_robin(ngx_conf_t *cf,
     ngx_http_upstream_server_t    *server;
     ngx_http_upstream_rr_peers_t  *peers, *backup;
 
-    us->peer.init = ngx_http_upstream_init_round_robin_peer;
+    us->peer.init = ngx_http_upstream_init_round_robin_peer;//[p]默认使用round robin
 
     if (us->servers) {
-        server = us->servers->elts;
+        server = us->servers->elts;							//[p]服务器数组首地址
 
-        n = 0;
+        n = 0;												//[p]计算地址的总数
 
-        for (i = 0; i < us->servers->nelts; i++) {
-            if (server[i].backup) {
+        for (i = 0; i < us->servers->nelts; i++) {			//[p]遍历服务器数组
+            if (server[i].backup) {							//[p]计算非backup服务器
                 continue;
             }
 
-            n += server[i].naddrs;
+            n += server[i].naddrs;							//[p]计算地址的总数
         }
-
+		//[p]创建IP列表数据结构
         peers = ngx_pcalloc(cf->pool, sizeof(ngx_http_upstream_rr_peers_t)
                               + sizeof(ngx_http_upstream_rr_peer_t) * (n - 1));
         if (peers == NULL) {
             return NGX_ERROR;
         }
 
-        peers->single = (n == 1);
-        peers->number = n;
-        peers->name = &us->host;
+        peers->single = (n == 1);							//[p]是否只有一个服务器
+        peers->number = n;									//[p]服务器数量
+        peers->name = &us->host;							//[p]upstream块的名字
 
         n = 0;
 
-        for (i = 0; i < us->servers->nelts; i++) {
-            for (j = 0; j < server[i].naddrs; j++) {
-                if (server[i].backup) {
+        for (i = 0; i < us->servers->nelts; i++) {			//[p]遍历服务器数组
+            for (j = 0; j < server[i].naddrs; j++) {		//[p]遍历服务器的每个IP地址
+                if (server[i].backup) {						//[p]只处理非backup服务器
                     continue;
                 }
 
-                peers->peer[n].sockaddr = server[i].addrs[j].sockaddr;
-                peers->peer[n].socklen = server[i].addrs[j].socklen;
-                peers->peer[n].name = server[i].addrs[j].name;
+                peers->peer[n].sockaddr = server[i].addrs[j].sockaddr;//[p]socket地址
+                peers->peer[n].socklen = server[i].addrs[j].socklen;  //[p]socket结构长度
+                peers->peer[n].name = server[i].addrs[j].name;		  //[p]地址的名字
                 peers->peer[n].max_fails = server[i].max_fails;
                 peers->peer[n].fail_timeout = server[i].fail_timeout;
                 peers->peer[n].down = server[i].down;
@@ -79,14 +79,14 @@ ngx_http_upstream_init_round_robin(ngx_conf_t *cf,
             }
         }
 
-        us->peer.data = peers;
+        us->peer.data = peers;								//[p]添加到配置数据结构里
 
         ngx_sort(&peers->peer[0], (size_t) n,
                  sizeof(ngx_http_upstream_rr_peer_t),
                  ngx_http_upstream_cmp_servers);
 
         /* backup servers */
-
+		//[p]下面处理backup服务器列表，过程与上面相似
         n = 0;
 
         for (i = 0; i < us->servers->nelts; i++) {
@@ -132,7 +132,7 @@ ngx_http_upstream_init_round_robin(ngx_conf_t *cf,
             }
         }
 
-        peers->next = backup;
+        peers->next = backup;					//[p]挂载backup服务器列表
 
         ngx_sort(&backup->peer[0], (size_t) n,
                  sizeof(ngx_http_upstream_rr_peer_t),
@@ -226,7 +226,7 @@ ngx_http_upstream_init_round_robin_peer(ngx_http_request_t *r,
         r->upstream->peer.data = rrp;
     }
 
-    rrp->peers = us->peer.data;
+    rrp->peers = us->peer.data;//[p]得到配置里的IP地址列表
     rrp->current = 0;
 
     n = rrp->peers->number;
@@ -247,7 +247,7 @@ ngx_http_upstream_init_round_robin_peer(ngx_http_request_t *r,
             return NGX_ERROR;
         }
     }
-
+	//[p]设置 get/free 回调函数，供upstream框架在连接服务器时调用，否则还是默认的round robin算法
     r->upstream->peer.get = ngx_http_upstream_get_round_robin_peer;
     r->upstream->peer.free = ngx_http_upstream_free_round_robin_peer;
     r->upstream->peer.tries = rrp->peers->number;

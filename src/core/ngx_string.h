@@ -23,8 +23,8 @@ typedef struct {
 
 
 typedef struct {
-    ngx_str_t   key;  //key-value结构
-    ngx_str_t   value; //key-value结构
+    ngx_str_t   key;  //[p]key-value结构,键
+    ngx_str_t   value; //[p]key-value结构，值
 } ngx_keyval_t;
 
 //参考资料：
@@ -57,7 +57,7 @@ typedef struct {
 //设置字符串str为空串，长度为0，data为NULL。
 #define ngx_str_null(str)   (str)->len = 0; (str)->data = NULL
 
-/*
+/*[p]
 ngx_string与ngx_null_string只能用于赋值时初始化
 ngx_str_t str = ngx_string("hello world");
 ngx_str_t str1 = ngx_null_string();
@@ -141,7 +141,7 @@ void *ngx_memcpy(void *dst, void *src, size_t n);
  * icc8 compile memcpy(d, s, 4) to the inline "mov"es or XMM moves.
  */
 #define ngx_memcpy(dst, src, n)   (void) memcpy(dst, src, n)
-#define ngx_cpymem(dst, src, n)   (((u_char *) memcpy(dst, src, n)) + (n))
+#define ngx_cpymem(dst, src, n)   (((u_char *) memcpy(dst, src, n)) + (n)) //[p]返回的是拷贝数据的终点，在连续拷贝多端数据时很方便
 
 #endif
 
@@ -238,7 +238,7 @@ u_char *ngx_hex_dump(u_char *dst, u_char *src, size_t len);
 //base64 编码／解码函数和宏
 #define ngx_base64_encoded_length(len)  (((len + 2) / 3) * 4)
 #define ngx_base64_decoded_length(len)  (((len + 3) / 4) * 3)
-
+//[p]标准base64的编解码
 void ngx_encode_base64(ngx_str_t *dst, ngx_str_t *src);
 ngx_int_t ngx_decode_base64(ngx_str_t *dst, ngx_str_t *src);
 /*

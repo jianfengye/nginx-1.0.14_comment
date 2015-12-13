@@ -27,13 +27,13 @@ void *ngx_calloc(size_t size, ngx_log_t *log);
  * FreeBSD 7.0 has posix_memalign(), besides, early version's malloc()
  * aligns allocations bigger than page size at the page boundary
  */
-
+//[p] 对齐，定义了宏
 #if (NGX_HAVE_POSIX_MEMALIGN || NGX_HAVE_MEMALIGN)
 
 void *ngx_memalign(size_t alignment, size_t size, ngx_log_t *log);
 
 #else
-
+//[p] 非对齐，未定义NGX_HAVE_POSIX_MEMALIGN，NGX_HAVE_MEMALIGN宏
 #define ngx_memalign(alignment, size, log)  ngx_alloc(size, log)
 
 #endif

@@ -24,7 +24,7 @@ static ngx_int_t ngx_http_test_expect(ngx_http_request_t *r);
  *    *) one memory buf that was preread in r->header_in;
  *    *) one memory or file buf that contains the rest of the body
  */
-
+//[p]异步接收包体
 ngx_int_t
 ngx_http_read_client_request_body(ngx_http_request_t *r,
     ngx_http_client_body_handler_pt post_handler)

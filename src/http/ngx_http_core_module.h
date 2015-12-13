@@ -180,9 +180,9 @@ typedef struct {
     ngx_uint_t                 location_rewrite_index;
 } ngx_http_phase_engine_t;
 
-
+//[p] 该结构用来存储每个阶段的可用的处理函数
 typedef struct {
-    ngx_array_t                handlers;
+    ngx_array_t              handlers; //[p] 实质上是一个动态数组
 } ngx_http_phase_t;
 
 
@@ -210,7 +210,7 @@ typedef struct {
 
     ngx_uint_t                 try_files;       /* unsigned  try_files:1 */
 
-    ngx_http_phase_t           phases[NGX_HTTP_LOG_PHASE + 1];
+    ngx_http_phase_t           phases[NGX_HTTP_LOG_PHASE + 1]; //[p]存放所有的phases,主要用于handle的注册,形成一个二维数组
 } ngx_http_core_main_conf_t;
 
 

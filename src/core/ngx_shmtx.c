@@ -11,7 +11,7 @@
 
 #if (NGX_HAVE_ATOMIC_OPS)
 
-
+/*[p]初始化互斥锁*/
 ngx_int_t
 ngx_shmtx_create(ngx_shmtx_t *mtx, void *addr, u_char *name)
 {
@@ -37,7 +37,7 @@ ngx_shmtx_create(ngx_shmtx_t *mtx, void *addr, u_char *name)
     return NGX_OK;
 }
 
-
+/*[p]销毁互斥锁*/
 void
 ngx_shmtx_destory(ngx_shmtx_t *mtx)
 {
@@ -53,7 +53,7 @@ ngx_shmtx_destory(ngx_shmtx_t *mtx)
 #endif
 }
 
-
+/*[p]无阻塞地试图获取互斥锁，返回1表示获取互斥锁成功，返回0表示获取互斥锁失败*/
 ngx_uint_t
 ngx_shmtx_trylock(ngx_shmtx_t *mtx)
 {
@@ -65,7 +65,7 @@ ngx_shmtx_trylock(ngx_shmtx_t *mtx)
             && ngx_atomic_cmp_set(mtx->lock, val, val | 0x80000000));
 }
 
-
+/*[p]以阻塞进程的方式获取互斥锁，在方法返回时就已经持有了互斥锁了*/
 void
 ngx_shmtx_lock(ngx_shmtx_t *mtx)
 {
@@ -138,7 +138,7 @@ ngx_shmtx_lock(ngx_shmtx_t *mtx)
     }
 }
 
-
+/*[p]释放互斥锁*/
 void
 ngx_shmtx_unlock(ngx_shmtx_t *mtx)
 {

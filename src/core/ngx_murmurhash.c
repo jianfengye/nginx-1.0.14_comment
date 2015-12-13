@@ -7,7 +7,7 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-
+//[p]直接使用该函数就可以得到该算法的摘要
 uint32_t
 ngx_murmur_hash2(u_char *data, size_t len)
 {

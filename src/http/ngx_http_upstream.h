@@ -76,23 +76,23 @@ typedef ngx_int_t (*ngx_http_upstream_init_pt)(ngx_conf_t *cf,
 typedef ngx_int_t (*ngx_http_upstream_init_peer_pt)(ngx_http_request_t *r,
     ngx_http_upstream_srv_conf_t *us);
 
-
+//[p]该结构体定义了load_balance模块的入口，有两个回调函数，用来初始化load_balance模块
 typedef struct {
-    ngx_http_upstream_init_pt        init_upstream;
-    ngx_http_upstream_init_peer_pt   init;
-    void                            *data;
+    ngx_http_upstream_init_pt        init_upstream;//[p]配置解析时初始化
+    ngx_http_upstream_init_peer_pt   init;//[p]请求时初始化
+    void                            *data;//[p]服务器列表指针
 } ngx_http_upstream_peer_t;
 
-
+//[p]存放upstream配置块中每个服务器的信息
 typedef struct {
-    ngx_addr_t                      *addrs;
-    ngx_uint_t                       naddrs;
-    ngx_uint_t                       weight;
-    ngx_uint_t                       max_fails;
-    time_t                           fail_timeout;
+    ngx_addr_t                      *addrs;//[p]服务器地址数组
+    ngx_uint_t                       naddrs;//[p]地址数组的长度
+    ngx_uint_t                       weight;//[p]权重
+    ngx_uint_t                       max_fails;//[p]允许的最大失败次数
+    time_t                           fail_timeout;//[p]失败的时间区间
 
-    unsigned                         down:1;
-    unsigned                         backup:1;
+    unsigned                         down:1;//[p]服务器是否下线
+    unsigned                         backup:1;//[p]是否是备份服务器
 } ngx_http_upstream_server_t;
 
 
@@ -103,12 +103,12 @@ typedef struct {
 #define NGX_HTTP_UPSTREAM_DOWN          0x0010
 #define NGX_HTTP_UPSTREAM_BACKUP        0x0020
 
-
+//[p]upstream框架的配置数据结构
 struct ngx_http_upstream_srv_conf_s {
-    ngx_http_upstream_peer_t         peer;
+    ngx_http_upstream_peer_t         peer;//[p]初始化结构体
     void                           **srv_conf;
 
-    ngx_array_t                     *servers;  /* ngx_http_upstream_server_t */
+    ngx_array_t                     *servers;  /*[p] ngx_http_upstream_server_t动态数组，保存upstream配置快中的所有服务器信息 */
 
     ngx_uint_t                       flags;
     ngx_str_t                        host;
@@ -118,7 +118,7 @@ struct ngx_http_upstream_srv_conf_s {
     in_port_t                        default_port;
 };
 
-
+//[p]ngx_http_upstrean_conf_t结构设置upstream框架连接上游服务器的参数
 typedef struct {
     ngx_http_upstream_srv_conf_t    *upstream;
 
@@ -131,7 +131,7 @@ typedef struct {
     ngx_msec_t                       timeout;
 
     size_t                           send_lowat;
-    size_t                           buffer_size;
+    size_t                           buffer_size;//[p]缓冲区大小
 
     size_t                           busy_buffers_size;
     size_t                           max_temp_file_size;
@@ -141,12 +141,12 @@ typedef struct {
     size_t                           max_temp_file_size_conf;
     size_t                           temp_file_write_size_conf;
 
-    ngx_bufs_t                       bufs;
+    ngx_bufs_t                       bufs; //[p]缓冲区数量限制
 
     ngx_uint_t                       ignore_headers;
     ngx_uint_t                       next_upstream;
     ngx_uint_t                       store_access;
-    ngx_flag_t                       buffering;
+    ngx_flag_t                       buffering;//[p]是否使用接收缓冲区
     ngx_flag_t                       pass_request_headers;
     ngx_flag_t                       pass_request_body;
 
@@ -260,7 +260,7 @@ struct ngx_http_upstream_s {
     ngx_http_upstream_handler_pt     read_event_handler;
     ngx_http_upstream_handler_pt     write_event_handler;
 
-    ngx_peer_connection_t            peer;
+    ngx_peer_connection_t            peer;//[p]连接结构体
 
     ngx_event_pipe_t                *pipe;
 
@@ -282,10 +282,10 @@ struct ngx_http_upstream_s {
     ngx_buf_t                        buffer;
     size_t                           length;
 
-    ngx_chain_t                     *out_bufs;
+    ngx_chain_t                     *out_bufs;//[p]从上游接收到的数据
     ngx_chain_t                     *busy_bufs;
     ngx_chain_t                     *free_bufs;
-
+	//[p]处理上游服务器响应数据的回调函数
     ngx_int_t                      (*input_filter_init)(void *data);
     ngx_int_t                      (*input_filter)(void *data, ssize_t bytes);
     void                            *input_filter_ctx;
@@ -322,7 +322,7 @@ struct ngx_http_upstream_s {
     unsigned                         store:1;
     unsigned                         cacheable:1;
     unsigned                         accel:1;
-    // 是否给予SSL协议访问上游服务器
+    // 是否基于SSL协议访问上游服务器
     unsigned                         ssl:1;
 #if (NGX_HTTP_CACHE)
     unsigned                         cache_status:3;
@@ -334,8 +334,8 @@ struct ngx_http_upstream_s {
     当buffering为0时，表示只适用上面的这一个buffer缓冲区来向下游转发响应包体。 */
     unsigned                         buffering:1;
 
-    unsigned                         request_sent:1;
-    unsigned                         header_sent:1;
+    unsigned                         request_sent:1;//[p]是否已经发送请求
+    unsigned                         header_sent:1;//[p]是否已经发送响应头
 };
 
 

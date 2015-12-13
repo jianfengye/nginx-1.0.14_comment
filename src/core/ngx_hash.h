@@ -159,6 +159,7 @@ typedef struct {
 
 
 // ngx_table_elt_t是一个key/value对，ngx_str_t类型的key和value
+//[p]该结构主要用来表示HTTP头部信息，例如"server:nginx/1.8.0",就是key=server,value="nginx/1.8.0"
 typedef struct {
     ngx_uint_t        hash; //当它是ngx_hash_t表的成员的时候，用于快速检索头部
     ngx_str_t         key;  //名字字符串

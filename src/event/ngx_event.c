@@ -35,13 +35,13 @@ static void *ngx_event_create_conf(ngx_cycle_t *cycle);
 static char *ngx_event_init_conf(ngx_cycle_t *cycle, void *conf);
 
 
-static ngx_uint_t     ngx_timer_resolution;
+static ngx_uint_t     ngx_timer_resolution; /*[p] nginx更新时间间隔，在解析nginx配置时，在event模块初始化过程中对其赋值*/
 sig_atomic_t          ngx_event_timer_alarm;
 
 static ngx_uint_t     ngx_event_max_module;
 
 ngx_uint_t            ngx_event_flags;
-ngx_event_actions_t   ngx_event_actions;
+ngx_event_actions_t   ngx_event_actions; /*[p]ngx_event_actions为nginx程序的IO模型接口函数结构体，封装了selet,poll,epoll等事件驱动模型*/
 
 
 static ngx_atomic_t   connection_counter = 1;
@@ -163,7 +163,7 @@ static ngx_command_t  ngx_event_core_commands[] = {
     { ngx_string("debug_connection"),
       NGX_EVENT_CONF|NGX_CONF_TAKE1,
       ngx_event_debug_connection,
-      0,
+      0,  
       0,
       NULL },
 
@@ -195,7 +195,7 @@ ngx_module_t  ngx_event_core_module = {
     NGX_MODULE_V1_PADDING
 };
 
-
+/*[p] 工作进程事件接收的所有工作都在该函数中完成*/
 void
 ngx_process_events_and_timers(ngx_cycle_t *cycle)
 {
@@ -224,14 +224,14 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
             ngx_accept_disabled--;
 
         } else {
-            if (ngx_trylock_accept_mutex(cycle) == NGX_ERROR) {
+            if (ngx_trylock_accept_mutex(cycle) == NGX_ERROR) {  //[p] 尝试获取互斥量
                 return;
             }
 
-            if (ngx_accept_mutex_held) {
+            if (ngx_accept_mutex_held) {    //[p] 获取成功
                 flags |= NGX_POST_EVENTS;  //这个标志是将所有产生的事件放入到一个队列中。等释放锁以后再慢慢来处理事件。
 
-            } else {
+            } else {   //[p] 获取失败
                 if (timer == NGX_TIMER_INFINITE
                     || timer > ngx_accept_mutex_delay)  //设置最长延迟多久，再次去争抢锁
                 {
@@ -242,14 +242,14 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
     }
 
     delta = ngx_current_msec;
-    //epoll开始wait事件
+    //调用各种事件驱动机制下的事件处理函数，比如epoll就回调ngx_epoll_process_events
     (void) ngx_process_events(cycle, timer, flags);
 
     delta = ngx_current_msec - delta;
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                    "timer delta: %M", delta);
-    //ngx_posted_accept_events暂存epoll从监听套接字接口wait到的accept事件
+    //[p] ngx_posted_accept_events暂存epoll从监听套接字接口wait到的accept事件,是个存放事件的队列
     if (ngx_posted_accept_events) {
         ngx_event_process_posted(cycle, &ngx_posted_accept_events);
     }
@@ -264,7 +264,7 @@ ngx_process_events_and_timers(ngx_cycle_t *cycle)
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, cycle->log, 0,
                    "posted events %p", ngx_posted_events);
-    //处理普通事件（连接上获得的读写事件）
+    //[p]处理普通事件（连接上获得的读写事件）,非网络请求事件
     if (ngx_posted_events) {
         if (ngx_threaded) {
             ngx_wakeup_worker_thread(cycle);
@@ -450,7 +450,7 @@ ngx_event_module_init(ngx_cycle_t *cycle)
     }
     // 获取ngx_core_module模块的配置
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
-    // 设置时间精度
+    //[p] 设置时间精度，对ngx_timer_resolution进行赋值
     ngx_timer_resolution = ccf->timer_resolution;
 
 #if !(NGX_WIN32)

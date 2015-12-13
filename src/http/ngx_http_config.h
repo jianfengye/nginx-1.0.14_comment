@@ -13,11 +13,11 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-
+//[p] 使用三个数组的原因是，nginx把http配置设为http/server/location三个层次
 typedef struct {
     void        **main_conf;//数组，数组成员是void*，指向http模块的mainconf
-    void        **srv_conf;
-    void        **loc_conf;
+    void        **srv_conf; //[p]server域的存储数组
+    void        **loc_conf;//[p] localtion域的存储数组
 } ngx_http_conf_ctx_t;
 
 //HTTP框架在读取,重载配置文件时定义了由ngx_http_module_t接口描述的8个阶段

@@ -9,7 +9,9 @@
 #include <ngx_core.h>
 #include <ngx_channel.h>
 
-
+/*[p]nginx对消息的写操作
+s参数是要使用的TCP套接字，ch参数是ngx_channel_t类型的消息，size参数是ngx_channel_t结构体的大小，log参数是日志对象。
+*/
 ngx_int_t
 ngx_write_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size,
     ngx_log_t *log)
@@ -53,7 +55,7 @@ ngx_write_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size,
 
     msg.msg_flags = 0;
 
-#else
+#else //[p]不适用管道进程通信
 
     if (ch->fd == -1) {
         msg.msg_accrights = NULL;
@@ -65,7 +67,7 @@ ngx_write_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size,
     }
 
 #endif
-
+	//[p]struct iovec分散读写
     iov[0].iov_base = (char *) ch;
     iov[0].iov_len = size;
 
@@ -74,7 +76,7 @@ ngx_write_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size,
     msg.msg_iov = iov;
     msg.msg_iovlen = 1;
 
-    n = sendmsg(s, &msg, 0);
+    n = sendmsg(s, &msg, 0); //[p]发送消息,sendmsg为linux的系统调用，也是通过socket发送消息
 
     if (n == -1) {
         err = ngx_errno;
@@ -109,7 +111,7 @@ ngx_read_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size, ngx_log_t *log)
 
     iov[0].iov_base = (char *) ch;
     iov[0].iov_len = size;
-
+	//[p]设置消息接受缓冲区
     msg.msg_name = NULL;
     msg.msg_namelen = 0;
     msg.msg_iov = iov;
@@ -123,7 +125,7 @@ ngx_read_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size, ngx_log_t *log)
     msg.msg_accrightslen = sizeof(int);
 #endif
 
-    n = recvmsg(s, &msg, 0);
+    n = recvmsg(s, &msg, 0); //[p]recvmsg为linux系统调用，接受消息
 
     if (n == -1) {
         err = ngx_errno;
@@ -135,12 +137,12 @@ ngx_read_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size, ngx_log_t *log)
         return NGX_ERROR;
     }
 
-    if (n == 0) {
+    if (n == 0) { //[p]接受到的消息长度为0
         ngx_log_debug0(NGX_LOG_DEBUG_CORE, log, 0, "recvmsg() returned zero");
         return NGX_ERROR;
     }
 
-    if ((size_t) n < sizeof(ngx_channel_t)) {
+    if ((size_t) n < sizeof(ngx_channel_t)) { //[p]接受到的消息丢失
         ngx_log_error(NGX_LOG_ALERT, log, 0,
                       "recvmsg() returned not enough data: %uz", n);
         return NGX_ERROR;
@@ -148,7 +150,7 @@ ngx_read_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size, ngx_log_t *log)
 
 #if (NGX_HAVE_MSGHDR_MSG_CONTROL)
 
-    if (ch->command == NGX_CMD_OPEN_CHANNEL) {
+    if (ch->command == NGX_CMD_OPEN_CHANNEL) {  //[p]按照指令处理接受到的信息
 
         if (cmsg.cm.cmsg_len < (socklen_t) CMSG_LEN(sizeof(int))) {
             ngx_log_error(NGX_LOG_ALERT, log, 0,
@@ -192,7 +194,7 @@ ngx_read_channel(ngx_socket_t s, ngx_channel_t *ch, size_t size, ngx_log_t *log)
     return n;
 }
 
-
+//[p] worker进程使用ngx_add_channel_event方法把接受频道消息的套接字添加到epoll中，当接收到父进程消息时子进程会通过epoll的事件回调相应的handler方法来处理这个频道消息
 ngx_int_t
 ngx_add_channel_event(ngx_cycle_t *cycle, ngx_fd_t fd, ngx_int_t event,
     ngx_event_handler_pt handler)
@@ -224,10 +226,8 @@ ngx_add_channel_event(ngx_cycle_t *cycle, ngx_fd_t fd, ngx_int_t event,
     rev->channel = 1;
     wev->channel = 1;
 
-    ev = (event == NGX_READ_EVENT) ? rev : wev;
-
-    ev->handler = handler;
-
+    ev = (event == NGX_READ_EVENT) ? rev : wev; //[p] 初始化监听任务
+    ev->handler = handler; //[p] 设置事件处理函数
     if (ngx_add_conn && (ngx_event_flags & NGX_USE_EPOLL_EVENT) == 0) {
         if (ngx_add_conn(c) == NGX_ERROR) {
             ngx_free_connection(c);
@@ -235,7 +235,7 @@ ngx_add_channel_event(ngx_cycle_t *cycle, ngx_fd_t fd, ngx_int_t event,
         }
 
     } else {
-        if (ngx_add_event(ev, event, 0) == NGX_ERROR) {
+        if (ngx_add_event(ev, event, 0) == NGX_ERROR) { //[p]将监听任务添加到任务队列
             ngx_free_connection(c);
             return NGX_ERROR;
         }

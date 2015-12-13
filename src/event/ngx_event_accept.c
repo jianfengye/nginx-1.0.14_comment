@@ -123,7 +123,7 @@ ngx_event_accept(ngx_event_t *ev)
         (void) ngx_atomic_fetch_add(ngx_stat_active, 1);
 #endif
         
-        //创建内存池
+        //[p]为该连接建立内存池
         c->pool = ngx_create_pool(ls->pool_size, ev->log);
         if (c->pool == NULL) {
             ngx_close_accepted_connection(c);
@@ -147,7 +147,7 @@ ngx_event_accept(ngx_event_t *ev)
         }
 
         /* set a blocking mode for aio and non-blocking mode for others */
-
+		//[p]当使用aio时，采用阻塞方式；其他模式(epoll\select)使用非阻塞
         if (ngx_inherited_nonblocking) {
             if (ngx_event_flags & NGX_USE_AIO_EVENT) {
                 if (ngx_blocking(s) == -1) {
@@ -228,7 +228,7 @@ ngx_event_accept(ngx_event_t *ev)
          *           - ngx_atomic_fetch_add()
          *             or protection by critical section or light mutex
          */
-
+		//[p] ngx_connection_counter是nginx的连接计数器
         c->number = ngx_atomic_fetch_add(ngx_connection_counter, 1);
 
 #if (NGX_STAT_STUB)
@@ -278,7 +278,8 @@ ngx_event_accept(ngx_event_t *ev)
 
         ngx_log_debug3(NGX_LOG_DEBUG_EVENT, log, 0,
                        "*%d accept: %V fd:%d", c->number, &c->addr_text, s);
-
+		/*[p]  调用ngx_add_conn将新建的连接加入nginx的事件循环。在使用epoll时，实际上会调用ngx_epoll_add_connection函数，
+		最终调用epoll_ctl添加事件，这样后续就会监听到来自该socket的数据。*/
         if (ngx_add_conn && (ngx_event_flags & NGX_USE_EPOLL_EVENT) == 0) {
             if (ngx_add_conn(c) == NGX_ERROR) {
                 ngx_close_accepted_connection(c);

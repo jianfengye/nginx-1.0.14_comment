@@ -30,7 +30,7 @@ ngx_alloc(size_t size, ngx_log_t *log)
     return p;
 }
 
-
+/*[p] 该函数从系统内存分配内存，而不是内存池，另外该函数还会对内存进行初始化，这就是两个不同点*/
 void *
 ngx_calloc(size_t size, ngx_log_t *log)
 {

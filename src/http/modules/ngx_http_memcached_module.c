@@ -9,7 +9,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-
+//[p]定义连接参数
 typedef struct {
     ngx_http_upstream_conf_t   upstream;
     ngx_int_t                  index;
@@ -49,12 +49,12 @@ static ngx_conf_bitmask_t  ngx_http_memcached_next_upstream_masks[] = {
     { ngx_null_string, 0 }
 };
 
-
+//[p]指令
 static ngx_command_t  ngx_http_memcached_commands[] = {
 
-    { ngx_string("memcached_pass"),
+    { ngx_string("memcached_pass"),			//[p]启动upstream框架
       NGX_HTTP_LOC_CONF|NGX_HTTP_LIF_CONF|NGX_CONF_TAKE1,
-      ngx_http_memcached_pass,
+      ngx_http_memcached_pass,				//[p]指令解析函数
       NGX_HTTP_LOC_CONF_OFFSET,
       0,
       NULL },
@@ -142,7 +142,7 @@ static ngx_str_t  ngx_http_memcached_key = ngx_string("memcached_key");
 #define NGX_HTTP_MEMCACHED_END   (sizeof(ngx_http_memcached_end) - 1)
 static u_char  ngx_http_memcached_end[] = CRLF "END" CRLF;
 
-
+//[p]设置upstream回调函数，启动upstream机制
 static ngx_int_t
 ngx_http_memcached_handler(ngx_http_request_t *r)
 {
@@ -151,11 +151,11 @@ ngx_http_memcached_handler(ngx_http_request_t *r)
     ngx_http_memcached_ctx_t       *ctx;
     ngx_http_memcached_loc_conf_t  *mlcf;
 
-    if (!(r->method & (NGX_HTTP_GET|NGX_HTTP_HEAD))) {
+    if (!(r->method & (NGX_HTTP_GET|NGX_HTTP_HEAD))) {		//[p]检查请求方法
         return NGX_HTTP_NOT_ALLOWED;
     }
 
-    rc = ngx_http_discard_request_body(r);
+    rc = ngx_http_discard_request_body(r);					//[p]丢弃请求体,因为访问memcached服务器不需要请求体
 
     if (rc != NGX_OK) {
         return rc;
@@ -165,7 +165,7 @@ ngx_http_memcached_handler(ngx_http_request_t *r)
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    if (ngx_http_upstream_create(r) != NGX_OK) {
+    if (ngx_http_upstream_create(r) != NGX_OK) {			//[p]初始化upstream
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
@@ -176,8 +176,8 @@ ngx_http_memcached_handler(ngx_http_request_t *r)
 
     mlcf = ngx_http_get_module_loc_conf(r, ngx_http_memcached_module);
 
-    u->conf = &mlcf->upstream;
-
+    u->conf = &mlcf->upstream;								//[p]设置连接参数
+	//[p]设置回调函数
     u->create_request = ngx_http_memcached_create_request;
     u->reinit_request = ngx_http_memcached_reinit_request;
     u->process_header = ngx_http_memcached_process_header;
@@ -197,12 +197,12 @@ ngx_http_memcached_handler(ngx_http_request_t *r)
     u->input_filter_init = ngx_http_memcached_filter_init;
     u->input_filter = ngx_http_memcached_filter;
     u->input_filter_ctx = ctx;
+	
+    r->main->count++;										//[p]增加引用计数
 
-    r->main->count++;
+    ngx_http_upstream_init(r);								//[p]启动upstream
 
-    ngx_http_upstream_init(r);
-
-    return NGX_DONE;
+    return NGX_DONE;										//[p]必须返回NGX_DONE
 }
 
 
@@ -580,7 +580,7 @@ ngx_http_memcached_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
     return NGX_CONF_OK;
 }
 
-
+//[p]解析配置指令，设置模块的content handlers
 static char *
 ngx_http_memcached_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 {
@@ -594,11 +594,11 @@ ngx_http_memcached_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return "is duplicate";
     }
 
-    value = cf->args->elts;
+    value = cf->args->elts;								//[p]得到指令字符串
 
     ngx_memzero(&u, sizeof(ngx_url_t));
 
-    u.url = value[1];
+    u.url = value[1];									//[p]解析url
     u.no_resolve = 1;
 
     mlcf->upstream.upstream = ngx_http_upstream_add(cf, &u, 0);
@@ -608,7 +608,7 @@ ngx_http_memcached_pass(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     clcf = ngx_http_conf_get_module_loc_conf(cf, ngx_http_core_module);
 
-    clcf->handler = ngx_http_memcached_handler;
+    clcf->handler = ngx_http_memcached_handler;			//[p]注册处理函数
 
     if (clcf->name.data[clcf->name.len - 1] == '/') {
         clcf->auto_redirect = 1;

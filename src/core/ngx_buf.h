@@ -100,9 +100,9 @@ struct ngx_chain_s {
 
 
 typedef struct {
-    ngx_int_t    num;
-    size_t       size;
-} ngx_bufs_t;
+    ngx_int_t    num;   //[p]缓冲区的数量
+    size_t       size;  //[p]缓冲区的大小
+} ngx_bufs_t; //[p]创建链表的参数结构，用于一次创建多个缓冲区
 
 
 typedef struct ngx_output_chain_ctx_s  ngx_output_chain_ctx_t;
@@ -158,10 +158,10 @@ typedef struct {
 
 #define NGX_CHAIN_ERROR     (ngx_chain_t *) NGX_ERROR
 
-
+//[p]检查标志位，确定缓冲区是否在内存中
 #define ngx_buf_in_memory(b)        (b->temporary || b->memory || b->mmap)
 #define ngx_buf_in_memory_only(b)   (ngx_buf_in_memory(b) && !b->in_file)
-
+//[p]检查是否特殊控制作用的标志位
 #define ngx_buf_special(b)                                                   \
     ((b->flush || b->last_buf || b->sync)                                    \
      && !ngx_buf_in_memory(b) && !b->in_file)
@@ -169,19 +169,20 @@ typedef struct {
 #define ngx_buf_sync_only(b)                                                 \
     (b->sync                                                                 \
      && !ngx_buf_in_memory(b) && !b->in_file && !b->flush && !b->last_buf)
-
+//[p]计算缓冲区的大小
 #define ngx_buf_size(b)                                                      \
     (ngx_buf_in_memory(b) ? (off_t) (b->last - b->pos):                      \
                             (b->file_last - b->file_pos))
-
+//[p]从内存池中分配size大小的缓冲区
 ngx_buf_t *ngx_create_temp_buf(ngx_pool_t *pool, size_t size);
 ngx_chain_t *ngx_create_chain_of_bufs(ngx_pool_t *pool, ngx_bufs_t *bufs);
 
-
+//[p]直接从内存池中创建一个ngx_buf_t结构，然后手工指定成员
 #define ngx_alloc_buf(pool)  ngx_palloc(pool, sizeof(ngx_buf_t))
 #define ngx_calloc_buf(pool) ngx_pcalloc(pool, sizeof(ngx_buf_t))
 
 ngx_chain_t *ngx_alloc_chain_link(ngx_pool_t *pool);
+//[p]从内存池中释放ngx_chinat_t对象
 #define ngx_free_chain(pool, cl)                                             \
     cl->next = pool->chain;                                                  \
     pool->chain = cl

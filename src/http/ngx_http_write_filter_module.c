@@ -43,7 +43,7 @@ ngx_module_t  ngx_http_write_filter_module = {
     NGX_MODULE_V1_PADDING
 };
 
-
+//[p]用于输出响应体，两个参数ngx_request_t和ngx_chain_t，第一个就是请求，第二个参数是输出内容的buffer链表
 ngx_int_t
 ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
 {
@@ -61,9 +61,9 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
         return NGX_ERROR;
     }
 
-    size = 0;
-    flush = 0;
-    last = 0;
+    size = 0; /*[p] 待输出的内容的大小 */ 
+    flush = 0;/*[p] 是否需要flush */
+    last = 0; /*[p] 是否是最后一个buffer */
     //得到上次没有发送完毕的chain
     ll = &r->out;
 
@@ -216,16 +216,17 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
         return NGX_ERROR;
     }
 
+	/*[p] 设置了limit rate */
     if (r->limit_rate) {
         limit = r->limit_rate * (ngx_time() - r->start_sec + 1)
                 - (c->sent - clcf->limit_rate_after);
-
+		/*[p] 超出发送速率限制 */
         if (limit <= 0) {
-            c->write->delayed = 1;
+            c->write->delayed = 1; /*[p] 设置delayed标记，延迟发送请求 */  
             ngx_add_timer(c->write,
                           (ngx_msec_t) (- limit * 1000 / r->limit_rate + 1));
 
-            c->buffered |= NGX_HTTP_WRITE_BUFFERED;
+            c->buffered |= NGX_HTTP_WRITE_BUFFERED; /*[p] 设置buffered标记 */  
 
             return NGX_AGAIN;
         }
@@ -233,7 +234,7 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
         if (clcf->sendfile_max_chunk
             && (off_t) clcf->sendfile_max_chunk < limit)
         {
-            limit = clcf->sendfile_max_chunk;
+            limit = clcf->sendfile_max_chunk; /* sendfile用的的limit */
         }
 
     } else {
@@ -244,7 +245,7 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                    "http write filter limit %O", limit);
-
+	/*[p] send_chain返回的是没有发完的chain */
     chain = c->send_chain(c, r->out, limit);
 
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
@@ -254,7 +255,7 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
         c->error = 1;
         return NGX_ERROR;
     }
-
+	/*[p] 对limit_rate处理，可能会设置delayed标记 */
     if (r->limit_rate) {
 
         nsent = c->sent;
@@ -288,22 +289,22 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
         c->write->delayed = 1;
         ngx_add_timer(c->write, 1);
     }
-
+	/*[p] 释放已经发送的chain的内存 */
     for (cl = r->out; cl && cl != chain; /* void */) {
         ln = cl;
         cl = cl->next;
         ngx_free_chain(r->pool, ln);
     }
-
+	/*[p] 重新赋值尚未发送的chain */
     r->out = chain;
-
+	/*[p] 如果chain不为空，那么buf没有发送完，需要设置buffered标记，并返回NGX_AGAIN */
     if (chain) {
         c->buffered |= NGX_HTTP_WRITE_BUFFERED;
         return NGX_AGAIN;
     }
-
+	/*[p] 如果已经没有未发送的chain，就清空buffered标记 */
     c->buffered &= ~NGX_HTTP_WRITE_BUFFERED;
-
+	/*[p] 如果其他filter模块buffer了chain并且postponed为NULL，那么返回NGX_AGAIN，需要继续处理buf */
     if ((c->buffered & NGX_LOWLEVEL_BUFFERED) && r->postponed == NULL) {
         return NGX_AGAIN;
     }
@@ -313,9 +314,9 @@ ngx_http_write_filter(ngx_http_request_t *r, ngx_chain_t *in)
 
 
 static ngx_int_t
-ngx_http_write_filter_init(ngx_conf_t *cf)
+ngx_http_write_filter_init(ngx_conf_t *cf)  //[p] postconfiguration 阶段调用
 {
-    ngx_http_top_body_filter = ngx_http_write_filter;
+    ngx_http_top_body_filter = ngx_http_write_filter; //[p] 初始化链表头结点
 
     return NGX_OK;
 }

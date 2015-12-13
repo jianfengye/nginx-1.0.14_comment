@@ -96,3 +96,31 @@ if (str == NULL) {
 str->len = sizeof("Hello World");
 str->value = "Hello World";
 */
+
+
+
+/*[p]遍历链表的实例
+//part用于指向链表中的每一个ngx_list_part_t数组
+ngx_list_part_t* part = &testlist.part;
+//根据链表中的数据类型，把数组里的elts转化为该类型使用
+ngx_str_t* str = part->elts;
+//i表示元素在链表的每个ngx_list_part_t数组里的序号
+for (i = 0;;i++)
+{
+	if (i>=part->next)
+	{
+		if (part->next == NULL)
+		{
+			//说明某个ngx_list_part_t数组的next指针为空，则说明已经遍历完链表
+			break;
+		}
+		//访问下一个ngx_list_part_t
+		part = part->next;
+		header = part->elts;
+		//将i的序号重置为0，准备重新访问下一个数组
+		i = 0;
+	}
+	//这里可以很方便地取到当前遍历到的链表元素、
+	printf("List Element:%*s\n", str[i].len, str[i].data);
+}
+*/

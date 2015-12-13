@@ -36,7 +36,7 @@ ngx_write_chain_to_temp_file(ngx_temp_file_t *tf, ngx_chain_t *chain)
     return ngx_write_chain_to_file(&tf->file, chain, tf->offset, tf->pool);
 }
 
-
+/*[p]nginx调用此函数创建临时文件*/
 ngx_int_t
 ngx_create_temp_file(ngx_file_t *file, ngx_path_t *path, ngx_pool_t *pool,
     ngx_uint_t persistent, ngx_uint_t clean, ngx_uint_t access)
@@ -63,11 +63,11 @@ ngx_create_temp_file(ngx_file_t *file, ngx_path_t *path, ngx_pool_t *pool,
 
     n = (uint32_t) ngx_next_temp_number(0);
 
-    cln = ngx_pool_cleanup_add(pool, sizeof(ngx_pool_cleanup_file_t));
+    cln = ngx_pool_cleanup_add(pool, sizeof(ngx_pool_cleanup_file_t)); //[p]向回收链申请了sizeof(ngx_pool_cleanup_file_t)的空间，存放临时文件的信息
     if (cln == NULL) {
         return NGX_ERROR;
     }
-
+	//[p]下面的代码将实际的临时文件信息与回收链刚申请的空间关联在一起
     for ( ;; ) {
         (void) ngx_sprintf(file->name.data + path->name.len + 1 + path->len,
                            "%010uD%Z", n);
@@ -84,8 +84,8 @@ ngx_create_temp_file(ngx_file_t *file, ngx_path_t *path, ngx_pool_t *pool,
 
         if (file->fd != NGX_INVALID_FILE) {
 
-            cln->handler = clean ? ngx_pool_delete_file : ngx_pool_cleanup_file;
-            clnf = cln->data;
+			cln->handler = clean ? ngx_pool_delete_file : ngx_pool_cleanup_file;//[p] 指向临时文件的处理程序 delete_file或cleanup_file
+            clnf = cln->data; //[p] 将申请的内存空间赋值给clnf,用于存放信息
 
             clnf->fd = file->fd;
             clnf->name = file->name.data;
