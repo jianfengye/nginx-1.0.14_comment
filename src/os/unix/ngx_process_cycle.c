@@ -392,7 +392,7 @@ ngx_start_worker_processes(ngx_cycle_t *cycle, ngx_int_t n, ngx_int_t type)
 
         cpu_affinity = ngx_get_cpu_affinity(i);
         
-        //[p]fork新进程的具体工作，ngx_worker_process_cycle函数是工作进程要执行的具体工作
+        //fork新进程的具体工作，ngx_worker_process_cycle函数是工作进程要执行的具体工作
         ngx_spawn_process(cycle, ngx_worker_process_cycle, NULL,
                           "worker process", type);
 
@@ -461,7 +461,7 @@ ngx_start_cache_manager_processes(ngx_cycle_t *cycle, ngx_uint_t respawn)
     ngx_pass_open_channel(cycle, &ch);
 }
 
-/*[p]for循环遍历所有工作进程，将自己的信息发送给所有的工作进程*/
+/*for循环遍历所有工作进程，将自己的信息发送给所有的工作进程*/
 static void
 ngx_pass_open_channel(ngx_cycle_t *cycle, ngx_channel_t *ch)
 {
@@ -755,7 +755,7 @@ ngx_master_process_exit(ngx_cycle_t *cycle)
     exit(0);
 }
 
-/*[p] 工作进程要执行的具体工作*/
+/* 工作进程要执行的具体工作*/
 static void
 ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
 {
@@ -766,7 +766,7 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
 
     //初始化worker进程
     ngx_worker_process_init(cycle, 1);
-	//[p]设置工作进程标题
+	//设置工作进程标题
     ngx_setproctitle("worker process");
 
 #if (NGX_THREADS)
@@ -875,7 +875,7 @@ ngx_worker_process_cycle(ngx_cycle_t *cycle, void *data)
     }
 }
 
-/*[p]工作进程初始化*/
+/*工作进程初始化*/
 static void
 ngx_worker_process_init(ngx_cycle_t *cycle, ngx_uint_t priority)
 {
@@ -885,26 +885,26 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_uint_t priority)
     struct rlimit     rlmt;
     ngx_core_conf_t  *ccf;
     ngx_listening_t  *ls;
-	//[p] 设置nginx服务器的运行环境
+	// 设置nginx服务器的运行环境
     if (ngx_set_environment(cycle, NULL) == NULL) {
         /* fatal */
         exit(2);
     }
-	//[p]获取配置的上下文
+	//获取配置的上下文
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
 
     if (priority && ccf->priority != 0) {
-        if (setpriority(PRIO_PROCESS, 0, ccf->priority) == -1) { //[p] 设置工作进程优先级
-            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, //[p]出错处理
+        if (setpriority(PRIO_PROCESS, 0, ccf->priority) == -1) { // 设置工作进程优先级
+            ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno, //出错处理
                           "setpriority(%d) failed", ccf->priority);
         }
     }
 
     if (ccf->rlimit_nofile != NGX_CONF_UNSET) {
-        rlmt.rlim_cur = (rlim_t) ccf->rlimit_nofile;       //[p] 获取配置信息
+        rlmt.rlim_cur = (rlim_t) ccf->rlimit_nofile;       // 获取配置信息
         rlmt.rlim_max = (rlim_t) ccf->rlimit_nofile;
 
-        if (setrlimit(RLIMIT_NOFILE, &rlmt) == -1) {		//[p]设置打开文件描述符的上限
+        if (setrlimit(RLIMIT_NOFILE, &rlmt) == -1) {		//设置打开文件描述符的上限
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           "setrlimit(RLIMIT_NOFILE, %i) failed",
                           ccf->rlimit_nofile);
@@ -915,7 +915,7 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_uint_t priority)
         rlmt.rlim_cur = (rlim_t) ccf->rlimit_core;
         rlmt.rlim_max = (rlim_t) ccf->rlimit_core;
 
-        if (setrlimit(RLIMIT_CORE, &rlmt) == -1) {          //[p] 设置内核转储文件的最大长度
+        if (setrlimit(RLIMIT_CORE, &rlmt) == -1) {          // 设置内核转储文件的最大长度
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           "setrlimit(RLIMIT_CORE, %O) failed",
                           ccf->rlimit_core);
@@ -936,20 +936,20 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_uint_t priority)
 #endif
 
     if (geteuid() == 0) {
-        if (setgid(ccf->group) == -1) {      //[p]设置组ID
+        if (setgid(ccf->group) == -1) {      //设置组ID
             ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno,
                           "setgid(%d) failed", ccf->group);
             /* fatal */
             exit(2);
         }
 
-        if (initgroups(ccf->username, ccf->group) == -1) {    //[p] 初始化组清单
+        if (initgroups(ccf->username, ccf->group) == -1) {    // 初始化组清单
             ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno,
                           "initgroups(%s, %d) failed",
                           ccf->username, ccf->group);
         }
 
-        if (setuid(ccf->user) == -1) {  //[p] 设置用户ID
+        if (setuid(ccf->user) == -1) {  // 设置用户ID
             ngx_log_error(NGX_LOG_EMERG, cycle->log, ngx_errno,
                           "setuid(%d) failed", ccf->user);
             /* fatal */
@@ -986,7 +986,7 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_uint_t priority)
 #endif
 
     if (ccf->working_directory.len) {
-        if (chdir((char *) ccf->working_directory.data) == -1) {    //[p]设置进程的工作目录
+        if (chdir((char *) ccf->working_directory.data) == -1) {    //设置进程的工作目录
             ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                           "chdir(\"%s\") failed", ccf->working_directory.data);
             /* fatal */
@@ -996,7 +996,7 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_uint_t priority)
 
     sigemptyset(&set);
 
-    if (sigprocmask(SIG_SETMASK, &set, NULL) == -1) {           //[p] 取消最信号的屏蔽
+    if (sigprocmask(SIG_SETMASK, &set, NULL) == -1) {           // 取消最信号的屏蔽
         ngx_log_error(NGX_LOG_ALERT, cycle->log, ngx_errno,
                       "sigprocmask() failed");
     }
@@ -1007,9 +1007,9 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_uint_t priority)
      */
     ls = cycle->listening.elts;
     for (i = 0; i < cycle->listening.nelts; i++) {
-        ls[i].previous = NULL;  //[p] 遍历并设置所有监听套接字的状态
+        ls[i].previous = NULL;  // 遍历并设置所有监听套接字的状态
     }
-	//[p] 初始化nginx各个模块
+	// 初始化nginx各个模块
     for (i = 0; ngx_modules[i]; i++) {
         if (ngx_modules[i]->init_process) { 
             //进程初始化, 调用每个模块的init_process,用它做模块开发的时候，使用得挺少的 
@@ -1052,7 +1052,7 @@ ngx_worker_process_init(ngx_cycle_t *cycle, ngx_uint_t priority)
     ngx_last_process = 0;
 #endif
     // 将channel放入nginx关心的集合中，同时关注channel上的读事件。
-	//[p] 设置当前工作进程从channel[1]中监听事件
+	// 设置当前工作进程从channel[1]中监听事件
     if (ngx_add_channel_event(cycle, ngx_channel, NGX_READ_EVENT,
                               ngx_channel_handler)
         == NGX_ERROR)

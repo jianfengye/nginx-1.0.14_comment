@@ -388,7 +388,7 @@ char *ngx_conf_set_bitmask_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 
 
 extern ngx_uint_t     ngx_max_module;
-extern ngx_module_t  *ngx_modules[];  //[p]该数组存放所有模块，实际定义在obj/ngx_modules.c文件中，由configure文件生成源代码文件objs/ngx_modules.c中
+extern ngx_module_t  *ngx_modules[];  //该数组存放所有模块，实际定义在obj/ngx_modules.c文件中，由configure文件生成源代码文件objs/ngx_modules.c中
 
 
 #endif /* _NGX_HTTP_CONF_FILE_H_INCLUDED_ */

@@ -178,7 +178,7 @@ ngx_http_header_t  ngx_http_headers_in[] = {
     { ngx_null_string, 0, NULL }
 };
 
-/*[p]初始化链接*/
+/*初始化链接*/
 void
 ngx_http_init_connection(ngx_connection_t *c)
 {
@@ -203,7 +203,7 @@ ngx_http_init_connection(ngx_connection_t *c)
     c->log_error = NGX_ERROR_INFO;
 
     rev = c->read;
-	//[p]设置读handler为ngx_http_init_request,在客户端向服务器发送数据时会被调用，用于初始化并处理客户端请求
+	//设置读handler为ngx_http_init_request,在客户端向服务器发送数据时会被调用，用于初始化并处理客户端请求
     rev->handler = ngx_http_init_request;
     c->write->handler = ngx_http_empty_handler;
 
@@ -236,7 +236,7 @@ ngx_http_init_connection(ngx_connection_t *c)
     }
 }
 
-/*[p]初始化请求，客户端发送第一次请求时调用，由ngx_http_init_connection设置回调*/
+/*初始化请求，客户端发送第一次请求时调用，由ngx_http_init_connection设置回调*/
 static void
 ngx_http_init_request(ngx_event_t *rev)
 {
@@ -261,18 +261,18 @@ ngx_http_init_request(ngx_event_t *rev)
 #if (NGX_STAT_STUB)
     (void) ngx_atomic_fetch_add(ngx_stat_reading, -1);
 #endif
-	/*[p]ngx_event_t的data成员存放事件对应的连接句柄*/
+	/*ngx_event_t的data成员存放事件对应的连接句柄*/
     c = rev->data;
-	/*[p] 在ngx_init_connection中对读事件添加了timer，超时直接返回*/
+	/* 在ngx_init_connection中对读事件添加了timer，超时直接返回*/
     if (rev->timedout) {
         ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT, "client timed out");
 
         ngx_http_close_connection(c);
         return;
     }
-	/*[p] 连接处理的request的计数 */
+	/* 连接处理的request的计数 */
     c->requests++;
-	/*[p] ngx_http_connection_t */
+	/* ngx_http_connection_t */
     hc = c->data;
 
     if (hc == NULL) {
@@ -295,7 +295,7 @@ ngx_http_init_request(ngx_event_t *rev)
         }
 
     } else {
-		/*[p] 为request分配空间 */
+		/* 为request分配空间 */
         r = ngx_pcalloc(c->pool, sizeof(ngx_http_request_t));
         if (r == NULL) {
             ngx_http_close_connection(c);
@@ -310,9 +310,9 @@ ngx_http_init_request(ngx_event_t *rev)
 
     c->sent = 0;
     r->signature = NGX_HTTP_MODULE;
-	/*[p] 上面一段代码完成获取连接、请求并进行一部分初始化工作，比如会为新的请求分配内存。*/
+	/* 上面一段代码完成获取连接、请求并进行一部分初始化工作，比如会为新的请求分配内存。*/
     /* find the server configuration for the address:port */
-	/**[p]
+	/**
 	* ngx_listening_t的servers存放监听同一端口的server，但它们的监听的地址可以不同。
 	*
 	*            port
@@ -332,12 +332,12 @@ ngx_http_init_request(ngx_event_t *rev)
          * is an "*:port" wildcard so getsockname() in ngx_http_server_addr()
          * is required to determine a server address
          */
-		/*[p] 获取连接c的socket绑定的本地地址 */
+		/* 获取连接c的socket绑定的本地地址 */
         if (ngx_connection_local_sockaddr(c, NULL, 0) != NGX_OK) {
             ngx_http_close_connection(c);
             return;
         }
-		/*[p] 根据连接c的socket地址匹配port->addrs，找到对应的address:port */  
+		/* 根据连接c的socket地址匹配port->addrs，找到对应的address:port */  
         switch (c->local_sockaddr->sa_family) {
 
 #if (NGX_HAVE_INET6)
@@ -403,10 +403,10 @@ ngx_http_init_request(ngx_event_t *rev)
     r->main_conf = cscf->ctx->main_conf;
     r->srv_conf = cscf->ctx->srv_conf;
     r->loc_conf = cscf->ctx->loc_conf;
-	/*[p]上面这段代码是为地址addr:port匹配server config，从而确定该请求的配置。
+	/*上面这段代码是为地址addr:port匹配server config，从而确定该请求的配置。
 	由于nginx支持虚拟主机，所以这里确定了r->virtual_names是该addr:port对应的虚拟主机数组，
 	后面会根据请求的HOST匹配对应的虚拟主机从而确定最终的配置。*/
-    rev->handler = ngx_http_process_request_line; //[p]  将连接读事件的handler设置为ngx_http_process_request_line
+    rev->handler = ngx_http_process_request_line; //  将连接读事件的handler设置为ngx_http_process_request_line
     r->read_event_handler = ngx_http_block_reading;
 
 #if (NGX_HTTP_SSL)
@@ -446,11 +446,11 @@ ngx_http_init_request(ngx_event_t *rev)
 #endif
 
     clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
-    c->log->file = clcf->error_log->file; //[p] 初始化日志信息
+    c->log->file = clcf->error_log->file; // 初始化日志信息
     if (!(c->log->log_level & NGX_LOG_DEBUG_CONNECTION)) {
         c->log->log_level = clcf->error_log->log_level;
     }
-	//[p]为连接分配临时buf
+	//为连接分配临时buf
     if (c->buffer == NULL) {
         c->buffer = ngx_create_temp_buf(c->pool,
                                         cscf->client_header_buffer_size);
@@ -459,11 +459,11 @@ ngx_http_init_request(ngx_event_t *rev)
             return;
         }
     }
-	//[p]将request的header_in指向临时的buf，在后面用于存放请求头信息
+	//将request的header_in指向临时的buf，在后面用于存放请求头信息
     if (r->header_in == NULL) {
         r->header_in = c->buffer;
     }
-	//[p]为请求分配内存池
+	//为请求分配内存池
     r->pool = ngx_create_pool(cscf->request_pool_size, c->log);
     if (r->pool == NULL) {
         ngx_http_close_connection(c);
@@ -488,7 +488,7 @@ ngx_http_init_request(ngx_event_t *rev)
     }
 
     cmcf = ngx_http_get_module_main_conf(r, ngx_http_core_module);
-	/**[p]
+	/**
 	* 为所有变量在此请求中分配空间
 	* Allocate memory space for the variable values of the request.
 	* The type of variables array is ngx_http_variable_value_t.
@@ -535,7 +535,7 @@ ngx_http_init_request(ngx_event_t *rev)
     r->stat_reading = 1;
     (void) ngx_atomic_fetch_add(ngx_stat_requests, 1);
 #endif
-	/*[p]Start processing request,调用rev->handler(rev),实质是ngx_http_process_request_line函数，开始处理请求*/
+	/*Start processing request,调用rev->handler(rev),实质是ngx_http_process_request_line函数，开始处理请求*/
     rev->handler(rev);
 }
 
@@ -721,7 +721,7 @@ ngx_http_ssl_servername(ngx_ssl_conn_t *ssl_conn, int *ad, void *arg)
 
 #endif
 
-/*[p]用来处理请求行，会不断调用ngx_http_read_request_header从socket读取头部并保存在request的header_in字段中*/
+/*用来处理请求行，会不断调用ngx_http_read_request_header从socket读取头部并保存在request的header_in字段中*/
 static void
 ngx_http_process_request_line(ngx_event_t *rev)
 {
@@ -731,14 +731,14 @@ ngx_http_process_request_line(ngx_event_t *rev)
     ngx_connection_t          *c;
     ngx_http_request_t        *r;
     ngx_http_core_srv_conf_t  *cscf;
-	//[p]从rev中获取连接以及请求
+	//从rev中获取连接以及请求
     c = rev->data;
     r = c->data;
 
 	ngx_log_debug0(NGX_LOG_DEBUG_HTTP, rev->log, 0,
                    "http process request line");
 
-	//[p]判断是否超时
+	//判断是否超时
     if (rev->timedout) {
         ngx_log_error(NGX_LOG_INFO, c->log, NGX_ETIMEDOUT, "client timed out");
         c->timedout = 1;
@@ -747,18 +747,18 @@ ngx_http_process_request_line(ngx_event_t *rev)
     }
 
     rc = NGX_AGAIN;
-	//[p]for是本函数的主体，从socket中读取足够的信息，解析出http method,uri,version等信息
+	//for是本函数的主体，从socket中读取足够的信息，解析出http method,uri,version等信息
     for ( ;; ) {
 
         if (rc == NGX_AGAIN) {
-			//[p]读取请求行，保存到r->header_in缓冲区
+			//读取请求行，保存到r->header_in缓冲区
             n = ngx_http_read_request_header(r);
 
             if (n == NGX_AGAIN || n == NGX_ERROR) {
                 return;
             }
         }
-		/*[p]状态机，解析请求行*/
+		/*状态机，解析请求行*/
         rc = ngx_http_parse_request_line(r, r->header_in);
 
         if (rc == NGX_OK) {
@@ -875,7 +875,7 @@ ngx_http_process_request_line(ngx_event_t *rev)
 
             ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                            "http exten: \"%V\"", &r->exten);
-			/*[p] 解析并验证host */
+			/* 解析并验证host */
             if (r->host_start && r->host_end) {
 
                 host = r->host_start;
@@ -893,13 +893,13 @@ ngx_http_process_request_line(ngx_event_t *rev)
                     ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
                     return;
                 }
-				/*[p] 初始化request header的server字段 */
+				/* 初始化request header的server字段 */
                 r->headers_in.server.len = n;
                 r->headers_in.server.data = host;
             }
-			//[p]  如果使用的http协议版本小于1.0，那么不支持header以及请求体，所以接下来直接调用ngx_http_process_request处理请求
+			//  如果使用的http协议版本小于1.0，那么不支持header以及请求体，所以接下来直接调用ngx_http_process_request处理请求
             if (r->http_version < NGX_HTTP_VERSION_10) {
-				//[p]根据请求的host，即虚拟主机名，去查找对应的server 
+				//根据请求的host，即虚拟主机名，去查找对应的server 
                 if (ngx_http_find_virtual_server(r, r->headers_in.server.data,
                                                  r->headers_in.server.len)
                     == NGX_ERROR)
@@ -907,12 +907,12 @@ ngx_http_process_request_line(ngx_event_t *rev)
                     ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
                     return;
                 }
-				//[p]对于http0.1来说，处理完后直接返回，对于http1.0和1.1还没处理完
+				//对于http0.1来说，处理完后直接返回，对于http1.0和1.1还没处理完
                 ngx_http_process_request(r);
                 return; 
             }
 
-			/*[p]初始化headers*/
+			/*初始化headers*/
             if (ngx_list_init(&r->headers_in.headers, r->pool, 20,
                               sizeof(ngx_table_elt_t))
                 != NGX_OK)
@@ -921,7 +921,7 @@ ngx_http_process_request_line(ngx_event_t *rev)
                 return;
             }
 
-			//[p]初始化cookies
+			//初始化cookies
             if (ngx_array_init(&r->headers_in.cookies, r->pool, 2,
                                sizeof(ngx_table_elt_t *))
                 != NGX_OK)
@@ -931,14 +931,14 @@ ngx_http_process_request_line(ngx_event_t *rev)
             }
 
             c->log->action = "reading client request headers";
-			//[p] 设置读事件rev的handler为ngx_http_process_request_headers
+			// 设置读事件rev的handler为ngx_http_process_request_headers
             rev->handler = ngx_http_process_request_headers;
-			//[p] 调用ngx_http_process_request_headers进行header解析
+			// 调用ngx_http_process_request_headers进行header解析
             ngx_http_process_request_headers(rev);
 
             return;
         }
-		//[p]错误处理，解析出错，写日志
+		//错误处理，解析出错，写日志
         if (rc != NGX_AGAIN) {
 
             /* there was error while a request line parsing */
@@ -950,7 +950,7 @@ ngx_http_process_request_line(ngx_event_t *rev)
         }
 
         /* NGX_AGAIN: a request line parsing is still incomplete */
-		//[p]这里rc==NGX_AGAIN，说明request line没有处理完毕，如果header_in大小不够，则调用ngx_http_alloc_large_header_buffer进行扩容。
+		//这里rc==NGX_AGAIN，说明request line没有处理完毕，如果header_in大小不够，则调用ngx_http_alloc_large_header_buffer进行扩容。
         if (r->header_in->pos == r->header_in->end) {
 
             rv = ngx_http_alloc_large_header_buffer(r, 1);
@@ -973,7 +973,7 @@ ngx_http_process_request_line(ngx_event_t *rev)
     }
 }
 
-//[p]处理请求头
+//处理请求头
 static void
 ngx_http_process_request_headers(ngx_event_t *rev)
 {
@@ -987,7 +987,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
     ngx_http_request_t         *r;
     ngx_http_core_srv_conf_t   *cscf;
     ngx_http_core_main_conf_t  *cmcf;
-	//[p] 获取连接和请求
+	// 获取连接和请求
     c = rev->data;
     r = c->data;
 
@@ -1005,13 +1005,13 @@ ngx_http_process_request_headers(ngx_event_t *rev)
     cscf = ngx_http_get_module_srv_conf(r, ngx_http_core_module);
 
     rc = NGX_AGAIN;
-	//[p]一次for循环一次解析一个header
+	//一次for循环一次解析一个header
     for ( ;; ) {
 
         if (rc == NGX_AGAIN) {
 
             if (r->header_in->pos == r->header_in->end) {
-				//[p]空间不足，重新分配
+				//空间不足，重新分配
                 rv = ngx_http_alloc_large_header_buffer(r, 0);
 
                 if (rv == NGX_ERROR) {
@@ -1048,19 +1048,19 @@ ngx_http_process_request_headers(ngx_event_t *rev)
                     return;
                 }
             }
-			//[p]读取请求并保存到header_in缓冲区中
+			//读取请求并保存到header_in缓冲区中
             n = ngx_http_read_request_header(r);
 
             if (n == NGX_AGAIN || n == NGX_ERROR) {
                 return;
             }
         }
-		//[p]状态机，解析header,内部实现和ngx_http_parse_request_line一样
+		//状态机，解析header,内部实现和ngx_http_parse_request_line一样
         rc = ngx_http_parse_header_line(r, r->header_in,
                                         cscf->underscores_in_headers);
-		//[p]解析成功，返回NGX_OK
+		//解析成功，返回NGX_OK
         if (rc == NGX_OK) {
-			//[p]不合法的header,continue下一个header
+			//不合法的header,continue下一个header
             if (r->invalid_header && cscf->ignore_invalid_headers) {
 
                 /* there was error while a header line parsing */
@@ -1073,7 +1073,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
             }
 
             /* a header line has been parsed successfully */
-			//[p]解析成功，将解析出来的header放入request的headers_in.header链表中，然后对它初始化
+			//解析成功，将解析出来的header放入request的headers_in.header链表中，然后对它初始化
             h = ngx_list_push(&r->headers_in.headers);
             if (h == NULL) {
                 ngx_http_close_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
@@ -1116,7 +1116,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
 
             continue;
         }
-		//[p]解析完毕
+		//解析完毕
         if (rc == NGX_HTTP_PARSE_HEADER_DONE) {
 
             /* a whole header has been parsed successfully */
@@ -1127,13 +1127,13 @@ ngx_http_process_request_headers(ngx_event_t *rev)
             r->request_length += r->header_in->pos - r->header_in->start;
 
             r->http_state = NGX_HTTP_PROCESS_REQUEST_STATE;
-			/*[p]根据host匹配虚拟主机，并对一些header初始化 */
+			/*根据host匹配虚拟主机，并对一些header初始化 */
             rc = ngx_http_process_request_header(r);
 
             if (rc != NGX_OK) {
                 return;
             }
-			//[p]处理请求
+			//处理请求
             ngx_http_process_request(r);
 
             return;
@@ -1613,7 +1613,7 @@ ngx_http_process_request_header(ngx_http_request_t *r)
     return NGX_OK;
 }
 
-//[p]处理请求，设置读写事件的handler
+//处理请求，设置读写事件的handler
 static void
 ngx_http_process_request(ngx_http_request_t *r)
 {
@@ -1672,7 +1672,7 @@ ngx_http_process_request(ngx_http_request_t *r)
     }
 
 #endif
-	//[p]删除之前读事件的handler
+	//删除之前读事件的handler
     if (c->read->timer_set) {
         ngx_del_timer(c->read);
     }
@@ -1683,13 +1683,13 @@ ngx_http_process_request(ngx_http_request_t *r)
     (void) ngx_atomic_fetch_add(ngx_stat_writing, 1);
     r->stat_writing = 1;
 #endif
-	//[p] 设置读写事件的handler为ngx_http_request_handler
+	// 设置读写事件的handler为ngx_http_request_handler
     c->read->handler = ngx_http_request_handler;
     c->write->handler = ngx_http_request_handler;
     r->read_event_handler = ngx_http_block_reading;
 
     ngx_http_handler(r);
-	//[p]? 处理subrequest 
+	//? 处理subrequest 
     ngx_http_run_posted_requests(c);
 }
 
@@ -1844,7 +1844,7 @@ ngx_http_request_handler(ngx_event_t *ev)
     ngx_http_run_posted_requests(c);
 }
 
-//[p]驱动子请求运行
+//驱动子请求运行
 void
 ngx_http_run_posted_requests(ngx_connection_t *c)
 {
@@ -1859,15 +1859,15 @@ ngx_http_run_posted_requests(ngx_connection_t *c)
         }
 
         r = c->data;
-        pr = r->main->posted_requests;         //[p]获取待执行的请求链表
+        pr = r->main->posted_requests;         //获取待执行的请求链表
 
         if (pr == NULL) {
             return;
         }
 
-        r->main->posted_requests = pr->next;	//[p]移除头结点
+        r->main->posted_requests = pr->next;	//移除头结点
 
-        r = pr->request;					//[p]得到当前待执行的请求
+        r = pr->request;					//得到当前待执行的请求
 
         ctx = c->log->data;
         ctx->current_request = r;
@@ -1875,11 +1875,11 @@ ngx_http_run_posted_requests(ngx_connection_t *c)
         ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
                        "http posted request: \"%V?%V\"", &r->uri, &r->args);
 
-        r->write_event_handler(r);			//[p]执行请求的handler
+        r->write_event_handler(r);			//执行请求的handler
     }
 }
 
-//[p]该函数的作用是将子请求pr加入到主请求r的待执行请求链表posted_requests里
+//该函数的作用是将子请求pr加入到主请求r的待执行请求链表posted_requests里
 ngx_int_t
 ngx_http_post_request(ngx_http_request_t *r, ngx_http_posted_request_t *pr)
 {
@@ -1895,14 +1895,14 @@ ngx_http_post_request(ngx_http_request_t *r, ngx_http_posted_request_t *pr)
     pr->request = r;
     pr->next = NULL;
 
-    for (p = &r->main->posted_requests; *p; p = &(*p)->next) { /* void */ } //[p]找到链表末尾
+    for (p = &r->main->posted_requests; *p; p = &(*p)->next) { /* void */ } //找到链表末尾
 
-    *p = pr;  //[p]添加到链表末尾等待调度
+    *p = pr;  //添加到链表末尾等待调度
 
     return NGX_OK;
 }
 
-//[p]请求或者子请求结束会调用该函数
+//请求或者子请求结束会调用该函数
 void
 ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
 {
@@ -1932,7 +1932,7 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
         ngx_http_core_run_phases(r);
         return;
     }
-	//[p]执行子请求的回调函数
+	//执行子请求的回调函数
     if (r != r->main && r->post_subrequest) {
         rc = r->post_subrequest->handler(r, r->post_subrequest->data, rc);
     }
@@ -2037,7 +2037,7 @@ ngx_http_finalize_request(ngx_http_request_t *r, ngx_int_t rc)
                 r->done = 1;
             }
         }
-		//[p]将父请求加入待处理链表，等待引擎调度而“激活”，进而继续执行父请求的后续工作
+		//将父请求加入待处理链表，等待引擎调度而“激活”，进而继续执行父请求的后续工作
         if (ngx_http_post_request(pr, NULL) != NGX_OK) {
             r->main->count++;
             ngx_http_terminate_request(r, 0);
@@ -3059,8 +3059,8 @@ ngx_http_log_request(ngx_http_request_t *r)
     log_handler = cmcf->phases[NGX_HTTP_LOG_PHASE].handlers.elts;
     n = cmcf->phases[NGX_HTTP_LOG_PHASE].handlers.nelts;
 
-    for (i = 0; i < n; i++) { //[p]遍历log handler数组
-        log_handler[i](r); //[p] 执行回调函数
+    for (i = 0; i < n; i++) { //遍历log handler数组
+        log_handler[i](r); // 执行回调函数
     }
 }
 

@@ -29,20 +29,20 @@ static ngx_conf_enum_t  ngx_debug_points[] = {
     { ngx_null_string, 0 }
 };
 
-//[p] 定义了ngx_core_modules使用的配置指令，同时指定了指令的解析函数
-//[p] 这些指令的type都是NGX_MAIN_CONF | NGX_DIRECT_CONF，只能出现在配置文件最外层的main域中
+// 定义了ngx_core_modules使用的配置指令，同时指定了指令的解析函数
+// 这些指令的type都是NGX_MAIN_CONF | NGX_DIRECT_CONF，只能出现在配置文件最外层的main域中
 static ngx_command_t  ngx_core_commands[] = {
 
-    { ngx_string("daemon"), //[p] 守护进程指令
+    { ngx_string("daemon"), // 守护进程指令
       NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot, //[p]解析函数
+      ngx_conf_set_flag_slot, //解析函数
       0,
       offsetof(ngx_core_conf_t, daemon),
       NULL },
 
-    { ngx_string("master_process"), //[p] master进程指令
+    { ngx_string("master_process"), // master进程指令
       NGX_MAIN_CONF|NGX_DIRECT_CONF|NGX_CONF_FLAG,
-      ngx_conf_set_flag_slot, //[p]简单地解析 on | off的函数
+      ngx_conf_set_flag_slot, //简单地解析 on | off的函数
       0,
       offsetof(ngx_core_conf_t, master),
       NULL },
@@ -156,18 +156,18 @@ static ngx_command_t  ngx_core_commands[] = {
 
 #endif
 
-      ngx_null_command  //[p] 指令数组结束
+      ngx_null_command  // 指令数组结束
 };
 
 
 static ngx_core_module_t  ngx_core_module_ctx = {
-    ngx_string("core"),              //[p] 模块名字
-    ngx_core_module_create_conf,     //[p] 创建配置结构
-    ngx_core_module_init_conf        //[p] 初始化配置结构
+    ngx_string("core"),              // 模块名字
+    ngx_core_module_create_conf,     // 创建配置结构
+    ngx_core_module_init_conf        // 初始化配置结构
 };
 
 
-ngx_module_t  ngx_core_module = {          //[p] 模块定义
+ngx_module_t  ngx_core_module = {          // 模块定义
     NGX_MODULE_V1,
     &ngx_core_module_ctx,                  /* module context */
     ngx_core_commands,                     /* module directives */
@@ -943,9 +943,9 @@ ngx_process_options(ngx_cycle_t *cycle)
 static void *
 ngx_core_module_create_conf(ngx_cycle_t *cycle)  // 这是core模块对外的create_conf的钩子
 {
-    ngx_core_conf_t  *ccf; //[p] 配置结构数据指针
+    ngx_core_conf_t  *ccf; // 配置结构数据指针
 
-    ccf = ngx_pcalloc(cycle->pool, sizeof(ngx_core_conf_t)); //[p] 创建配置结构数据
+    ccf = ngx_pcalloc(cycle->pool, sizeof(ngx_core_conf_t)); // 创建配置结构数据
     if (ccf == NULL) {
         return NULL;
     }
@@ -996,8 +996,8 @@ ngx_core_module_init_conf(ngx_cycle_t *cycle, void *conf)
     ngx_core_conf_t  *ccf = conf;
 	//下面的代码基本上是对conf结构体的成员进行初始化
     //初始化daemon、master等
-    ngx_conf_init_value(ccf->daemon, 1); //[p] 默认启用守护模式
-    ngx_conf_init_value(ccf->master, 1); //[p] 默认启动master进程
+    ngx_conf_init_value(ccf->daemon, 1); // 默认启用守护模式
+    ngx_conf_init_value(ccf->master, 1); // 默认启动master进程
     ngx_conf_init_msec_value(ccf->timer_resolution, 0);
 
     ngx_conf_init_value(ccf->worker_processes, 1);

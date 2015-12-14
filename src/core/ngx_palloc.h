@@ -67,9 +67,9 @@ struct ngx_pool_s {
 
 /*ngx_pool_cleanup_t中的*data成员通常指向ngx_pool_cleanup_file_t结构体*/
 typedef struct {
-    ngx_fd_t              fd;	//[p]文件句柄
-    u_char               *name;	//[p]文件名称
-    ngx_log_t            *log;	//[p]日志对象
+    ngx_fd_t              fd;	//文件句柄
+    u_char               *name;	//文件名称
+    ngx_log_t            *log;	//日志对象
 } ngx_pool_cleanup_file_t;
 
 //使用malloc分配内存空间

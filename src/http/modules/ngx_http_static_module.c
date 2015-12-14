@@ -49,7 +49,7 @@ ngx_module_t  ngx_http_static_module = {
 };
 
 //核心处理逻辑ngx_http_static_handler函数。该函数大概占了这个模块代码量的百分之八九十。
-//[p]ngx_http_static_module模块的处理函数，检查URI的有效性，映射URI到磁盘路径，再访问文件，最后调用ngx_http_output_filter，把文件内容交给过滤链表处理
+//ngx_http_static_module模块的处理函数，检查URI的有效性，映射URI到磁盘路径，再访问文件，最后调用ngx_http_output_filter，把文件内容交给过滤链表处理
 static ngx_int_t
 ngx_http_static_handler(ngx_http_request_t *r)
 {
@@ -270,7 +270,7 @@ ngx_http_static_handler(ngx_http_request_t *r)
     out.buf = b;
     out.next = NULL;
 
-    return ngx_http_output_filter(r, &out); //[p]将文件内容交给过滤链表进行处理输出
+    return ngx_http_output_filter(r, &out); //将文件内容交给过滤链表进行处理输出
 }
 
 //解析完配置项后调用，仅仅是把handler挂载到NGX_HTTP_CONTENT_PHASE处理阶段
@@ -287,7 +287,7 @@ ngx_http_static_init(ngx_conf_t *cf)
         return NGX_ERROR;
     }
 
-    *h = ngx_http_static_handler;//[p]添加数组元素,挂载这个handler到NGX_HTTP_CONTENT_PHASE处理阶段
+    *h = ngx_http_static_handler;//添加数组元素,挂载这个handler到NGX_HTTP_CONTENT_PHASE处理阶段
 
     return NGX_OK;
 }

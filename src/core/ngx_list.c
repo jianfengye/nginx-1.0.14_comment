@@ -99,7 +99,7 @@ str->value = "Hello World";
 
 
 
-/*[p]遍历链表的实例
+/*遍历链表的实例
 //part用于指向链表中的每一个ngx_list_part_t数组
 ngx_list_part_t* part = &testlist.part;
 //根据链表中的数据类型，把数组里的elts转化为该类型使用

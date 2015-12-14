@@ -12,7 +12,7 @@
 static void *ngx_palloc_block(ngx_pool_t *pool, size_t size);
 static void *ngx_palloc_large(ngx_pool_t *pool, size_t size);
 
-//[p]通过ngx_create_pool可以创建一个内存池
+//通过ngx_create_pool可以创建一个内存池
 ngx_pool_t *
 ngx_create_pool(size_t size, ngx_log_t *log)
 {
@@ -28,7 +28,7 @@ ngx_create_pool(size_t size, ngx_log_t *log)
     p->d.next = NULL;
     p->d.failed = 0;
 
-	//[p]sizeof(ngx_pool_t)用来存储自身
+	//sizeof(ngx_pool_t)用来存储自身
     size = size - sizeof(ngx_pool_t);
     p->max = (size < NGX_MAX_ALLOC_FROM_POOL) ? size : NGX_MAX_ALLOC_FROM_POOL; //最大不超过 NGX_MAX_ALLOC_FROM_POOL,也就是getpagesize()-1 大小
 
@@ -41,28 +41,28 @@ ngx_create_pool(size_t size, ngx_log_t *log)
     return p;
 }
 
-//[p]销毁内存池
+//销毁内存池
 void
 ngx_destroy_pool(ngx_pool_t *pool)
 {
     ngx_pool_t          *p, *n;
     ngx_pool_large_t    *l;
     ngx_pool_cleanup_t  *c;
-	//[p] 遍历节点上的各个节点
+	// 遍历节点上的各个节点
     for (c = pool->cleanup; c; c = c->next) {
         if (c->handler) {
             ngx_log_debug1(NGX_LOG_DEBUG_ALLOC, pool->log, 0,
                            "run cleanup: %p", c);
-            c->handler(c->data);  //[p]释放节点占用的内存
+            c->handler(c->data);  //释放节点占用的内存
         }
     }
-	//[p]对大块数据内存的清理
+	//对大块数据内存的清理
     for (l = pool->large; l; l = l->next) {
 
         ngx_log_debug1(NGX_LOG_DEBUG_ALLOC, pool->log, 0, "free: %p", l->alloc);
 
         if (l->alloc) {
-            ngx_free(l->alloc); //[p] 直接ngx_free，宏，本质是free
+            ngx_free(l->alloc); // 直接ngx_free，宏，本质是free
         }
     }
 
@@ -93,7 +93,7 @@ ngx_destroy_pool(ngx_pool_t *pool)
     }
 }
 
-//[p]重置，将内存池恢复到初始分配的状态
+//重置，将内存池恢复到初始分配的状态
 void
 ngx_reset_pool(ngx_pool_t *pool)
 {
@@ -102,14 +102,14 @@ ngx_reset_pool(ngx_pool_t *pool)
 
     for (l = pool->large; l; l = l->next) {
         if (l->alloc) {
-            ngx_free(l->alloc); //[p]释放大块内存
+            ngx_free(l->alloc); //释放大块内存
         }
     }
 
     pool->large = NULL;
 
     for (p = pool; p; p = p->d.next) {
-        p->d.last = (u_char *) p + sizeof(ngx_pool_t); //[p]小块内存结尾指针指向刚分配的位置，其中的数据将被覆盖
+        p->d.last = (u_char *) p + sizeof(ngx_pool_t); //小块内存结尾指针指向刚分配的位置，其中的数据将被覆盖
     }
 }
 
@@ -143,7 +143,7 @@ ngx_palloc(ngx_pool_t *pool, size_t size)
     return ngx_palloc_large(pool, size);
 }
 
-/*[p] 原理和ngx_alloc一样，只是没有考虑数据对齐*/
+/* 原理和ngx_alloc一样，只是没有考虑数据对齐*/
 void *
 ngx_pnalloc(ngx_pool_t *pool, size_t size)
 {
@@ -221,7 +221,7 @@ ngx_palloc_large(ngx_pool_t *pool, size_t size)
     ngx_uint_t         n;
     ngx_pool_large_t  *large;
 
-    p = ngx_alloc(size, pool->log); //[p] 在大数据块链表中申请调用了ngx_alloc
+    p = ngx_alloc(size, pool->log); // 在大数据块链表中申请调用了ngx_alloc
     if (p == NULL) {
         return NULL;
     }
@@ -311,7 +311,7 @@ ngx_pcalloc(ngx_pool_t *pool, size_t size)
     return p;
 }
 
-//[p] 用于向内存回收链表中添加节点数据
+// 用于向内存回收链表中添加节点数据
 ngx_pool_cleanup_t *
 ngx_pool_cleanup_add(ngx_pool_t *p, size_t size)
 {
@@ -323,7 +323,7 @@ ngx_pool_cleanup_add(ngx_pool_t *p, size_t size)
     }
 
     if (size) {
-        c->data = ngx_palloc(p, size); //[p] 申请存放目标数据的空间
+        c->data = ngx_palloc(p, size); // 申请存放目标数据的空间
         if (c->data == NULL) {
             return NULL;
         }
@@ -363,7 +363,7 @@ ngx_pool_run_cleanup_file(ngx_pool_t *p, ngx_fd_t fd)
     }
 }
 
-//[p]关闭文件句柄
+//关闭文件句柄
 void
 ngx_pool_cleanup_file(void *data)
 {

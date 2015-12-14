@@ -459,7 +459,7 @@ ngx_http_init_headers_in_hash(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
     return NGX_OK;
 }
 
-/*[p] http://blog.csdn.net/chosen0ne/article/details/8051940
+/* http://blog.csdn.net/chosen0ne/article/details/8051940
 *phase handler初始化
 大致原理就是将所有的phase handler以ngx_http_phase_handler_t->next组织成handler链表，
 处理请求时遍历这个链表。handler处理函数ngx_http_phase_handler_t->handler的调用是在checker中完成的，
@@ -478,28 +478,28 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
     cmcf->phase_engine.server_rewrite_index = (ngx_uint_t) -1;
     cmcf->phase_engine.location_rewrite_index = (ngx_uint_t) -1;
     find_config_index = 0;
-	/*[p] ngx_http_rewrite在http module的postconfiguration回调函数中添加REWRITE阶段的处理函数 */
+	/* ngx_http_rewrite在http module的postconfiguration回调函数中添加REWRITE阶段的处理函数 */
     use_rewrite = cmcf->phases[NGX_HTTP_REWRITE_PHASE].handlers.nelts ? 1 : 0;
-	/*[p] ngx_http_access在http module的postconfiguration回调函数中添加ACCESS阶段的处理函数 */
+	/* ngx_http_access在http module的postconfiguration回调函数中添加ACCESS阶段的处理函数 */
     use_access = cmcf->phases[NGX_HTTP_ACCESS_PHASE].handlers.nelts ? 1 : 0;
-	/*[p]计算handler数组的大小*/
+	/*计算handler数组的大小*/
     n = use_rewrite + use_access + cmcf->try_files + 1 /* find config phase */;
-	/*[p] 对所有handlers计数 */
+	/* 对所有handlers计数 */
     for (i = 0; i < NGX_HTTP_LOG_PHASE; i++) {
         n += cmcf->phases[i].handlers.nelts;
     }
-	//[p]为handler数组分配内存
+	//为handler数组分配内存
     ph = ngx_pcalloc(cf->pool,
                      n * sizeof(ngx_http_phase_handler_t) + sizeof(void *));
     if (ph == NULL) {
         return NGX_ERROR;
     }
-	/*[p]
+	/*
 	* 初始化phase handler，保存checker和next字段
 	* continue的都是不能添加handler的phase
 	*/
     cmcf->phase_engine.handlers = ph;
-    n = 0; /*[p] 下一个phase的第一个handler的索引 */  
+    n = 0; /* 下一个phase的第一个handler的索引 */  
 
     for (i = 0; i < NGX_HTTP_LOG_PHASE; i++) {
         h = cmcf->phases[i].handlers.elts;
@@ -508,14 +508,14 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 
         case NGX_HTTP_SERVER_REWRITE_PHASE:
             if (cmcf->phase_engine.server_rewrite_index == (ngx_uint_t) -1) {
-                cmcf->phase_engine.server_rewrite_index = n; /*[p] 设置server rewrite对应的handler的开始下标 */  
+                cmcf->phase_engine.server_rewrite_index = n; /* 设置server rewrite对应的handler的开始下标 */  
             }
             checker = ngx_http_core_rewrite_phase;
 
             break;
 
         case NGX_HTTP_FIND_CONFIG_PHASE:
-            find_config_index = n;/*[p] find config对应的handler的下标，后面post rewrite的handler设置需要用到 */  
+            find_config_index = n;/* find config对应的handler的下标，后面post rewrite的handler设置需要用到 */  
 
             ph->checker = ngx_http_core_find_config_phase;
             n++;
@@ -534,7 +534,7 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
         case NGX_HTTP_POST_REWRITE_PHASE:
             if (use_rewrite) {
                 ph->checker = ngx_http_core_post_rewrite_phase;
-				/**[p]
+				/**
 				* 这里将post rewrite的next设置为find config的handler对应下标。
 				* 因为在location rewrite之后，需要重新匹配location，所以需要再次
 				* 进入这个phase。
@@ -576,9 +576,9 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
         default:
             checker = ngx_http_core_generic_phase;
         }
-		/*[p] 跳过本phase所有handler，也就指向了下一个phase的第一个handler */
+		/* 跳过本phase所有handler，也就指向了下一个phase的第一个handler */
         n += cmcf->phases[i].handlers.nelts;
-		/*[p] 遍历初始化同一个phase上的handler */
+		/* 遍历初始化同一个phase上的handler */
         for (j = cmcf->phases[i].handlers.nelts - 1; j >=0; j--) {
             ph->checker = checker;
             ph->handler = h[j];

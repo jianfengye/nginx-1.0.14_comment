@@ -59,7 +59,7 @@ static ngx_uint_t argument_number[] = {
     NGX_CONF_TAKE7
 };
 
-/*panzg:解析nginx配置参数*/
+/*解析nginx配置参数*/
 char *
 ngx_conf_param(ngx_conf_t *cf)
 {
@@ -73,7 +73,7 @@ ngx_conf_param(ngx_conf_t *cf)
     if (param->len == 0) {
         return NGX_CONF_OK;
     }
-	//panzg:初始化保存配置信息的结构体
+	//初始化保存配置信息的结构体
     ngx_memzero(&conf_file, sizeof(ngx_conf_file_t));
 
     ngx_memzero(&b, sizeof(ngx_buf_t));
@@ -90,7 +90,7 @@ ngx_conf_param(ngx_conf_t *cf)
 
     cf->conf_file = &conf_file;
     cf->conf_file->buffer = &b;
-	//panzg:执行具体的配置文件解析工作
+	//执行具体的配置文件解析工作
     rv = ngx_conf_parse(cf, NULL);
 
     cf->conf_file = NULL;
