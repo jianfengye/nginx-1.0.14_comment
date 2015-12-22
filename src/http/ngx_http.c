@@ -78,12 +78,12 @@ ngx_str_t  ngx_http_html_default_types[] = {
     ngx_null_string
 };
 
-
+/*http模块指令集数组*/
 static ngx_command_t  ngx_http_commands[] = {
 
-    { ngx_string("http"),
+    { ngx_string("http"), //http指令结构
       NGX_MAIN_CONF|NGX_CONF_BLOCK|NGX_CONF_NOARGS,
-      ngx_http_block,
+      ngx_http_block, //http块执行函数
       0,
       0,
       NULL },
@@ -134,8 +134,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         return NGX_CONF_ERROR;
     }
 
-	//最核心的地方，可以看到修改了传递进来的conf，也就是将该ctx的指针保存到了全局的cycle->conf_ctx[n]中
-    *(ngx_http_conf_ctx_t **) conf = ctx;
+	//最核心的地方，可以看到修改了传递进来的conf，也就是将该ctx的指针保存到了全局的cycle->conf_ctx[n]�?    *(ngx_http_conf_ctx_t **) conf = ctx;
 
 
     /* count the number of the http modules and set up their indices */
@@ -147,7 +146,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
         }
         
         //每个模块都有自己对应的索引值
-        ngx_modules[m]->ctx_index = ngx_http_max_module++;
+		ngx_modules[m]->ctx_index = ngx_http_max_module++;
     }
 
     //下面是创建http module的对应的main,srv,loc config
@@ -190,20 +189,19 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
      */
 
     //调用对应的create_xxx_conf回调函数
-    //开始遍历
-    for (m = 0; ngx_modules[m]; m++) {
+    //开始遍历    for (m = 0; ngx_modules[m]; m++) {
         if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
             continue;
         }
         
-        //得到对应的module上下文
-        //疑问：这个“ngx_modules[m]->ctx”是什么时候赋值的呢？？？？
-        module = ngx_modules[m]->ctx;
-        //得到对应的索引
-        mi = ngx_modules[m]->ctx_index;
+		//得到对应的module上下文
+		//疑问：这个“ngx_modules[m]->ctx”是什么时候赋值的呢？？？？
+		module = ngx_modules[m]->ctx;
+		//得到对应的索引     
+		mi = ngx_modules[m]->ctx_index;
         
-        //如果有对应的回调，则调用回调函数，然后将返回的模块config设置到ctx的对应的conf列表中
-        if (module->create_main_conf) {
+        //如果有对应的回调，则调用回调函数，然后将返回的模块config设置到ctx的对应的conf列表中    
+		if (module->create_main_conf) {
             ctx->main_conf[mi] = module->create_main_conf(cf);
             if (ctx->main_conf[mi] == NULL) {
                 return NGX_CONF_ERROR;
@@ -237,8 +235,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
         module = ngx_modules[m]->ctx;
         
-        //如果存在postconfiguratio则调用初始化,真正初始化模块之前需要调用preconfiguration来进行一些操作。
-        if (module->preconfiguration) {
+        //如果存在postconfiguratio则调用初始化,真正初始化模块之前需要调用preconfiguration来进行一些操作�?        if (module->preconfiguration) {
             if (module->preconfiguration(cf) != NGX_OK) {
                 return NGX_CONF_ERROR;
             }
@@ -247,11 +244,11 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
     /* parse inside the http{} block */
 
-	//设置模块类型和命令类型
-    cf->module_type = NGX_HTTP_MODULE;
+	//设置模块类型和命令类型    
+	cf->module_type = NGX_HTTP_MODULE;
     cf->cmd_type = NGX_HTTP_MAIN_CONF;
-    //继续parse config,这里注意传递进去的文件名是空
-    rv = ngx_conf_parse(cf, NULL);
+    //继续parse config,这里注意传递进去的文件名是空   
+	rv = ngx_conf_parse(cf, NULL);
 
     if (rv != NGX_CONF_OK) {
         goto failed;
@@ -265,8 +262,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
     cmcf = ctx->main_conf[ngx_http_core_module.ctx_index];
     cscfp = cmcf->servers.elts;
 
-    //当http block完全parse完毕之后，就需要merge(main和srv或者srv和loc)相关的config了。不过在每次merge之前都会首先初始化main conf。
-    for (m = 0; ngx_modules[m]; m++) {
+    //当http block完全parse完毕之后，就需要merge(main和srv或者srv和loc)相关的config了。不过在每次merge之前都会首先初始化main conf�?    for (m = 0; ngx_modules[m]; m++) {
         if (ngx_modules[m]->type != NGX_HTTP_MODULE) {
             continue;
         }
@@ -294,8 +290,7 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
     /* create location trees */
-    //当merge完毕之后，然后就是初始化location tree，创建handler phase，调用postconfiguration，以及变量的初始化
-    for (s = 0; s < cmcf->servers.nelts; s++) {
+    //当merge完毕之后，然后就是初始化location tree，创建handler phase，调用postconfiguration，以及变量的初始�?    for (s = 0; s < cmcf->servers.nelts; s++) {
 
         clcf = cscfp[s]->ctx->loc_conf[ngx_http_core_module.ctx_index];
 
@@ -353,8 +348,8 @@ ngx_http_block(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 
     /* optimize the lists of ports, addresses and server names */
-    //初始化socket相关的东西
-    if (ngx_http_optimize_servers(cf, cmcf, cmcf->ports) != NGX_OK) {
+    //初始化socket相关的东西   
+	if (ngx_http_optimize_servers(cf, cmcf, cmcf->ports) != NGX_OK) {
         return NGX_CONF_ERROR;
     }
 
@@ -464,7 +459,12 @@ ngx_http_init_headers_in_hash(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
     return NGX_OK;
 }
 
-
+/* http://blog.csdn.net/chosen0ne/article/details/8051940
+*phase handler初始化
+大致原理就是将所有的phase handler以ngx_http_phase_handler_t->next组织成handler链表，
+处理请求时遍历这个链表。handler处理函数ngx_http_phase_handler_t->handler的调用是在checker中完成的，
+不同的phase具有不同的checker，但是同一个phase的checker相同。调用完这个函数，phase handler的初始化就完成了。
+*/
 static ngx_int_t
 ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 {
@@ -478,23 +478,28 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
     cmcf->phase_engine.server_rewrite_index = (ngx_uint_t) -1;
     cmcf->phase_engine.location_rewrite_index = (ngx_uint_t) -1;
     find_config_index = 0;
+	/* ngx_http_rewrite在http module的postconfiguration回调函数中添加REWRITE阶段的处理函数 */
     use_rewrite = cmcf->phases[NGX_HTTP_REWRITE_PHASE].handlers.nelts ? 1 : 0;
+	/* ngx_http_access在http module的postconfiguration回调函数中添加ACCESS阶段的处理函数 */
     use_access = cmcf->phases[NGX_HTTP_ACCESS_PHASE].handlers.nelts ? 1 : 0;
-
+	/*计算handler数组的大小*/
     n = use_rewrite + use_access + cmcf->try_files + 1 /* find config phase */;
-
+	/* 对所有handlers计数 */
     for (i = 0; i < NGX_HTTP_LOG_PHASE; i++) {
         n += cmcf->phases[i].handlers.nelts;
     }
-
+	//为handler数组分配内存
     ph = ngx_pcalloc(cf->pool,
                      n * sizeof(ngx_http_phase_handler_t) + sizeof(void *));
     if (ph == NULL) {
         return NGX_ERROR;
     }
-
+	/*
+	* 初始化phase handler，保存checker和next字段
+	* continue的都是不能添加handler的phase
+	*/
     cmcf->phase_engine.handlers = ph;
-    n = 0;
+    n = 0; /* 下一个phase的第一个handler的索引 */  
 
     for (i = 0; i < NGX_HTTP_LOG_PHASE; i++) {
         h = cmcf->phases[i].handlers.elts;
@@ -503,14 +508,14 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
 
         case NGX_HTTP_SERVER_REWRITE_PHASE:
             if (cmcf->phase_engine.server_rewrite_index == (ngx_uint_t) -1) {
-                cmcf->phase_engine.server_rewrite_index = n;
+                cmcf->phase_engine.server_rewrite_index = n; /* 设置server rewrite对应的handler的开始下标 */  
             }
             checker = ngx_http_core_rewrite_phase;
 
             break;
 
         case NGX_HTTP_FIND_CONFIG_PHASE:
-            find_config_index = n;
+            find_config_index = n;/* find config对应的handler的下标，后面post rewrite的handler设置需要用到 */  
 
             ph->checker = ngx_http_core_find_config_phase;
             n++;
@@ -529,6 +534,11 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
         case NGX_HTTP_POST_REWRITE_PHASE:
             if (use_rewrite) {
                 ph->checker = ngx_http_core_post_rewrite_phase;
+				/**
+				* 这里将post rewrite的next设置为find config的handler对应下标。
+				* 因为在location rewrite之后，需要重新匹配location，所以需要再次
+				* 进入这个phase。
+				*/
                 ph->next = find_config_index;
                 n++;
                 ph++;
@@ -566,9 +576,9 @@ ngx_http_init_phase_handlers(ngx_conf_t *cf, ngx_http_core_main_conf_t *cmcf)
         default:
             checker = ngx_http_core_generic_phase;
         }
-
+		/* 跳过本phase所有handler，也就指向了下一个phase的第一个handler */
         n += cmcf->phases[i].handlers.nelts;
-
+		/* 遍历初始化同一个phase上的handler */
         for (j = cmcf->phases[i].handlers.nelts - 1; j >=0; j--) {
             ph->checker = checker;
             ph->handler = h[j];
@@ -1752,16 +1762,16 @@ ngx_http_add_listening(ngx_conf_t *cf, ngx_http_conf_addr_t *addr)
     ngx_http_core_loc_conf_t  *clcf;
     ngx_http_core_srv_conf_t  *cscf;
 
-    //创建listen结构体
-    ls = ngx_create_listening(cf, &addr->opt.u.sockaddr, addr->opt.socklen);
+	//创建listen结构体
+	ls = ngx_create_listening(cf, &addr->opt.u.sockaddr, addr->opt.socklen);
     if (ls == NULL) {
         return NULL;
     }
 
     ls->addr_ntop = 1;
 
-    //设置listen句柄的回调,注意这个handler并不是accept handler，而是当accpet完之后，处理accept到的句柄的操作
-    ls->handler = ngx_http_init_connection;
+	//设置listen句柄的回调,注意这个handler并不是accept handler，而是当accpet完之后，处理accept到的句柄的操作
+	ls->handler = ngx_http_init_connection;
 
     cscf = addr->default_server;
     ls->pool_size = cscf->connection_pool_size;
@@ -1786,7 +1796,7 @@ ngx_http_add_listening(ngx_conf_t *cf, ngx_http_conf_addr_t *addr)
     }
 #endif
     
-    //设置对应的属性,backlog,读写buf
+	//设置对应的属性,backlog,读写buf
     ls->backlog = addr->opt.backlog;
     ls->rcvbuf = addr->opt.rcvbuf;
     ls->sndbuf = addr->opt.sndbuf;

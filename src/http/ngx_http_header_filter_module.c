@@ -615,9 +615,9 @@ ngx_http_header_filter(ngx_http_request_t *r)
 
 
 static ngx_int_t
-ngx_http_header_filter_init(ngx_conf_t *cf)
+ngx_http_header_filter_init(ngx_conf_t *cf)//postconfiguration阶段调用
 {
-    ngx_http_top_header_filter = ngx_http_header_filter;
+    ngx_http_top_header_filter = ngx_http_header_filter;//初始化链表头结点
 
     return NGX_OK;
 }

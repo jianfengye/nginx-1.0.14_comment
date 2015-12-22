@@ -164,8 +164,8 @@ struct ngx_module_s {
     ngx_command_t        *commands;
 
     //标示该模块的类型，和ctx是紧密相关的。它的取值范围是以下几种:
-    //NGX_HTTP_MODULE,NGX_CORE_MODULE,NGX_CONF_MODULE,
-    //NGX_EVENT_MODULE,NGX_MAIL_MODULE
+    //NGX_HTTP_MODULE,NGX_CORE_MODULE,NGX_CONF_MODULE,NGX_EVENT_MODULE,NGX_MAIL_MODULE
+	//[p]即五种类型的模块，core,conf,event,http,mail
     ngx_uint_t            type;
 
     //下面7个函数是nginx在启动，停止过程中的7个执行点
@@ -388,7 +388,7 @@ char *ngx_conf_set_bitmask_slot(ngx_conf_t *cf, ngx_command_t *cmd, void *conf);
 
 
 extern ngx_uint_t     ngx_max_module;
-extern ngx_module_t  *ngx_modules[];
+extern ngx_module_t  *ngx_modules[];  //该数组存放所有模块，实际定义在obj/ngx_modules.c文件中，由configure文件生成源代码文件objs/ngx_modules.c中
 
 
 #endif /* _NGX_HTTP_CONF_FILE_H_INCLUDED_ */

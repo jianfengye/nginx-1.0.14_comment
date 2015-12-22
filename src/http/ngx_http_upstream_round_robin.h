@@ -13,11 +13,11 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
-
+//该结构体与每个服务器的具体IP一一对应
 typedef struct {
-    struct sockaddr                *sockaddr;
-    socklen_t                       socklen;
-    ngx_str_t                       name;
+    struct sockaddr                *sockaddr;//一个可连接的IP地址
+    socklen_t                       socklen;//sockaddr结构体的长度
+    ngx_str_t                       name;//地址的名字
 
     ngx_int_t                       current_weight;
     ngx_int_t                       weight;
@@ -37,10 +37,10 @@ typedef struct {
 
 
 typedef struct ngx_http_upstream_rr_peers_s  ngx_http_upstream_rr_peers_t;
-
+//管理IP地址列表
 struct ngx_http_upstream_rr_peers_s {
     ngx_uint_t                      single;        /* unsigned  single:1; */
-    ngx_uint_t                      number;
+    ngx_uint_t                      number;//服务器数量，即peer的长度
     ngx_uint_t                      last_cached;
 
  /* ngx_mutex_t                    *mutex; */
@@ -48,16 +48,16 @@ struct ngx_http_upstream_rr_peers_s {
 
     ngx_str_t                      *name;
 
-    ngx_http_upstream_rr_peers_t   *next;
+    ngx_http_upstream_rr_peers_t   *next;//backup服务器IP列表
 
-    ngx_http_upstream_rr_peer_t     peer[1];
+    ngx_http_upstream_rr_peer_t     peer[1];//非backup服务器IP列表
 };
 
-
+//是负载均衡所使用的数据结构
 typedef struct {
-    ngx_http_upstream_rr_peers_t   *peers;
-    ngx_uint_t                      current;
-    uintptr_t                      *tried;
+    ngx_http_upstream_rr_peers_t   *peers;//IP地址列表
+    ngx_uint_t                      current;//round robin算法参数
+    uintptr_t                      *tried;//重试bit数组
     uintptr_t                       data;
 } ngx_http_upstream_rr_peer_data_t;
 

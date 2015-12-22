@@ -48,7 +48,8 @@ ngx_module_t  ngx_http_static_module = {
     NGX_MODULE_V1_PADDING
 };
 
-//核心处理函数
+//核心处理逻辑ngx_http_static_handler函数。该函数大概占了这个模块代码量的百分之八九十。
+//ngx_http_static_module模块的处理函数，检查URI的有效性，映射URI到磁盘路径，再访问文件，最后调用ngx_http_output_filter，把文件内容交给过滤链表处理
 static ngx_int_t
 ngx_http_static_handler(ngx_http_request_t *r)
 {
@@ -83,6 +84,7 @@ ngx_http_static_handler(ngx_http_request_t *r)
      */
 	
 	//ngx_http_map_uri_to_paht函数的作用是把请求的http协议的路径转化为文件系统的路径
+	//然后根据转化来的具体路径，去打开文件
     last = ngx_http_map_uri_to_path(r, &path, &root, 0);
     if (last == NULL) {
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
@@ -107,6 +109,7 @@ ngx_http_static_handler(ngx_http_request_t *r)
 	//根据相关配置项，对文件做两种检查
 	//1.如果求情的文件是一个symbol link，根据配置是否应许符号连接，不应许则返回错误。
 	//2.如果请求的是一个目录名称，则也返回错误。
+	//检查没问题的话，就读取文件，返回内容给一下个filter.
     if (ngx_open_cached_file(clcf->open_file_cache, &path, &of, r->pool)
         != NGX_OK)
     {
@@ -267,7 +270,7 @@ ngx_http_static_handler(ngx_http_request_t *r)
     out.buf = b;
     out.next = NULL;
 
-    return ngx_http_output_filter(r, &out);
+    return ngx_http_output_filter(r, &out); //将文件内容交给过滤链表进行处理输出
 }
 
 //解析完配置项后调用，仅仅是把handler挂载到NGX_HTTP_CONTENT_PHASE处理阶段
@@ -284,7 +287,7 @@ ngx_http_static_init(ngx_conf_t *cf)
         return NGX_ERROR;
     }
 
-    *h = ngx_http_static_handler;
+    *h = ngx_http_static_handler;//添加数组元素,挂载这个handler到NGX_HTTP_CONTENT_PHASE处理阶段
 
     return NGX_OK;
 }

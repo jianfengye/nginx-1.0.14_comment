@@ -34,7 +34,9 @@ struct ngx_shm_zone_s {
     void                     *tag;
 };
 
-
+/*
+注意理解cycle,cycle就是周期的意思，对应着一次启动过程。也就是说，不论是新的nginx、reload还是热替换，nginx都会创建一个新的cycle启动对应。
+*/
 struct ngx_cycle_s {
     /*
      保存着所有模块存储配置项的结构体指针，
@@ -122,14 +124,14 @@ struct ngx_cycle_s {
     // 使用gethostname系统调用得到的主机名
     ngx_str_t                 hostname;   
 };
-
+//[p] 保存nginx运行所需的基本参数
 typedef struct {
-     ngx_flag_t               daemon;              
-     ngx_flag_t               master;
+     ngx_flag_t               daemon;  //[p] 守护进程标志            
+     ngx_flag_t               master;  //[p] master进程标志
 
      ngx_msec_t               timer_resolution;
 
-     ngx_int_t                worker_processes;    
+     ngx_int_t                worker_processes;    //[p] worker进程的数量
      ngx_int_t                debug_points;
 
      ngx_int_t                rlimit_nofile;

@@ -18,6 +18,7 @@ typedef pid_t       ngx_pid_t;
 
 typedef void (*ngx_spawn_proc_pt) (ngx_cycle_t *cycle, void *data);
 
+/*存放工作进程信息的数据结构*/
 typedef struct {
     // 进程ID
     ngx_pid_t           pid;  

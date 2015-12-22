@@ -55,16 +55,16 @@ ngx_http_postpone_filter(ngx_http_request_t *r, ngx_chain_t *in)
     ngx_connection_t              *c;
     ngx_http_postponed_request_t  *pr;
 
-    c = r->connection;
+    c = r->connection;							//获取当前的连接对象
 
     ngx_log_debug3(NGX_LOG_DEBUG_HTTP, c->log, 0,
                    "http postpone filter \"%V?%V\" %p", &r->uri, &r->args, in);
 
-    if (r != c->data) {
+    if (r != c->data) {							//r不是当前正在处理的请求
 
         if (in) {
-            ngx_http_postpone_filter_add(r, in);
-            return NGX_OK;
+            ngx_http_postpone_filter_add(r, in);//数据加入到父请求链表末尾
+            return NGX_OK;						//直接结束过滤链表
         }
 
 #if 0
@@ -77,33 +77,33 @@ ngx_http_postpone_filter(ngx_http_request_t *r, ngx_chain_t *in)
         return NGX_OK;
     }
 
-    if (r->postponed == NULL) {
+    if (r->postponed == NULL) {				//没有需要延后发送的数据
 
-        if (in || c->buffered) {
+        if (in || c->buffered) {			//使用主请求发送数据
             return ngx_http_next_filter(r->main, in);
         }
 
         return NGX_OK;
     }
 
-    if (in) {
-        ngx_http_postpone_filter_add(r, in);
+    if (in) {								//有需要延后发送的数据
+        ngx_http_postpone_filter_add(r, in);//将数据加入到父请求链表末尾
     }
 
-    do {
-        pr = r->postponed;
+    do {									//循环处理现有的待发数据
+        pr = r->postponed;					//获取头结点
 
-        if (pr->request) {
+        if (pr->request) {					//节点是子请求
 
             ngx_log_debug2(NGX_LOG_DEBUG_HTTP, c->log, 0,
                            "http postpone filter wake \"%V?%V\"",
                            &pr->request->uri, &pr->request->args);
 
-            r->postponed = pr->next;
+            r->postponed = pr->next;		//移除头结点
 
-            c->data = pr->request;
+            c->data = pr->request;			//置为连接处理的当前请求
 
-            return ngx_http_post_request(pr->request, NULL);
+            return ngx_http_post_request(pr->request, NULL);//加入待处理请求链表
         }
 
         if (pr->out == NULL) {
@@ -121,9 +121,9 @@ ngx_http_postpone_filter(ngx_http_request_t *r, ngx_chain_t *in)
             }
         }
 
-        r->postponed = pr->next;
+        r->postponed = pr->next;	//处理下一个节点
 
-    } while (r->postponed);
+    } while (r->postponed);			//直到所有数据节点处理完毕
 
     return NGX_OK;
 }
