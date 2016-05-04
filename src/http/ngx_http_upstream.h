@@ -260,7 +260,8 @@ struct ngx_http_upstream_s {
     ngx_http_upstream_handler_pt     read_event_handler;
     ngx_http_upstream_handler_pt     write_event_handler;
 
-    ngx_peer_connection_t            peer;//连接结构体
+    /*用于描述与对端连接的结构体，包括对端网络终端的IP地址，端口等参数*/
+    ngx_peer_connection_t            peer;
 
     ngx_event_pipe_t                *pipe;
 
@@ -270,15 +271,15 @@ struct ngx_http_upstream_s {
     ngx_output_chain_ctx_t           output;
     ngx_chain_writer_ctx_t           writer;
 
-    /* upstream访问时的所有限制性参数 */
+    /*用于描述与上游服务器连接配置的结构体，例如TCP timeout时间等等*/
     ngx_http_upstream_conf_t        *conf;
 
     ngx_http_upstream_headers_in_t   headers_in;
 
-    /* 通过resolved可以直接执行上游服务器地址 */
+    /* 通过resolved可以直接指定上游服务器地址 */
     ngx_http_upstream_resolved_t    *resolved;
 
-    /* bugger成员存储接收自上游服务器发来的相应内容 */
+    /* buffer成员存储接收自上游服务器发来的相应内容 */
     ngx_buf_t                        buffer;
     size_t                           length;
 
