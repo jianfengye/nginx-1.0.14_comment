@@ -408,9 +408,9 @@ void
 ngx_http_upstream_init(ngx_http_request_t *r)
 {
     ngx_connection_t     *c;
-
+    /*获取当前请求中的连接*/
     c = r->connection;
-
+    /*输出log*/
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                    "http init upstream, client timer: %d", c->read->timer_set);
 
