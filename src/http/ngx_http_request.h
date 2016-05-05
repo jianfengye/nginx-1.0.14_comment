@@ -482,8 +482,14 @@ struct ngx_http_request_s {
     ngx_http_request_t               *parent;
 
     // 与subrequest子请求相关的功能。
+    /*用于将多个子请求链接成链表，并且序列化子请求，而非使用一般的异步调用方式乱序处理*/
     ngx_http_postponed_request_t     *postponed;
-    ngx_http_post_subrequest_t       *post_subrequest;
+    /*
+    当父请求结束之后，会检查post_subrequest，如果子请求存在就会调用子请求的write_handler进行
+    处理，而后根据子请求的URI去匹配nginx.conf中合适的location,选择合适的模块进行请求的处理，
+    在子请求结束时，就会调用子请求的Handler。
+    */
+    ngx_http_post_subrequest_t       *post_subrequest;/*指向该请求的子请求*/
 
     /*
     所有自请求都是通过posted_requests这个单链表来链接起来的，执行post子请求时调用的ngx_http_run_posted_requests

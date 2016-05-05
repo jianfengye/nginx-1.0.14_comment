@@ -413,7 +413,10 @@ ngx_http_upstream_init(ngx_http_request_t *r)
     /*输出log*/
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                    "http init upstream, client timer: %d", c->read->timer_set);
-
+    /*
+      如果原本这个请求已经设置了定时器，即加入了定时器红黑书中，那么就删除这个定时器，
+      因为在upstream中不需要定时器事件。
+    */
     if (c->read->timer_set) {
         ngx_del_timer(c->read);
     }
