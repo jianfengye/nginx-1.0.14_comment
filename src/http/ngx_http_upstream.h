@@ -260,7 +260,7 @@ struct ngx_http_upstream_s {
     ngx_http_upstream_handler_pt     read_event_handler;
     ngx_http_upstream_handler_pt     write_event_handler;
 
-    /*用于描述与对端连接的结构体，包括对端网络终端的IP地址，端口等参数*/
+    /*用于描述与对端(上游)连接的结构体，包括对端网络终端的IP地址，端口等参数*/
     ngx_peer_connection_t            peer;
 
     ngx_event_pipe_t                *pipe;

@@ -433,7 +433,7 @@ ngx_http_upstream_init(ngx_http_request_t *r)
             }
         }
     }
-
+    //这里启动了upstream机制
     ngx_http_upstream_init_request(r);
 }
 
@@ -481,18 +481,18 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
     }
 
 #endif
-
     u->store = (u->conf->store || u->conf->store_lengths);
 
     if (!u->store && !r->post_action && !u->conf->ignore_client_abort) {
         r->read_event_handler = ngx_http_upstream_rd_check_broken_connection;
         r->write_event_handler = ngx_http_upstream_wr_check_broken_connection;
     }
-
+    //当前请求包体的结构保存在upstream的request_bufs成员当中。
     if (r->request_body) {
         u->request_bufs = r->request_body->bufs;
     }
-
+    //调用create_request回调方法去构造request,注意这个request并不是重新创建出来的
+    //而是原来下游与nginx请求服务的request
     if (u->create_request(r) != NGX_OK) {
         ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
         return;
@@ -510,7 +510,7 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
     u->output.filter_ctx = &u->writer;
 
     u->writer.pool = r->pool;
-
+    //创建空间用于储存上游响应的状态
     if (r->upstream_states == NULL) {
 
         r->upstream_states = ngx_array_create(r->pool, 1,
@@ -531,7 +531,7 @@ ngx_http_upstream_init_request(ngx_http_request_t *r)
 
         ngx_memzero(u->state, sizeof(ngx_http_upstream_state_t));
     }
-
+    //添加一个方法用于在结束的时候负责销毁upstream，做一些清理工作
     cln = ngx_http_cleanup_add(r, 0);
     if (cln == NULL) {
         ngx_http_finalize_request(r, NGX_HTTP_INTERNAL_SERVER_ERROR);
@@ -1075,6 +1075,7 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r,
 }
 
 //连接上游服务器
+// u = r->upstream
 static void
 ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
 {
@@ -1104,8 +1105,8 @@ ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
     tp = ngx_timeofday();
     u->state->response_sec = tp->sec;
     u->state->response_msec = tp->msec;
-
-    rc = ngx_event_connect_peer(&u->peer);						//连接上游服务器
+    //连接上游服务器
+    rc = ngx_event_connect_peer(&u->peer);
 
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
                    "http upstream connect: %i", rc);
@@ -1134,10 +1135,14 @@ ngx_http_upstream_connect(ngx_http_request_t *r, ngx_http_upstream_t *u)
     c = u->peer.connection;
 
     c->data = r;
-
+    //读写事件已经在前面ngx_event_connect_peer中添加到事件循环当中，这里设置其handler
     c->write->handler = ngx_http_upstream_handler;
     c->read->handler = ngx_http_upstream_handler;
 
+    //当上游的响应到达时，也就是读事件发生，这时候会调用c->read->handler也就是
+    // ngx_http_upstream_handler回调函数。此时该函数直接调用u->read_event_handler
+    // 来处理，也就是ngx_http_upstream_process_header回调函数，而在这个函数中接受
+    //并且解析完了响应头之后，调用了upstream::process_header来处理之
     u->write_event_handler = ngx_http_upstream_send_request_handler;
     u->read_event_handler = ngx_http_upstream_process_header;
 
