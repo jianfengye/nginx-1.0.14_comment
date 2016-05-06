@@ -377,12 +377,13 @@ ngx_http_upstream_create(ngx_http_request_t *r)
     ngx_http_upstream_t  *u;
 
     u = r->upstream;//upstream对象
-
+    /*若已经穿gian过了且定义了cleanup成员，则调用cleanup清理方法将原始结构体清除*/
     if (u && u->cleanup) {
         r->main->count++;
         ngx_http_upstream_cleanup(r);
     }
 
+    /*从内存池分配ngx_http_upstream_t的空间*/
     u = ngx_pcalloc(r->pool, sizeof(ngx_http_upstream_t));//创建对象
     if (u == NULL) {
         return NGX_ERROR;
@@ -414,7 +415,7 @@ ngx_http_upstream_init(ngx_http_request_t *r)
     ngx_log_debug1(NGX_LOG_DEBUG_HTTP, c->log, 0,
                    "http init upstream, client timer: %d", c->read->timer_set);
     /*
-      如果原本这个请求已经设置了定时器，即加入了定时器红黑书中，那么就删除这个定时器，
+      如果原本这个请求的读事件已经设置了定时器，即加入了定时器红黑书中，那么就删除这个定时器，
       因为在upstream中不需要定时器事件。
     */
     if (c->read->timer_set) {
