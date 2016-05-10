@@ -10,7 +10,13 @@
 #include <ngx_event.h>
 #include <ngx_event_connect.h>
 
+/*
+  pc当中保存着与上游连接的套接字参数
 
+  1. 打开一个套接字
+  2. 设置该套接字为非阻塞
+  3.
+*/
 ngx_int_t
 ngx_event_connect_peer(ngx_peer_connection_t *pc)
 {
@@ -22,11 +28,11 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
     ngx_event_t       *rev, *wev;
     ngx_connection_t  *c;
 
-    rc = pc->get(pc, pc->data);					//调用get函调函数
+    rc = pc->get(pc, pc->data);
     if (rc != NGX_OK) {
         return rc;
     }
-
+    /*打开一个套接字*/
     s = ngx_socket(pc->sockaddr->sa_family, SOCK_STREAM, 0);//创建socket对象
 
     ngx_log_debug1(NGX_LOG_DEBUG_EVENT, pc->log, 0, "socket %d", s);
@@ -37,7 +43,7 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
         return NGX_ERROR;
     }
 
-
+    /*获取一个connection*/
     c = ngx_get_connection(s, pc->log);
 
     if (c == NULL) {
@@ -48,7 +54,7 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 
         return NGX_ERROR;
     }
-
+    /*设置接受缓冲区的大小*/
     if (pc->rcvbuf) {
         if (setsockopt(s, SOL_SOCKET, SO_RCVBUF,
                        (const void *) &pc->rcvbuf, sizeof(int)) == -1)
@@ -58,7 +64,7 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
             goto failed;
         }
     }
-
+    /*设置套接字为非阻塞套接字*/
     if (ngx_nonblocking(s) == -1) {
         ngx_log_error(NGX_LOG_ALERT, pc->log, ngx_socket_errno,
                       ngx_nonblocking_n " failed");
@@ -67,6 +73,7 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
     }
 
     if (pc->local) {
+        //为套接字绑定地址
         if (bind(s, pc->local->sockaddr, pc->local->socklen) == -1) {
             ngx_log_error(NGX_LOG_CRIT, pc->log, ngx_socket_errno,
                           "bind(%V) failed", &pc->local->name);
@@ -75,6 +82,7 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
         }
     }
 
+    //设置回调函数
     c->recv = ngx_recv;
     c->send = ngx_send;
     c->recv_chain = ngx_recv_chain;
@@ -93,13 +101,13 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
         c->sendfile = 0;
 #endif
     }
-
+    /*读写事件*/
     rev = c->read;
     wev = c->write;
 
     rev->log = pc->log;
     wev->log = pc->log;
-
+    //设置peer当中的connection
     pc->connection = c;
 
     c->number = ngx_atomic_fetch_add(ngx_connection_counter, 1);
@@ -123,7 +131,7 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 
     ngx_log_debug3(NGX_LOG_DEBUG_EVENT, pc->log, 0,
                    "connect to %V, fd:%d #%d", pc->name, s, c->number);
-
+    //向上游发起连接
     rc = connect(s, pc->sockaddr, pc->socklen);
 
     if (rc == -1) {
@@ -220,7 +228,7 @@ ngx_event_connect_peer(ngx_peer_connection_t *pc)
 
         event = NGX_LEVEL_EVENT;
     }
-
+    //添加一个读事件
     if (ngx_add_event(rev, NGX_READ_EVENT, event) != NGX_OK) {
         goto failed;
     }
