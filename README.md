@@ -3,11 +3,6 @@ nginx-1.0.14_comment
 
 nginx源码中文注释版
 
-此项目已经成为太监项目了，另外起了一个项目继续这个研究：请移步：
-
-https://github.com/its-tech/nginx-1.14.0-research
-
-
 ＝＝＝＝＝＝＝＝
 
 
